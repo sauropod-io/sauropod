@@ -1,0 +1,117 @@
+exclude: |
+  (?x)^(
+      .*_pb.ts|
+      .*\.vale/.*|
+      packages/client/.*\.ts
+  )$
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: check-added-large-files
+      - id: check-case-conflict
+      - id: check-merge-conflict
+      - id: check-toml
+      - id: check-yaml
+      - id: end-of-file-fixer
+      - id: file-contents-sorter
+      - id: name-tests-test
+      - id: requirements-txt-fixer
+      - id: trailing-whitespace
+      - id: trailing-whitespace
+      - id: mixed-line-ending
+        args: ["--fix=lf"]
+  - repo: https://github.com/errata-ai/vale
+    rev: v3.10.0
+    hooks:
+      - id: vale
+        args: [--output=line, --minAlertLevel=error]
+        types_or:
+          [
+            "ts",
+            "tsx",
+            "javascript",
+            "jsx",
+            "css",
+            "scss",
+            "html",
+            "markdown",
+            "html",
+            "rust",
+            "python",
+          ]
+  - repo: https://github.com/EmbarkStudios/cargo-deny
+    rev: 0.18.2
+    hooks:
+      - id: cargo-deny
+  - repo: local
+    hooks:
+      - id: generate-json-schemas
+        name: generate-json-schemas
+        language: system
+        types: [rust]
+        files: "crates/schemas/.*|api/core/.*"
+        entry: make
+        args: ["generate"]
+        pass_filenames: false
+      - id: cargo-fmt
+        name: cargo fmt
+        language: system
+        types: [rust]
+        entry: cargo
+        args: ["fmt", "--"]
+      - id: cargo-check
+        name: cargo check
+        language: system
+        types: [rust]
+        entry: env "RUSTFLAGS=-Dwarnings" cargo
+        args: ["check", "--locked", "--workspace"]
+        pass_filenames: false
+      - id: cargo-clippy-fix
+        name: cargo clippy --fix
+        language: system
+        types: [rust]
+        entry: cargo
+        args:
+          [
+            "clippy",
+            "--fix",
+            "--allow-dirty",
+            "--allow-staged",
+            "--workspace",
+            "--",
+            "--deny=clippy::all",
+          ]
+        pass_filenames: false
+      - id: prettier
+        name: prettier
+        language: system
+        types_or:
+          [
+            "ts",
+            "tsx",
+            "javascript",
+            "jsx",
+            "json",
+            "css",
+            "scss",
+            "html",
+            "markdown",
+            "yaml",
+          ]
+        entry: npx prettier
+        args: ["--write"]
+      - id: eslint
+        name: eslint
+        language: system
+        types_or: ["ts", "tsx", "javascript", "jsx"]
+        entry: npm run --if-present --workspaces lint
+        args: ["--", "--fix"]
+        pass_filenames: false
+      - id: tsc
+        name: tsc
+        language: system
+        types_or: ["ts", "tsx", "javascript", "jsx"]
+        entry: npm run --if-present --workspaces test:ts
+        args: []
+        pass_filenames: false

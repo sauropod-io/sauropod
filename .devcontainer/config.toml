@@ -1,0 +1,2 @@
+[target.'cfg(target_os = "linux")']
+rustflags = "-Clink-arg=-fuse-ld=lld"

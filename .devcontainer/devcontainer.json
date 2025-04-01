@@ -1,0 +1,39 @@
+{
+  "dockerFile": "Dockerfile",
+  "name": "Dev Container",
+  "runArgs": ["--net=host"],
+  "updateRemoteUserUID": true,
+  "mounts": [
+    {
+      "source": "${localEnv:HOME}",
+      "target": "${localEnv:HOME}",
+      "type": "bind"
+    }
+  ],
+  "privileged": true,
+  "containerEnv": {
+    // Use this environment variable if you need to bind mount your local source code into a new container.
+    "LOCAL_WORKSPACE_FOLDER": "${localWorkspaceFolder}"
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "charliermarsh.ruff",
+        "ms-python.debugpy",
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "ms-python.isort",
+        "ChrisChinchilla.vale-vscode",
+        "ms-azuretools.vscode-docker",
+        "rust-lang.rust-analyzer",
+        "tamasfe.even-better-toml",
+        "nefrob.vscode-just-syntax",
+        "42Crunch.vscode-openapi",
+        "ms-vscode.cpptools"
+      ],
+      "settings": {
+        "remote.autoForwardPorts": false
+      }
+    }
+  }
+}

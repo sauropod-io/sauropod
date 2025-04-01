@@ -1,0 +1,14 @@
+{
+  "files.watcherExclude": {
+    "**/node_modules": true,
+    "**/target": true
+  },
+  "files.insertFinalNewline": true,
+  "C_Cpp.default.compilerPath": "/usr/bin/g++",
+  "C_Cpp.default.includePath": [
+    "/usr/local/cuda/include/",
+    "third_party/llama-cpp/include",
+    "third_party/TensorRT-LLM/cpp/include",
+    "third_party/llama-cpp/ggml/include"
+  ]
+}

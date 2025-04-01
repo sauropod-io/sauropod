@@ -1,0 +1,671 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Sauropod Scales",
+    "license": {
+      "name": "Apache 2.0",
+      "url": "https://www.apache.org/licenses/LICENSE-2.0.html"
+    },
+    "version": "0.1.0"
+  },
+  "servers": [
+    {
+      "url": "{protocol}://{host}:{port}",
+      "description": "Local server",
+      "variables": {
+        "host": {
+          "default": "localhost",
+          "description": "The host"
+        },
+        "port": {
+          "default": "3140",
+          "description": "The port number"
+        },
+        "protocol": {
+          "default": "http",
+          "description": "The protocol"
+        }
+      }
+    }
+  ],
+  "paths": {
+    "/api/health": {
+      "get": {
+        "summary": "Get the health of the system",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthCheckResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/models": {
+      "get": {
+        "summary": "Get the list of available models",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Array_of_ModelDefinition"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/observability/logs": {
+      "get": {
+        "summary": "Get the logs from the system",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LogResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/task": {
+      "get": {
+        "summary": "Get the list of tasks",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Array_of_ObjectInfo"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a task",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Task"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/int64"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/task/{id}": {
+      "get": {
+        "summary": "Get a task by ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Task"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Update a task",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Task"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete a task",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        }
+      }
+    },
+    "/api/task/{id}/inputSchema": {
+      "get": {
+        "summary": "Get the input JSON Schema for a task",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Map_of_AnyValue"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/tools": {
+      "get": {
+        "summary": "Get the list of available tools",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Array_of_ToolDefinition"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/workflow": {
+      "get": {
+        "summary": "Get the list of workflows",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Array_of_ObjectInfo"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a workflow",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Workflow"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/int64"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/workflow/{id}": {
+      "get": {
+        "summary": "Get a workflow by ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Workflow"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Update a workflow",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Workflow"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete a workflow",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        }
+      }
+    },
+    "/api/workflow/{id}/invoke": {
+      "post": {
+        "summary": "Invoke a workflow by ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Map_of_AnyValue"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Map_of_AnyValue"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Array_of_ModelDefinition": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/ModelDefinition"
+        }
+      },
+      "Array_of_ObjectInfo": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/ObjectInfo"
+        }
+      },
+      "Array_of_ToolDefinition": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/ToolDefinition"
+        }
+      },
+      "Connection": {
+        "description": "A connection.",
+        "anyOf": [
+          {
+            "description": "A parameter passed in from outside the workflow.",
+            "type": "object",
+            "properties": {
+              "parameter": {
+                "description": "The name of the parameter.",
+                "type": "string"
+              },
+              "to": {
+                "description": "The task parameters to connect the workflow parameter to.",
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": ["parameter", "to"],
+            "additionalProperties": false
+          },
+          {
+            "description": "A connection between the output of one task and the input of another.",
+            "type": "object",
+            "properties": {
+              "from": {
+                "description": "The ID of the task that produces the output.",
+                "type": "string"
+              },
+              "to": {
+                "description": "The ID of the task that consumes the output.",
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": ["from", "to"],
+            "additionalProperties": false
+          }
+        ]
+      },
+      "HealthCheckResponse": {
+        "description": "Response to a health check request.",
+        "type": "object",
+        "additionalProperties": false
+      },
+      "InvokeLLM": {
+        "description": "Run an LLM.",
+        "type": "object",
+        "properties": {
+          "modelStrength": {
+            "$ref": "#/components/schemas/ModelStrength"
+          },
+          "template": {
+            "$ref": "#/components/schemas/Template"
+          }
+        },
+        "required": ["template", "modelStrength"],
+        "additionalProperties": false
+      },
+      "LogLevel": {
+        "description": "The log level.",
+        "oneOf": [
+          {
+            "description": "Debug log level.",
+            "type": "string"
+          },
+          {
+            "description": "Info log level.",
+            "type": "string"
+          },
+          {
+            "description": "Warning log level.",
+            "type": "string"
+          },
+          {
+            "description": "Error log level.",
+            "type": "string"
+          }
+        ]
+      },
+      "LogMessage": {
+        "description": "A logged message.",
+        "type": "object",
+        "properties": {
+          "fields": {
+            "description": "Structured logging fields.",
+            "type": "object",
+            "additionalProperties": true
+          },
+          "level": {
+            "$ref": "#/components/schemas/LogLevel"
+          },
+          "line": {
+            "description": "The line number where the log message was emitted.",
+            "type": "integer",
+            "format": "uint32",
+            "nullable": true,
+            "minimum": 0.0
+          },
+          "module": {
+            "description": "The module where the log message was emitted.",
+            "type": "string"
+          },
+          "timestampS": {
+            "description": "The number of seconds since epoch.",
+            "type": "integer",
+            "format": "uint64",
+            "minimum": 0.0
+          }
+        },
+        "required": ["module", "timestampS", "fields", "level"],
+        "additionalProperties": false
+      },
+      "LogResponse": {
+        "description": "A list of logged messages.",
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/LogMessage"
+        }
+      },
+      "Map_of_AnyValue": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "ModelDefinition": {
+        "description": "A model definition.",
+        "type": "object",
+        "properties": {
+          "name": {
+            "description": "The human-friendly name of the model.",
+            "type": "string"
+          },
+          "uri": {
+            "description": "The URI of the model.",
+            "type": "string"
+          }
+        },
+        "required": ["name", "uri"],
+        "additionalProperties": false
+      },
+      "ModelStrength": {
+        "description": "Enum for model strength.",
+        "oneOf": [
+          {
+            "description": "Weak model.",
+            "type": "string"
+          },
+          {
+            "description": "Strong model.",
+            "type": "string"
+          }
+        ]
+      },
+      "ObjectInfo": {
+        "description": "Minimal information describing a stored object.",
+        "type": "object",
+        "properties": {
+          "id": {
+            "description": "The ID of the object.\n\n This ID can be used to retrieve the contents of the object.",
+            "type": "integer",
+            "format": "uint64",
+            "minimum": 0.0
+          },
+          "name": {
+            "description": "The name of the object.",
+            "type": "string"
+          }
+        },
+        "required": ["id", "name"],
+        "additionalProperties": false
+      },
+      "Task": {
+        "description": "A task is the smallest unit of work in a workflow.",
+        "type": "object",
+        "properties": {
+          "action": {
+            "$ref": "#/components/schemas/TaskAction"
+          },
+          "name": {
+            "description": "The Name of the task.",
+            "type": "string"
+          }
+        },
+        "required": ["name", "action"],
+        "additionalProperties": false
+      },
+      "TaskAction": {
+        "description": "A description of the action associated with a task.",
+        "oneOf": [
+          {
+            "description": "Invoke an LLM.",
+            "type": "object",
+            "properties": {
+              "invokeLLM": {
+                "$ref": "#/components/schemas/InvokeLLM"
+              }
+            },
+            "required": ["invokeLLM"],
+            "additionalProperties": false
+          }
+        ]
+      },
+      "Template": {
+        "description": "A template written with Jinja2 syntax.",
+        "type": "string"
+      },
+      "ToolDefinition": {
+        "description": "A tool definition.",
+        "type": "object",
+        "properties": {
+          "description": {
+            "description": "A detailed description of what the tool does.",
+            "type": "string"
+          },
+          "inputSchema": {
+            "description": "A JSON Schema describing the parameters for the tool.\n\n See <https://json-schema.org/>."
+          },
+          "name": {
+            "description": "The name of the tool.\n\n Must match `^[a-zA-Z0-9_-]{1,64}$`.",
+            "type": "string"
+          }
+        },
+        "required": ["name", "description", "inputSchema"],
+        "additionalProperties": false
+      },
+      "Workflow": {
+        "description": "A workflow.",
+        "type": "object",
+        "properties": {
+          "connections": {
+            "description": "A mapping of connections between tasks.\n\n # Example\n\n ```json\n [\n   {\n     // Make the workflow parameter `url` available to the task `foo`.\n     \"parameter\": \"url\",\n     \"to\": [\"foo.url\"]\n   },\n   {\n     // Pipe the output of the `foo` task to the  `content` parameter of task `bar`.\n     \"from\": \"foo.output\",\n     \"to\": [\"bar.content\"]\n   }\n ]\n ```",
+            "type": "array",
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/Connection"
+            }
+          },
+          "name": {
+            "description": "The name of the workflow.",
+            "type": "string"
+          },
+          "tasks": {
+            "description": "The tasks in the workflow.\n\n The keys are the IDs of the tasks.",
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/Task"
+            }
+          }
+        },
+        "required": ["name", "tasks"],
+        "additionalProperties": false
+      },
+      "int64": {
+        "type": "integer",
+        "format": "int64"
+      }
+    }
+  }
+}

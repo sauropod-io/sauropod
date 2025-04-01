@@ -1,0 +1,68 @@
+[graph]
+targets = []
+all-features = false
+no-default-features = false
+
+[output]
+feature-depth = 1
+
+[advisories]
+db-urls = ["https://github.com/rustsec/advisory-db"]
+ignore = []
+
+[licenses]
+allow = [
+    "0BSD",
+    "Apache-2.0",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "ISC",
+    "MIT-0",
+    "MIT",
+    "MPL-2.0",
+    "Unicode-3.0",
+    "Zlib",
+]
+confidence-threshold = 0.8
+exceptions = []
+
+[licenses.private]
+ignore = true
+registries = []
+
+[[licenses.clarify]]
+name = "toktrie_hf_tokenizers"
+expression = "MIT"
+license-files = []
+
+[[licenses.clarify]]
+name = "toktrie"
+expression = "MIT"
+license-files = []
+
+[[licenses.clarify]]
+name = "llguidance"
+expression = "MIT"
+license-files = []
+
+[bans]
+multiple-versions = "allow" # TODO change this to deny
+wildcards = "allow"
+highlight = "all"
+workspace-default-features = "allow"
+external-default-features = "allow"
+allow = []
+deny = []
+skip = []
+skip-tree = []
+
+[sources]
+unknown-registry = "warn"
+unknown-git = "warn"
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]
+allow-git = []
+
+[sources.allow-org]
+github = []
+gitlab = []
+bitbucket = []

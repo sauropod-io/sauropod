@@ -1,0 +1,31 @@
+[package]
+name = "sauropod-server"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+publish.workspace = true
+
+[dependencies]
+sauropod-cli-utilities = { path = "../cli-utilities" }
+sauropod-config = { path = "../config" }
+sauropod-database = { path = "../database" }
+sauropod-http = { path = "../http" }
+sauropod-llm-inference = { path = "../llm-inference" }
+sauropod-logging = { path = "../logging" }
+sauropod-schemas = { path = "../schemas", features = ["json_schema"] }
+sauropod-task = { path = "../task" }
+sauropod-task-context = { path = "../task-context" }
+sauropod-tool-spec = { path = "../tool-spec" }
+sauropod-workflows = { path = "../workflows" }
+
+anyhow.workspace = true
+argh.workspace = true
+async-trait.workspace = true
+axum.workspace = true
+serde_json.workspace = true
+serde.workspace = true
+thiserror.workspace = true
+tokio.workspace = true
+tower-http.workspace = true
+tracing.workspace = true

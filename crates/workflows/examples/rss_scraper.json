@@ -1,0 +1,20 @@
+{
+  "name": "rss_scraper",
+  "tasks": {
+    "fetch": {
+      "name": "fetch",
+      "action": {
+        "invokeLLM": {
+          "modelStrength": "strong",
+          "template": "Fetch the RSS feed from {{ url }} and rewrite it into a Markdown representation for me to read. The Markdown should be formatted as a list of items, with each item containing the title and a short description."
+        }
+      }
+    }
+  },
+  "connections": [
+    {
+      "parameter": "url",
+      "to": ["fetch.url"]
+    }
+  ]
+}

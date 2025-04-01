@@ -1,0 +1,17 @@
+[package]
+name = "sauropod-task-context"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+publish.workspace = true
+
+[dependencies]
+sauropod-tool-spec = { path = "../tool-spec" }
+sauropod-core-tools = { path = "../core-tools" }
+sauropod-llm-inference = { path = "../llm-inference" }
+sauropod-schemas = { path = "../schemas" }
+sauropod-config = { path = "../config" }
+
+anyhow.workspace = true
+tracing.workspace = true

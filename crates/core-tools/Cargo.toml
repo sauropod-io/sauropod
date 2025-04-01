@@ -1,0 +1,18 @@
+[package]
+name = "sauropod-core-tools"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+publish.workspace = true
+
+[dependencies]
+sauropod-tool-spec = { path = "../tool-spec" }
+
+anyhow.workspace = true
+async-trait.workspace = true
+reqwest.workspace = true
+tracing.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+schemars.workspace = true

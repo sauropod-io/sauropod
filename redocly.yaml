@@ -1,0 +1,14 @@
+apis:
+  core:
+    root: ./api/openapi.json
+    x-openapi-ts:
+      output: ./packages/client/openapi.d.ts
+
+theme:
+  openapi:
+    schemaExpansionLevel: 2
+    generateCodeSamples:
+      languages:
+        - lang: curl
+        - lang: Python
+        - lang: JavaScript

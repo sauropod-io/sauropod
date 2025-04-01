@@ -1,0 +1,144 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Workflow",
+  "description": "A workflow.",
+  "type": "object",
+  "properties": {
+    "connections": {
+      "description": "A mapping of connections between tasks.\n\n # Example\n\n ```json\n [\n   {\n     // Make the workflow parameter `url` available to the task `foo`.\n     \"parameter\": \"url\",\n     \"to\": [\"foo.url\"]\n   },\n   {\n     // Pipe the output of the `foo` task to the  `content` parameter of task `bar`.\n     \"from\": \"foo.output\",\n     \"to\": [\"bar.content\"]\n   }\n ]\n ```",
+      "type": "array",
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/Connection"
+      }
+    },
+    "name": {
+      "description": "The name of the workflow.",
+      "type": "string",
+      "examples": ["Process shipping emails"]
+    },
+    "tasks": {
+      "description": "The tasks in the workflow.\n\n The keys are the IDs of the tasks.",
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/Task"
+      }
+    }
+  },
+  "additionalProperties": false,
+  "required": ["name", "tasks"],
+  "$defs": {
+    "Connection": {
+      "description": "A connection.",
+      "anyOf": [
+        {
+          "description": "A parameter passed in from outside the workflow.",
+          "type": "object",
+          "properties": {
+            "parameter": {
+              "description": "The name of the parameter.",
+              "type": "string"
+            },
+            "to": {
+              "description": "The task parameters to connect the workflow parameter to.",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "additionalProperties": false,
+          "required": ["parameter", "to"]
+        },
+        {
+          "description": "A connection between the output of one task and the input of another.",
+          "type": "object",
+          "properties": {
+            "from": {
+              "description": "The ID of the task that produces the output.",
+              "type": "string"
+            },
+            "to": {
+              "description": "The ID of the task that consumes the output.",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "additionalProperties": false,
+          "required": ["from", "to"]
+        }
+      ]
+    },
+    "InvokeLLM": {
+      "description": "Run an LLM.",
+      "type": "object",
+      "properties": {
+        "modelStrength": {
+          "description": "The model strength to use.",
+          "$ref": "#/$defs/ModelStrength"
+        },
+        "template": {
+          "description": "The template to use.",
+          "$ref": "#/$defs/Template"
+        }
+      },
+      "additionalProperties": false,
+      "required": ["template", "modelStrength"]
+    },
+    "ModelStrength": {
+      "description": "Enum for model strength.",
+      "oneOf": [
+        {
+          "description": "Weak model.",
+          "type": "string",
+          "const": "weak"
+        },
+        {
+          "description": "Strong model.",
+          "type": "string",
+          "const": "strong"
+        }
+      ]
+    },
+    "Task": {
+      "description": "A task is the smallest unit of work in a workflow.",
+      "type": "object",
+      "properties": {
+        "action": {
+          "description": "The action that the task performs.",
+          "$ref": "#/$defs/TaskAction"
+        },
+        "name": {
+          "description": "The Name of the task.",
+          "type": "string",
+          "examples": ["Classify Email"]
+        }
+      },
+      "additionalProperties": false,
+      "required": ["name", "action"]
+    },
+    "TaskAction": {
+      "description": "A description of the action associated with a task.",
+      "oneOf": [
+        {
+          "description": "Invoke an LLM.",
+          "type": "object",
+          "properties": {
+            "invokeLLM": {
+              "$ref": "#/$defs/InvokeLLM"
+            }
+          },
+          "additionalProperties": false,
+          "required": ["invokeLLM"]
+        }
+      ]
+    },
+    "Template": {
+      "description": "A template written with Jinja2 syntax.",
+      "type": "string",
+      "examples": ["Classify this sentence: {{ input.sentence }}"]
+    }
+  }
+}

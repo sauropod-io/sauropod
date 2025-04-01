@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Task",
+  "description": "A task is the smallest unit of work in a workflow.",
+  "type": "object",
+  "properties": {
+    "action": {
+      "description": "The action that the task performs.",
+      "$ref": "#/$defs/TaskAction"
+    },
+    "name": {
+      "description": "The Name of the task.",
+      "type": "string",
+      "examples": ["Classify Email"]
+    }
+  },
+  "additionalProperties": false,
+  "required": ["name", "action"],
+  "$defs": {
+    "InvokeLLM": {
+      "description": "Run an LLM.",
+      "type": "object",
+      "properties": {
+        "modelStrength": {
+          "description": "The model strength to use.",
+          "$ref": "#/$defs/ModelStrength"
+        },
+        "template": {
+          "description": "The template to use.",
+          "$ref": "#/$defs/Template"
+        }
+      },
+      "additionalProperties": false,
+      "required": ["template", "modelStrength"]
+    },
+    "ModelStrength": {
+      "description": "Enum for model strength.",
+      "oneOf": [
+        {
+          "description": "Weak model.",
+          "type": "string",
+          "const": "weak"
+        },
+        {
+          "description": "Strong model.",
+          "type": "string",
+          "const": "strong"
+        }
+      ]
+    },
+    "TaskAction": {
+      "description": "A description of the action associated with a task.",
+      "oneOf": [
+        {
+          "description": "Invoke an LLM.",
+          "type": "object",
+          "properties": {
+            "invokeLLM": {
+              "$ref": "#/$defs/InvokeLLM"
+            }
+          },
+          "additionalProperties": false,
+          "required": ["invokeLLM"]
+        }
+      ]
+    },
+    "Template": {
+      "description": "A template written with Jinja2 syntax.",
+      "type": "string",
+      "examples": ["Classify this sentence: {{ input.sentence }}"]
+    }
+  }
+}

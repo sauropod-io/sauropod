@@ -1,0 +1,13 @@
+API
+Gemma
+gRPC
+HSM
+HTTPS?
+LLM
+OTA
+Phi
+Protobuf
+Sauropod
+Scales
+TPM
+UI

@@ -1,0 +1,32 @@
+[package]
+name = "sauropod-task"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+publish.workspace = true
+
+[dependencies]
+sauropod-schemas = { path = "../schemas" }
+sauropod-llm-inference = { path = "../llm-inference" }
+sauropod-prompt-templates = { path = "../prompt-templates" }
+sauropod-tool-spec = { path = "../tool-spec" }
+sauropod-task-context = { path = "../task-context" }
+sauropod-config = { path = "../config" }
+
+anyhow.workspace = true
+async-trait.workspace = true
+futures.workspace = true
+minijinja.workspace = true
+schemars.workspace = true
+serde_json.workspace = true
+serde.workspace = true
+tokio.workspace = true
+tracing.workspace = true
+jsonschema.workspace = true
+
+[dev-dependencies]
+sauropod-logging = { path = "../logging" }
+
+tokio.workspace = true
+argh.workspace = true
