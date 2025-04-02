@@ -15,8 +15,6 @@ repos:
       - id: check-yaml
       - id: end-of-file-fixer
       - id: file-contents-sorter
-      - id: name-tests-test
-      - id: requirements-txt-fixer
       - id: trailing-whitespace
       - id: trailing-whitespace
       - id: mixed-line-ending

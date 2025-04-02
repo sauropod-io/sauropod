@@ -17,6 +17,7 @@ const queryClient = new QueryClient({
 });
 
 /** Wrapper that provides top level state providers. */
+// eslint-disable-next-line react-refresh/only-export-components
 function Providers({ children }: { children: React.ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>

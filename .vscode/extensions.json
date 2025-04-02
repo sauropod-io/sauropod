@@ -5,6 +5,7 @@
     "tamasfe.even-better-toml",
     "nefrob.vscode-just-syntax",
     "42crunch.vscode-openapi",
-    "ms-vscode.cpptools"
+    "ms-vscode.cpptools",
+    "vitest.explorer"
   ]
 }

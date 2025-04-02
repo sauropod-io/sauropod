@@ -29,7 +29,8 @@
         "tamasfe.even-better-toml",
         "nefrob.vscode-just-syntax",
         "42Crunch.vscode-openapi",
-        "ms-vscode.cpptools"
+        "ms-vscode.cpptools",
+        "vitest.explorer"
       ],
       "settings": {
         "remote.autoForwardPorts": false

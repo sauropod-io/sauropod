@@ -92,6 +92,11 @@ export function WorkflowConfigSheet({
                 placeholder="New input name"
                 value={newInputName}
                 onChange={(e) => setNewInputName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    handleAddInput();
+                  }
+                }}
                 className="flex-1"
               />
               <Button onClick={handleAddInput} size="sm">

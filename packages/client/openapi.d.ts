@@ -579,7 +579,7 @@ export interface components {
     /** @description Minimal information describing a stored object. */
     ObjectInfo: {
       /**
-       * Format: uint64
+       * Format: int64
        * @description The ID of the object.
        *
        *      This ID can be used to retrieve the contents of the object.
@@ -591,12 +591,20 @@ export interface components {
     /** @description A task is the smallest unit of work in a workflow. */
     Task: {
       action: components["schemas"]["TaskAction"];
-      /** @description The Name of the task. */
+      /** @description The name of the task. */
       name: string;
     };
     /** @description A description of the action associated with a task. */
     TaskAction: {
       invokeLLM: components["schemas"]["InvokeLLM"];
+    };
+    /** @description A task ID. */
+    TaskId: {
+      /**
+       * Format: int64
+       * @description The ID of the task.
+       */
+      taskId: number;
     };
     /** @description A template written with Jinja2 syntax. */
     Template: string;
@@ -615,6 +623,12 @@ export interface components {
     };
     /** @description A workflow. */
     Workflow: {
+      /** @description The tasks in the workflow.
+       *
+       *      The keys are the IDs of the tasks. */
+      actions: {
+        [key: string]: components["schemas"]["WorkflowAction"];
+      };
       /**
        * @description A mapping of connections between tasks.
        *
@@ -639,12 +653,21 @@ export interface components {
       connections: components["schemas"]["Connection"][];
       /** @description The name of the workflow. */
       name: string;
-      /** @description The tasks in the workflow.
-       *
-       *      The keys are the IDs of the tasks. */
-      tasks: {
-        [key: string]: components["schemas"]["Task"];
-      };
+    };
+    /** @description A task a workflow will perform. */
+    WorkflowAction:
+      | components["schemas"]["TaskId"]
+      | components["schemas"]["WorkflowId"]
+      | {
+          toolId: string;
+        };
+    /** @description A workflow ID. */
+    WorkflowId: {
+      /**
+       * Format: int64
+       * @description The ID of the workflow.
+       */
+      workflowId: number;
     };
     /** Format: int64 */
     int64: number;

@@ -1,11 +1,11 @@
 //! HTTP server code.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashMap};
 use std::sync::Arc;
 
 use sauropod_config::ModelConfig;
 use sauropod_database::{DatabaseId, DatabaseTypeWithID, DatabaseTypeWithName};
-use sauropod_schemas::task::{ModelStrength, Task};
+use sauropod_schemas::task::{ModelStrength, Task, TaskId};
 use sauropod_schemas::workflow::{ObjectInfo, Workflow};
 use tracing::Instrument;
 
@@ -201,8 +201,29 @@ impl sauropod_http::ServerInterface for Server {
                 return Ok(HttpResponse::NotFound(None));
             }
         };
+        let mut task_schema_map: HashMap<TaskId, sauropod_schemas::task::Task> =
+            HashMap::with_capacity(8);
+        for task in workflow.actions.values() {
+            match task {
+                sauropod_schemas::workflow::WorkflowAction::RunTask(task_id) => {
+                    // Tasks may appear in the action list multiple times
+                    if task_schema_map.contains_key(task_id) {
+                        continue;
+                    }
 
-        let workflow = sauropod_workflows::Workflow::from_schema(workflow)
+                    // Get the task from the database and populate the map
+                    if let Some(task) = self.db.get_by_id(task_id.task_id)? {
+                        task_schema_map.insert(*task_id, task);
+                    }
+                }
+                x => {
+                    tracing::error!("Unsupported action: {:#?}", x);
+                    anyhow::bail!("Unsupported action: {:#?}", x);
+                }
+            }
+        }
+
+        let workflow = sauropod_workflows::Workflow::from_schema(workflow, &task_schema_map)
             .instrument(tracing::info_span!("loading workflow"))
             .await?;
 

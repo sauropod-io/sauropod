@@ -45,12 +45,22 @@ pub enum TaskAction {
     InvokeLLM(InvokeLLM),
 }
 
+/// A task ID.
+#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[cfg_attr(feature = "json_schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct TaskId {
+    /// The ID of the task.
+    #[cfg_attr(feature = "json_schema", schemars(example = 12345))]
+    pub task_id: i64,
+}
+
 /// A task is the smallest unit of work in a workflow.
 #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
 #[cfg_attr(feature = "json_schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct Task {
-    /// The Name of the task.
+    /// The name of the task.
     #[cfg_attr(feature = "json_schema", schemars(example = "Classify Email"))]
     pub name: String,
     /// The action that the task performs.

@@ -2,6 +2,7 @@
 
 use std::collections::{HashMap, HashSet};
 
+use sauropod_schemas::task::TaskId;
 use tracing::Instrument as _;
 
 use sauropod_task::{Task, TaskArc, task_from_schema};
@@ -51,27 +52,33 @@ impl Workflow {
     /// Create a workflow from the schema representation.
     pub async fn from_schema(
         schema_workflow: sauropod_schemas::workflow::Workflow,
+        task_schema_map: &HashMap<TaskId, sauropod_schemas::task::Task>,
     ) -> anyhow::Result<Self> {
         // Initialize all the tasks
-        let task_futures = schema_workflow
-            .tasks
-            .into_iter()
-            .map(|(id, task_schema)| async {
-                match task_from_schema(task_schema).await {
-                    Ok(task) => Ok((id, task)),
-                    Err(e) => Err(e),
+        let mut task_map: HashMap<String, TaskArc> =
+            HashMap::with_capacity(schema_workflow.actions.len());
+        for (id, action) in &schema_workflow.actions {
+            match action {
+                sauropod_schemas::workflow::WorkflowAction::RunTask(task_id) => {
+                    // Get the task schema
+                    let task_schema = task_schema_map
+                        .get(task_id)
+                        .ok_or_else(|| anyhow::anyhow!("Task not found: {}", task_id.task_id))?;
+
+                    // Create the task from the schema representation
+                    let task = task_from_schema(task_schema.clone())?;
+                    task_map.insert(id.clone(), task);
                 }
-            })
-            .collect::<Vec<_>>();
-        let tasks: Vec<(String, TaskArc)> = futures::future::try_join_all(task_futures).await?;
+                unsupported => {
+                    tracing::warn!("Unsupported action in workflow: {:?}", unsupported);
+                    anyhow::bail!("Unsupported action in workflow: {:?}", unsupported);
+                }
+            }
+        }
 
         // Create the task map
         let mut task_data_dependencies =
-            HashMap::<String, Vec<Dependency>>::with_capacity(tasks.len());
-        let mut task_map: HashMap<String, TaskArc> = HashMap::new();
-        for (id, task) in tasks {
-            task_map.insert(id, task);
-        }
+            HashMap::<String, Vec<Dependency>>::with_capacity(task_map.len());
 
         // Initialize dependency map with empty sets for all tasks
         let mut task_dependency_map = HashMap::new();

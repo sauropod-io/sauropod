@@ -570,8 +570,7 @@
           "id": {
             "description": "The ID of the object.\n\n This ID can be used to retrieve the contents of the object.",
             "type": "integer",
-            "format": "uint64",
-            "minimum": 0.0
+            "format": "int64"
           },
           "name": {
             "description": "The name of the object.",
@@ -589,7 +588,7 @@
             "$ref": "#/components/schemas/TaskAction"
           },
           "name": {
-            "description": "The Name of the task.",
+            "description": "The name of the task.",
             "type": "string"
           }
         },
@@ -611,6 +610,19 @@
             "additionalProperties": false
           }
         ]
+      },
+      "TaskId": {
+        "description": "A task ID.",
+        "type": "object",
+        "properties": {
+          "taskId": {
+            "description": "The ID of the task.",
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "required": ["taskId"],
+        "additionalProperties": false
       },
       "Template": {
         "description": "A template written with Jinja2 syntax.",
@@ -639,6 +651,13 @@
         "description": "A workflow.",
         "type": "object",
         "properties": {
+          "actions": {
+            "description": "The tasks in the workflow.\n\n The keys are the IDs of the tasks.",
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/WorkflowAction"
+            }
+          },
           "connections": {
             "description": "A mapping of connections between tasks.\n\n # Example\n\n ```json\n [\n   {\n     // Make the workflow parameter `url` available to the task `foo`.\n     \"parameter\": \"url\",\n     \"to\": [\"foo.url\"]\n   },\n   {\n     // Pipe the output of the `foo` task to the  `content` parameter of task `bar`.\n     \"from\": \"foo.output\",\n     \"to\": [\"bar.content\"]\n   }\n ]\n ```",
             "type": "array",
@@ -650,16 +669,44 @@
           "name": {
             "description": "The name of the workflow.",
             "type": "string"
-          },
-          "tasks": {
-            "description": "The tasks in the workflow.\n\n The keys are the IDs of the tasks.",
-            "type": "object",
-            "additionalProperties": {
-              "$ref": "#/components/schemas/Task"
-            }
           }
         },
-        "required": ["name", "tasks"],
+        "required": ["name", "actions"],
+        "additionalProperties": false
+      },
+      "WorkflowAction": {
+        "description": "A task a workflow will perform.",
+        "anyOf": [
+          {
+            "$ref": "#/components/schemas/TaskId"
+          },
+          {
+            "$ref": "#/components/schemas/WorkflowId"
+          },
+          {
+            "description": "Run a tool.",
+            "type": "object",
+            "properties": {
+              "toolId": {
+                "type": "string"
+              }
+            },
+            "required": ["toolId"],
+            "additionalProperties": false
+          }
+        ]
+      },
+      "WorkflowId": {
+        "description": "A workflow ID.",
+        "type": "object",
+        "properties": {
+          "workflowId": {
+            "description": "The ID of the workflow.",
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "required": ["workflowId"],
         "additionalProperties": false
       },
       "int64": {

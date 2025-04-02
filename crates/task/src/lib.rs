@@ -24,10 +24,10 @@ pub trait Task {
 }
 
 /// Create a task from its schema representation.
-pub async fn task_from_schema(task: sauropod_schemas::task::Task) -> anyhow::Result<TaskArc> {
+pub fn task_from_schema(task: sauropod_schemas::task::Task) -> anyhow::Result<TaskArc> {
     match task.action {
         sauropod_schemas::task::TaskAction::InvokeLLM(invoke_llm) => {
-            Ok(Arc::new(invoke_llm::InvokeLlmTask::new(invoke_llm).await?))
+            Ok(Arc::new(invoke_llm::InvokeLlmTask::new(invoke_llm)?))
         }
     }
 }

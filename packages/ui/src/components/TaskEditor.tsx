@@ -146,7 +146,7 @@ export default function TaskEditor({ taskId }: { taskId?: string }) {
         return;
       }
 
-      await navigate(taskRoute(`${newTaskId}`));
+      await navigate(taskRoute(newTaskId));
     }
   };
 

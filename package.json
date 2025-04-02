@@ -4,7 +4,9 @@
   ],
   "scripts": {
     "dev": "npm run dev --workspace @sauropod-io/ui",
-    "build": "npm run build --workspace @sauropod-io/ui"
+    "build": "npm run build --workspace @sauropod-io/ui",
+    "test": "npm run --if-present --workspaces test",
+    "test:ts": "npm run --if-present --workspaces test:ts"
   },
   "devDependencies": {
     "@redocly/cli": "^1.34.1",

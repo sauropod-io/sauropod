@@ -29,7 +29,12 @@ async fn detect_backend(url: &str) -> anyhow::Result<Backend> {
         .get(url)
         .send()
         .await
-        .with_context(|| format!("Failed to send request to detect the LLM backend type at {}", url))?
+        .with_context(|| {
+            format!(
+                "Failed to send request to detect the LLM backend type at {}",
+                url
+            )
+        })?
         .error_for_status()?;
 
     let headers = response.headers();

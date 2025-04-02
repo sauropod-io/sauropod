@@ -2,6 +2,8 @@
 
 use std::collections::BTreeMap;
 
+use crate::task::TaskId;
+
 /// A connection.
 #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
 #[cfg_attr(feature = "json_schema", derive(schemars::JsonSchema))]
@@ -23,6 +25,32 @@ pub enum Connection {
     },
 }
 
+/// A task a workflow will perform.
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[cfg_attr(feature = "json_schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", untagged, deny_unknown_fields)]
+pub enum WorkflowAction {
+    /// Run a task.
+    RunTask(TaskId),
+    /// Run a workflow.
+    RunWorkflow(WorkflowId),
+    /// Run a tool.
+    RunTool {
+        #[serde(rename = "toolId")]
+        tool_id: String,
+    },
+}
+
+/// A workflow ID.
+#[derive(Debug, Copy, Hash, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[cfg_attr(feature = "json_schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct WorkflowId {
+    /// The ID of the workflow.
+    #[cfg_attr(feature = "json_schema", schemars(example = 12345))]
+    pub workflow_id: i64,
+}
+
 /// A workflow.
 #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
 #[cfg_attr(feature = "json_schema", derive(schemars::JsonSchema))]
@@ -34,7 +62,7 @@ pub struct Workflow {
     /// The tasks in the workflow.
     ///
     /// The keys are the IDs of the tasks.
-    pub tasks: BTreeMap<String, crate::task::Task>,
+    pub actions: BTreeMap<String, WorkflowAction>,
     /// A mapping of connections between tasks.
     ///
     /// # Example
@@ -74,7 +102,7 @@ pub struct ObjectInfo {
     /// The ID of the object.
     ///
     /// This ID can be used to retrieve the contents of the object.
-    pub id: u64,
+    pub id: i64,
     /// The name of the object.
     pub name: String,
 }

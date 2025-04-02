@@ -4,6 +4,13 @@
   "description": "A workflow.",
   "type": "object",
   "properties": {
+    "actions": {
+      "description": "The tasks in the workflow.\n\n The keys are the IDs of the tasks.",
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/WorkflowAction"
+      }
+    },
     "connections": {
       "description": "A mapping of connections between tasks.\n\n # Example\n\n ```json\n [\n   {\n     // Make the workflow parameter `url` available to the task `foo`.\n     \"parameter\": \"url\",\n     \"to\": [\"foo.url\"]\n   },\n   {\n     // Pipe the output of the `foo` task to the  `content` parameter of task `bar`.\n     \"from\": \"foo.output\",\n     \"to\": [\"bar.content\"]\n   }\n ]\n ```",
       "type": "array",
@@ -16,17 +23,10 @@
       "description": "The name of the workflow.",
       "type": "string",
       "examples": ["Process shipping emails"]
-    },
-    "tasks": {
-      "description": "The tasks in the workflow.\n\n The keys are the IDs of the tasks.",
-      "type": "object",
-      "additionalProperties": {
-        "$ref": "#/$defs/Task"
-      }
     }
   },
   "additionalProperties": false,
-  "required": ["name", "tasks"],
+  "required": ["name", "actions"],
   "$defs": {
     "Connection": {
       "description": "A connection.",
@@ -71,74 +71,57 @@
         }
       ]
     },
-    "InvokeLLM": {
-      "description": "Run an LLM.",
+    "TaskId": {
+      "description": "A task ID.",
       "type": "object",
       "properties": {
-        "modelStrength": {
-          "description": "The model strength to use.",
-          "$ref": "#/$defs/ModelStrength"
-        },
-        "template": {
-          "description": "The template to use.",
-          "$ref": "#/$defs/Template"
+        "taskId": {
+          "description": "The ID of the task.",
+          "type": "integer",
+          "format": "int64",
+          "examples": [12345]
         }
       },
       "additionalProperties": false,
-      "required": ["template", "modelStrength"]
+      "required": ["taskId"]
     },
-    "ModelStrength": {
-      "description": "Enum for model strength.",
-      "oneOf": [
+    "WorkflowAction": {
+      "description": "A task a workflow will perform.",
+      "anyOf": [
         {
-          "description": "Weak model.",
-          "type": "string",
-          "const": "weak"
+          "description": "Run a task.",
+          "$ref": "#/$defs/TaskId"
         },
         {
-          "description": "Strong model.",
-          "type": "string",
-          "const": "strong"
-        }
-      ]
-    },
-    "Task": {
-      "description": "A task is the smallest unit of work in a workflow.",
-      "type": "object",
-      "properties": {
-        "action": {
-          "description": "The action that the task performs.",
-          "$ref": "#/$defs/TaskAction"
+          "description": "Run a workflow.",
+          "$ref": "#/$defs/WorkflowId"
         },
-        "name": {
-          "description": "The Name of the task.",
-          "type": "string",
-          "examples": ["Classify Email"]
-        }
-      },
-      "additionalProperties": false,
-      "required": ["name", "action"]
-    },
-    "TaskAction": {
-      "description": "A description of the action associated with a task.",
-      "oneOf": [
         {
-          "description": "Invoke an LLM.",
+          "description": "Run a tool.",
           "type": "object",
           "properties": {
-            "invokeLLM": {
-              "$ref": "#/$defs/InvokeLLM"
+            "toolId": {
+              "type": "string"
             }
           },
           "additionalProperties": false,
-          "required": ["invokeLLM"]
+          "required": ["toolId"]
         }
       ]
     },
-    "Template": {
-      "description": "A template written with Jinja2 syntax.",
-      "type": "string",
-      "examples": ["Classify this sentence: {{ input.sentence }}"]
+    "WorkflowId": {
+      "description": "A workflow ID.",
+      "type": "object",
+      "properties": {
+        "workflowId": {
+          "description": "The ID of the workflow.",
+          "type": "integer",
+          "format": "int64",
+          "examples": [12345]
+        }
+      },
+      "additionalProperties": false,
+      "required": ["workflowId"]
     }
   }
 }

@@ -1,21 +1,27 @@
-import { useState, useCallback } from "react";
-import { Trash2, Save } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import {
-  ReactFlow,
-  Background,
-  Controls,
-  useNodesState,
-  useEdgesState,
   addEdge,
+  Background,
   type Connection,
+  Controls,
   type Edge,
   type Node,
+  ReactFlow,
   ReactFlowProvider,
+  useEdgesState,
+  useNodesState,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
+import { Save, Trash2 } from "lucide-react";
+import { useCallback, useState } from "react";
+import { useNavigate } from "react-router";
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Schemas } from "@sauropod-io/client";
+
+import { apiClient } from "@/api";
+import InputNode, { type InputNodeData } from "@/components/nodes/InputNode";
+import OutputNode from "@/components/nodes/OutputNode";
+import TaskNode, { type TaskNodeData } from "@/components/nodes/TaskNode";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -27,17 +33,24 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { WorkflowConfigSheet } from "@/components/WorkflowConfigSheet";
-import InputNode, { type InputNodeData } from "@/components/nodes/InputNode";
-import TaskNode, { type TaskNodeData } from "@/components/nodes/TaskNode";
-import OutputNode from "@/components/nodes/OutputNode";
-import { useQuery } from "@tanstack/react-query";
-import { apiClient } from "@/api";
-import { Schemas } from "@sauropod-io/client";
+import {
+  useCreateWorkflow,
+  useDeleteWorkflow,
+  useUpdateWorkflow,
+} from "@/mutations/workflowMutations";
+import { WORKFLOW_PREFIX, workflowRoute } from "@/routes";
+import {
+  GraphNode,
+  graphToWorkflow,
+  INPUT_NODE_TYPE,
+  OUTPUT_NODE_TYPE,
+  TASK_NODE_TYPE,
+  workflowToGraph,
+} from "@/lib/graphUtils";
 
-const INPUT_NODE_TYPE = "input-node";
-const OUTPUT_NODE_TYPE = "output-node";
-const TASK_NODE_TYPE = "task-node";
 const nodeTypes = {
   [INPUT_NODE_TYPE]: InputNode,
   [TASK_NODE_TYPE]: TaskNode,
@@ -50,9 +63,18 @@ interface FlowProps {
 }
 
 function Flow({ workflowData, workflowId }: FlowProps) {
+  const { nodes: originalNodes, edges: originalEdges } =
+    workflowToGraph(workflowData);
+
+  const createWorkflow = useCreateWorkflow();
+  const updateWorkflow = useUpdateWorkflow();
+  const deleteWorkflow = useDeleteWorkflow();
+  const navigate = useNavigate();
+
   const [name, setName] = useState(workflowData?.name);
-  const [nodes, setNodes, onNodesChange] = useNodesState<any>([]);
-  const [edges, setEdges, onEdgesChange] = useEdgesState<any>([]);
+  const [nodes, setNodes, onNodesChange] =
+    useNodesState<GraphNode>(originalNodes);
+  const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>(originalEdges);
   const [inputs, setInputs] = useState<{ id: string; name: string }[]>([]);
   const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
   const [isTasksSheetOpen, setIsTasksSheetOpen] = useState(false);
@@ -65,13 +87,40 @@ function Flow({ workflowData, workflowId }: FlowProps) {
     [setEdges],
   );
 
-  const handleSave = () => {
-    if (!workflowId) return;
-    // TODO
+  const handleSave = async () => {
+    const workflow = graphToWorkflow(name, nodes, edges);
+    if (workflowId !== undefined) {
+      await updateWorkflow.mutateAsync({
+        params: {
+          path: {
+            id: workflowId,
+          },
+        },
+        body: workflow,
+      });
+    } else {
+      let newWorkflowId: number;
+      try {
+        newWorkflowId = await createWorkflow.mutateAsync({
+          body: workflow,
+        });
+      } catch (error) {
+        alert(`Error creating workflow: ${error}`);
+        return;
+      }
+      await navigate(workflowRoute(newWorkflowId));
+    }
   };
 
-  const handleDelete = () => {
-    // deleteWorkflow(workflowId)
+  const handleDelete = async () => {
+    if (workflowId === undefined) return;
+
+    deleteWorkflow.mutate({
+      params: { path: { id: workflowId! } },
+    });
+
+    // Navigate back to the workflows page
+    await navigate(WORKFLOW_PREFIX);
   };
 
   const handleAddTask = (taskId: number, taskName: string) => {
@@ -217,7 +266,7 @@ export default function WorkflowEditor({
 
   return (
     <ReactFlowProvider>
-      <Flow workflowId={workflowId} workflowData={data} />
+      <Flow workflowId={workflowId} workflowData={data!} />
     </ReactFlowProvider>
   );
 }

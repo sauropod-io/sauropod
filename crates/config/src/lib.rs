@@ -161,6 +161,13 @@ impl Config {
 
 impl Default for Config {
     fn default() -> Self {
-        Self { cache_directory: None, database_path: None, host: None, port: None, backend: default_backend(), models: Models::default() }
+        Self {
+            cache_directory: None,
+            database_path: None,
+            host: None,
+            port: None,
+            backend: default_backend(),
+            models: Models::default(),
+        }
     }
 }

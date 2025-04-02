@@ -39,7 +39,7 @@ where
 static TEMPLATE_NAME: &str = "template";
 
 impl InvokeLlmTask {
-    pub async fn new(invoke_llm: sauropod_schemas::task::InvokeLLM) -> anyhow::Result<Self> {
+    pub fn new(invoke_llm: sauropod_schemas::task::InvokeLLM) -> anyhow::Result<Self> {
         // Check the template before loading the model to avoid loading the model if the template is invalid
         let mut template_env = minijinja::Environment::new();
         template_env.add_template_owned(TEMPLATE_NAME, invoke_llm.template.0)?;

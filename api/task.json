@@ -9,7 +9,7 @@
       "$ref": "#/$defs/TaskAction"
     },
     "name": {
-      "description": "The Name of the task.",
+      "description": "The name of the task.",
       "type": "string",
       "examples": ["Classify Email"]
     }
