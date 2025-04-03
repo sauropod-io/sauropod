@@ -1,11 +1,17 @@
-use {argh::FromArgs, std::fmt::Debug};
+use {
+    argh::FromArgs,
+    std::{fmt::Debug, net::IpAddr, path::PathBuf},
+};
 
 #[derive(FromArgs, PartialEq, Debug)]
 /// Sauropod Scales server entrypoint.
 struct Command {
+    /// the config file to load
+    #[argh(option, short = 'c')]
+    config: Option<PathBuf>,
     /// the host address to listen on - e.g. 127.0.0.1
     #[argh(option, short = 'h')]
-    host: Option<String>,
+    host: Option<IpAddr>,
     /// the port to listen on - e.g. 3140
     #[argh(option, short = 'p')]
     port: Option<u16>,
@@ -14,11 +20,16 @@ struct Command {
 #[tokio::main(flavor = "current_thread")]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let toplevel: Command = argh::from_env();
-    let config = sauropod_config::Config::load(Some(sauropod_config::Config {
-        host: toplevel.host,
+    let overrides = Some(sauropod_config::Config {
+        host: toplevel.host.map(|addr| addr.to_string()),
         port: toplevel.port,
         ..sauropod_config::Config::default()
-    }))?;
+    });
+    let config = if let Some(config_path) = toplevel.config {
+        sauropod_config::Config::load_from_file(config_path, overrides)?
+    } else {
+        sauropod_config::Config::load(overrides)?
+    };
 
     let log_buffer = sauropod_logging::InMemoryLogBuffer::new(50, 20);
     sauropod_logging::initialize(sauropod_logging::LoggingConfig {
