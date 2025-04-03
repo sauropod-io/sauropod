@@ -58,6 +58,8 @@ jobs:
           key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
             ${{ runner.os }}-node-
+      - name: Install Node.js dependencies
+        run: npm ci
       # Pre-commit cache
       - name: Cache pre-commit dependencies
         uses: actions/cache@v4
@@ -66,7 +68,7 @@ jobs:
             ~/.cache/pre-commit
           key: ${{ runner.os }}-pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
           restore-keys: |
-            ${{ runner.os }}-cargo-
+            ${{ runner.os }}-pre-commit-
 
       - name: Install requirements
         run: pip install -r requirements.txt
