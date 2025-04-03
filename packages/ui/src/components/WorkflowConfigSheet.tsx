@@ -37,7 +37,7 @@ interface WorkflowConfigSheetProps {
   onOpenChange: (open: boolean) => void;
   inputs: WorkflowInput[];
   onAddInput: (inputName: string) => void;
-  onRemoveInput: (inputId: string) => void;
+  onRemoveInput: (inputName: string) => void;
   selectedTasks: WorkflowTask[];
   onAddTask: (taskId: number, taskName: string) => void;
   onRemoveTask: (taskId: number) => void;
@@ -108,14 +108,14 @@ export function WorkflowConfigSheet({
               <div className="space-y-2">
                 {inputs.map((input) => (
                   <div
-                    key={input.id}
+                    key={input}
                     className="flex items-center justify-between bg-muted p-2 rounded-md"
                   >
-                    <span>{input.name}</span>
+                    <span>{input}</span>
                     <Button
                       size="sm"
                       variant="ghost"
-                      onClick={() => onRemoveInput(input.id)}
+                      onClick={() => onRemoveInput(input)}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>

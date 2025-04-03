@@ -21,7 +21,7 @@ import { Schemas } from "@sauropod-io/client";
 import { apiClient } from "@/api";
 import { InvocationModal } from "@/components/InvocationModal";
 import { WorkflowConfigSheet } from "@/components/WorkflowConfigSheet";
-import InputNode, { type InputNodeData } from "@/components/nodes/InputNode";
+import InputNode from "@/components/nodes/InputNode";
 import OutputNode from "@/components/nodes/OutputNode";
 import TaskNode, { type TaskNodeData } from "@/components/nodes/TaskNode";
 import {
@@ -51,6 +51,8 @@ import {
   useUpdateWorkflow,
 } from "@/mutations/workflowMutations";
 import { WORKFLOW_PREFIX, workflowRoute } from "@/routes";
+
+import { IONodeData } from "./nodes/IONode";
 
 const nodeTypes = {
   [INPUT_NODE_TYPE]: InputNode,
@@ -83,7 +85,7 @@ function Flow({ workflowData, workflowId }: FlowProps) {
     setEdges(graphEdges);
   }, [workflowData, setNodes, setEdges]);
 
-  const [inputs, setInputs] = useState<{ id: string; name: string }[]>([]);
+  const [inputs, setInputs] = useState<string[]>([]);
   const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
   const [isTasksSheetOpen, setIsTasksSheetOpen] = useState(false);
   const [selectedTasks, setSelectedTasks] = useState<
@@ -94,6 +96,17 @@ function Flow({ workflowData, workflowId }: FlowProps) {
     (params: Connection | Edge) => setEdges((eds) => addEdge(params, eds)),
     [setEdges],
   );
+
+  useEffect(() => {
+    const nodeId = "input";
+    const newNode: Node<IONodeData> = {
+      id: nodeId,
+      type: INPUT_NODE_TYPE,
+      position: { x: 100, y: 100 },
+      data: { names: inputs },
+    };
+    setNodes((nodes) => [...nodes.filter((x) => x.id != nodeId), newNode]);
+  }, [inputs, setNodes]);
 
   const handleSave = async () => {
     const workflow = graphToWorkflow(name, nodes, edges);
@@ -146,19 +159,8 @@ function Flow({ workflowData, workflowId }: FlowProps) {
   };
 
   const handleAddInput = (inputName: string) => {
-    if (!inputName.trim()) return;
-    const inputId = `input-${Date.now()}`;
-    // Don't allow duplicatei inputs
-    if (inputs.some((input) => input.name === inputName)) return;
-
-    setInputs([...inputs, { id: inputId, name: inputName }]);
-    const newNode: Node<InputNodeData> = {
-      id: inputId,
-      type: INPUT_NODE_TYPE,
-      position: { x: 100, y: 100 },
-      data: { name: inputName },
-    };
-    setNodes((nodes) => [...nodes, newNode]);
+    if (!inputName.trim() || inputs.includes(inputName)) return;
+    setInputs([...inputs, inputName]);
   };
 
   const handleRemoveInput = (inputId: string) => {

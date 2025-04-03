@@ -2,6 +2,7 @@ import type { Edge, Node } from "@xyflow/react";
 
 import { Schemas } from "@sauropod-io/client";
 
+import { IONodeData } from "@/components/nodes/IONode";
 import type { InputNodeData } from "@/components/nodes/InputNode";
 import type { TaskNodeData } from "@/components/nodes/TaskNode";
 
@@ -92,22 +93,23 @@ export function workflowToGraph(workflow: Schemas["Workflow"]): {
     createdNodes[nodeId] = true;
   });
 
+  const inputs = workflow.connections
+    .map((x) => x.parameter)
+    .filter((x) => x !== undefined);
+  if (inputs.length > 0) {
+    nodes.push({
+      id: "input",
+      type: INPUT_NODE_TYPE,
+      position: { x: 0, y: 100 },
+      data: { names: inputs } as IONodeData,
+    });
+  }
+
   // Process connections to create input nodes and edges
   workflow.connections.forEach((connection) => {
     // Handle input parameter connections
     if (connection.parameter) {
       const inputNodeId = `input-${connection.parameter}`;
-
-      // Create input node if not already created
-      if (!createdNodes[inputNodeId]) {
-        nodes.push({
-          id: inputNodeId,
-          type: INPUT_NODE_TYPE,
-          position: { x: 50, y: 100 * nodes.length }, // Position to the left
-          data: { name: connection.parameter } as InputNodeData,
-        });
-        createdNodes[inputNodeId] = true;
-      }
 
       // Create edges from input node to destination tasks
       connection.to.forEach((target) => {

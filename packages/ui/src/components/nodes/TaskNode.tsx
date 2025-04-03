@@ -5,6 +5,7 @@ import { memo } from "react";
 import api from "@/api";
 import Spinner from "@/components/icons/Spinner";
 import { BaseNode } from "@/components/nodes/BaseNode";
+import { LabeledHandle } from "@/components/nodes/LabeledHandle";
 import {
   NodeHeader,
   NodeHeaderActions,
@@ -12,8 +13,6 @@ import {
   NodeHeaderIcon,
   NodeHeaderTitle,
 } from "@/components/nodes/NodeHeader";
-
-import { LabeledHandle } from "./LabeledHandle";
 
 export type TaskNodeData = {
   taskId: number;
@@ -35,6 +34,7 @@ const TaskNode = memo(
       for (const input in data["properties"] as string[]) {
         inputs.push(
           <LabeledHandle
+            key={input}
             title={input}
             type="target"
             position={Position.Left}
