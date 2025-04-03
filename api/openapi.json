@@ -350,6 +350,33 @@
         }
       }
     },
+    "/api/workflow/{id}/inputSchema": {
+      "get": {
+        "summary": "Get the input JSON Schema for a workflow",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Map_of_AnyValue"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/workflow/{id}/invoke": {
       "post": {
         "summary": "Invoke a workflow by ID",

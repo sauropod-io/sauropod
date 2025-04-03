@@ -70,6 +70,13 @@ pub trait ServerInterface {
     ) -> anyhow::Result<
         crate::HttpResponse<serde_json::map::Map<std::string::String, serde_json::value::Value>>,
     >;
+    /// Get the input JSON Schema for a workflow
+    async fn get_workflow_id_input_schema(
+        &self,
+        id: i64,
+    ) -> anyhow::Result<
+        crate::HttpResponse<serde_json::map::Map<std::string::String, serde_json::value::Value>>,
+    >;
     /// Get the list of available tools
     async fn get_tools(
         &self,
@@ -365,6 +372,27 @@ pub fn register_routes<T: ServerInterface + Sync + Send + 'static>(
                             "Request",
                             method = "POST",
                             path = "/workflow/{{id}}/invoke"
+                        ))
+                        .await;
+                    if let Err(error) = &response {
+                        tracing::error!("Error responding to request: {:?}", error);
+                    }
+                    crate::create_response_from_result(response)
+                }
+            }),
+        )
+        .route(
+            "/workflow/{id}/inputSchema",
+            axum::routing::get({
+                let server_clone = server.clone();
+                async move |axum::extract::Path(id): axum::extract::Path<i64>| {
+                    tracing::debug!("GET /workflow/{{id}}/inputSchema");
+                    let response = server_clone
+                        .get_workflow_id_input_schema(id)
+                        .instrument(tracing::info_span!(
+                            "Request",
+                            method = "GET",
+                            path = "/workflow/{{id}}/inputSchema"
                         ))
                         .await;
                     if let Err(error) = &response {

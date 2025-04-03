@@ -198,9 +198,11 @@ impl sauropod_http::ServerInterface for Server {
         let workflow = match self.db.get_by_id::<Workflow>(id)? {
             Some(workflow) => workflow,
             None => {
+                tracing::error!("Workflow not found: {id}");
                 return Ok(HttpResponse::NotFound(None));
             }
         };
+
         let mut task_schema_map: HashMap<TaskId, sauropod_schemas::task::Task> =
             HashMap::with_capacity(8);
         for task in workflow.actions.values() {
@@ -253,6 +255,24 @@ impl sauropod_http::ServerInterface for Server {
                 .await?,
         );
         Ok(HttpResponse::Ok(result))
+    }
+
+    async fn get_workflow_id_input_schema(
+        &self,
+        id: i64,
+    ) -> anyhow::Result<
+        HttpResponse<serde_json::map::Map<std::string::String, serde_json::value::Value>>,
+    > {
+        let workflow = match self.db.get_by_id::<Workflow>(id)? {
+            Some(workflow) => workflow,
+            None => {
+                return Ok(HttpResponse::NotFound(None));
+            }
+        };
+
+        Ok(HttpResponse::Ok(
+            sauropod_workflows::input_schema_from_workflow_schema(&workflow),
+        ))
     }
 
     async fn get_task_id(&self, id: DatabaseId) -> anyhow::Result<HttpResponse<Task>> {

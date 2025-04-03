@@ -4,7 +4,6 @@
     "rust-lang.rust-analyzer",
     "tamasfe.even-better-toml",
     "42crunch.vscode-openapi",
-    "ms-vscode.cpptools",
     "vitest.explorer"
   ]
 }

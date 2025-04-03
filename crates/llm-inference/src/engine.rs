@@ -1,3 +1,4 @@
+use anyhow::Context;
 use tracing::Instrument;
 
 use crate::openai_api;
@@ -30,9 +31,14 @@ impl Engine {
 impl Engine {
     /// List the available models.
     pub async fn list_models(&self) -> anyhow::Result<Vec<sauropod_schemas::ModelDefinition>> {
-        let models_response = self.openai.models().await?;
+        let models_response = self
+            .openai
+            .models()
+            .await
+            .with_context(|| "Error fetching model list from inference service".to_string())?;
         let models = models_response
             .data
+            .unwrap_or_default()
             .into_iter()
             .map(|model_data| sauropod_schemas::ModelDefinition {
                 name: model_data.id.clone(),

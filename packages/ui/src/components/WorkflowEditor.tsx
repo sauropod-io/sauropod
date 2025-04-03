@@ -12,13 +12,14 @@ import {
   useNodesState,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { Save, Trash2 } from "lucide-react";
+import { Play, Save, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 
 import { Schemas } from "@sauropod-io/client";
 
 import { apiClient } from "@/api";
+import { InvocationModal } from "@/components/InvocationModal";
 import { WorkflowConfigSheet } from "@/components/WorkflowConfigSheet";
 import InputNode, { type InputNodeData } from "@/components/nodes/InputNode";
 import OutputNode from "@/components/nodes/OutputNode";
@@ -71,6 +72,9 @@ function Flow({ workflowData, workflowId }: FlowProps) {
   const [name, setName] = useState(workflowData?.name || "");
   const [nodes, setNodes, onNodesChange] = useNodesState<GraphNode>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
+
+  // Simplified state for workflow invocation
+  const [isRunModalOpen, setIsRunModalOpen] = useState(false);
 
   useEffect(() => {
     const { nodes: graphNodes, edges: graphEdges } =
@@ -167,6 +171,14 @@ function Flow({ workflowData, workflowId }: FlowProps) {
     setNodes(nodes.filter((node) => !node.id.startsWith(`${taskId}-`)));
   };
 
+  const handleRunClick = () => {
+    if (workflowId === undefined) {
+      alert("Please save the workflow first");
+      return;
+    }
+    setIsRunModalOpen(true);
+  };
+
   return (
     <div className="flex flex-col h-full">
       <div className="flex items-center justify-between p-4">
@@ -177,6 +189,16 @@ function Flow({ workflowData, workflowId }: FlowProps) {
           className="text-xl font-bold h-10"
         />
         <div className="flex gap-2 pl-2">
+          <Button
+            onClick={handleRunClick}
+            size="sm"
+            variant="default"
+            disabled={workflowId === undefined}
+          >
+            <Play className="mr-2 h-4 w-4" />
+            Run
+          </Button>
+
           <Button onClick={handleSave} size="sm" variant="outline">
             <Save className="mr-2 h-4 w-4" />
             Save
@@ -238,6 +260,13 @@ function Flow({ workflowData, workflowId }: FlowProps) {
         <Controls />
         <Background gap={12} size={1} />
       </ReactFlow>
+
+      <InvocationModal
+        workflowId={workflowId}
+        workflowName={name}
+        open={isRunModalOpen}
+        onOpenChange={setIsRunModalOpen}
+      />
     </div>
   );
 }
@@ -270,9 +299,13 @@ export default function WorkflowEditor({
     return <div className="p-4">Error: {error.message}</div>;
   }
 
+  if (data === undefined) {
+    return <div className="p-4">Loading</div>;
+  }
+
   return (
     <ReactFlowProvider>
-      <Flow workflowId={workflowId} workflowData={data!} />
+      <Flow workflowId={workflowId} workflowData={data} />
     </ReactFlowProvider>
   );
 }

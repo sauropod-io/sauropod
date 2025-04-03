@@ -30,6 +30,9 @@ export function useUpdateWorkflow() {
       queryClient.invalidateQueries({
         queryKey: ["get", "/api/workflow/{id}"],
       });
+      queryClient.invalidateQueries({
+        queryKey: ["get", "/api/workflow/{id}/inputSchema"],
+      });
     },
   });
 }

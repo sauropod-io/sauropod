@@ -38,6 +38,9 @@ fn main() -> anyhow::Result<()> {
         route "/workflow/{id:i64}/invoke" (
             POST (Object) -> Object : "Invoke a workflow by ID"
         )
+        route "/workflow/{id:i64}/inputSchema" (
+            GET (()) -> Object : "Get the input JSON Schema for a workflow"
+        )
         route "/tools" (
             GET (()) -> Vec<ToolDefinition> : "Get the list of available tools"
         )

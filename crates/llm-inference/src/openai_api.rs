@@ -142,7 +142,7 @@ pub struct ModelData {
 pub struct ModelsResponse {
     #[allow(unused)]
     pub object: String,
-    pub data: Vec<ModelData>,
+    pub data: Option<Vec<ModelData>>,
 }
 
 impl OpenAiInterface {

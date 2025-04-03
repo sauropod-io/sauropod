@@ -128,35 +128,11 @@ impl Workflow {
             }
         }
 
-        // Process inputs for workflow parameters
-        let inputs = schema_workflow
-            .connections
-            .into_iter()
-            .flat_map(|x| {
-                if let sauropod_schemas::workflow::Connection::Parameter { parameter, .. } = x {
-                    Some(parameter)
-                } else {
-                    None
-                }
-            })
-            .collect::<Vec<_>>();
-
-        let mut properties = HashMap::with_capacity(inputs.len());
-        for input in inputs.iter() {
-            properties.insert(input.clone(), serde_json::json!({ "type": "string" }));
-        }
-
-        let input_schema = serde_json::json!({
-            "type": "object",
-            "properties": properties,
-            "required": inputs,
-        });
-
         Ok(Self {
             task_map,
             task_data_dependencies,
             task_dependency_map,
-            input_schema,
+            input_schema: serde_json::json!(input_schema_from_workflow_schema(&schema_workflow)),
             // For now, just return a string.
             output_schema: serde_json::json!({
                 "type": "string"
@@ -302,4 +278,35 @@ impl Task for Workflow {
     fn output_schema(&self) -> &serde_json::Value {
         &self.output_schema
     }
+}
+
+/// Get the input schema for a workflow.
+///
+/// This function uses workflow's connections to determine the required inputs to invoke it.
+pub fn input_schema_from_workflow_schema(
+    schema_workflow: &sauropod_schemas::workflow::Workflow,
+) -> serde_json::Map<String, serde_json::Value> {
+    // Process inputs for workflow parameters
+    let input_names = schema_workflow
+        .connections
+        .iter()
+        .flat_map(|x| {
+            if let sauropod_schemas::workflow::Connection::Parameter { parameter, .. } = x {
+                Some(parameter)
+            } else {
+                None
+            }
+        })
+        .collect::<Vec<_>>();
+
+    let mut properties = HashMap::with_capacity(input_names.len());
+    for input in input_names.iter() {
+        properties.insert(input, serde_json::json!({ "type": "string" }));
+    }
+
+    let mut inputs = serde_json::Map::with_capacity(3);
+    inputs.insert("type".to_string(), serde_json::json!("object"));
+    inputs.insert("properties".to_string(), serde_json::json!(properties));
+    inputs.insert("required".to_string(), serde_json::json!(input_names));
+    inputs
 }
