@@ -1,15 +1,15 @@
-import { forwardRef, useCallback, HTMLAttributes, ReactNode } from "react";
+import { Slot } from "@radix-ui/react-slot";
 import { useNodeId, useReactFlow } from "@xyflow/react";
 import { EllipsisVertical, Trash } from "lucide-react";
+import { HTMLAttributes, ReactNode, forwardRef, useCallback } from "react";
 
-import { cn } from "@/lib/utils";
-import { Slot } from "@radix-ui/react-slot";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
-  DropdownMenuTrigger,
   DropdownMenuContent,
+  DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { cn } from "@/lib/utils";
 
 /* NODE HEADER -------------------------------------------------------------- */
 

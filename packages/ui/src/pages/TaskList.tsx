@@ -1,8 +1,11 @@
-import { Schemas } from "@sauropod-io/client";
+// Import X icon for delete button
+import { X } from "lucide-react";
 import { useNavigate } from "react-router";
-import { X } from "lucide-react"; // Import X icon for delete button
+
+import { Schemas } from "@sauropod-io/client";
 
 import api from "@/api";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardDescription,
@@ -10,9 +13,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { taskRoute } from "@/routes";
-import { Button } from "@/components/ui/button";
 import { useDeleteTask } from "@/mutations/taskMutations";
+import { taskRoute } from "@/routes";
 
 function SkeletonCard() {
   return (

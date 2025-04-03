@@ -1,18 +1,18 @@
 import { LucideIcon, PlusCircle } from "lucide-react";
+import { Link, useLocation, useNavigate } from "react-router";
 
+import { ErrorBadge } from "@/components/badge";
+import Spinner from "@/components/icons/Spinner";
 import {
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
   SidebarGroup,
-  SidebarGroupLabel,
-  SidebarGroupContent,
   SidebarGroupAction,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
   SidebarMenuSkeleton,
 } from "@/components/ui/sidebar";
-import { useNavigate, useLocation, Link } from "react-router";
-import Spinner from "@/components/icons/Spinner";
-import { ErrorBadge } from "@/components/badge";
 import { cn } from "@/lib/utils";
 
 interface SidebarLinkGroupProps {

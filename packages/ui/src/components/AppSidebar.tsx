@@ -1,27 +1,27 @@
 import { GitHubLogoIcon } from "@radix-ui/react-icons";
+import { Logs, Settings } from "lucide-react";
 import { Link, useLocation } from "react-router";
-import { Settings, Logs } from "lucide-react";
 
+import SauropodIcon from "@/assets/icon.svg";
+import Sauropod from "@/assets/sauropod.svg";
+import SidebarTaskGroup from "@/components/sidebar/SidebarTaskGroup";
+import SidebarWorkflowGroup from "@/components/sidebar/SidebarWorkflowGroup";
 import {
   Sidebar as ShadcnSidebar,
   SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
-  SidebarMenuItem,
   SidebarMenuButton,
+  SidebarMenuItem,
   SidebarRail,
-  SidebarGroup,
-  SidebarGroupLabel,
-  SidebarGroupContent,
-  SidebarFooter,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
-import { SETTINGS, LOGS } from "@/routes";
-import Sauropod from "@/assets/sauropod.svg";
-import SauropodIcon from "@/assets/icon.svg";
-import { useSidebar } from "@/components/ui/sidebar";
-import SidebarTaskGroup from "@/components/sidebar/SidebarTaskGroup";
-import SidebarWorkflowGroup from "@/components/sidebar/SidebarWorkflowGroup";
+import { LOGS, SETTINGS } from "@/routes";
 
 export default function AppSidebar() {
   const location = useLocation().pathname;

@@ -1,18 +1,18 @@
-import { Routes, Route, Navigate } from "react-router";
+import { Navigate, Route, Routes } from "react-router";
 
-import Workflow from "@/pages/Workflow";
-import Task from "@/pages/Task";
-import Logs from "@/pages/Logs";
-import TaskList from "@/pages/TaskList";
-import WorkflowList from "@/pages/WorkflowList";
-import { taskRoute, workflowRoute, INDEX, SETTINGS, LOGS } from "@/routes";
+import AppSidebar from "@/components/AppSidebar";
 import {
   SidebarInset,
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
-import AppSidebar from "@/components/AppSidebar";
+import Logs from "@/pages/Logs";
 import Settings from "@/pages/Settings";
+import Task from "@/pages/Task";
+import TaskList from "@/pages/TaskList";
+import Workflow from "@/pages/Workflow";
+import WorkflowList from "@/pages/WorkflowList";
+import { INDEX, LOGS, SETTINGS, taskRoute, workflowRoute } from "@/routes";
 
 function PageContent() {
   return (

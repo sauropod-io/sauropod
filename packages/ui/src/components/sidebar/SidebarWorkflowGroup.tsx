@@ -1,7 +1,8 @@
 import { Waypoints } from "lucide-react";
 
-import { workflowRoute, WORKFLOW_PREFIX } from "@/routes";
 import api from "@/api";
+import { WORKFLOW_PREFIX, workflowRoute } from "@/routes";
+
 import SidebarLinkGroup from "./SidebarLinkGroup";
 
 export default function SidebarWorkflowGroup() {

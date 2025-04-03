@@ -1,6 +1,7 @@
 import _createClient, { Client, ClientOptions } from "openapi-fetch";
 import type { MediaType } from "openapi-typescript-helpers";
-import type { paths, components } from "./openapi";
+
+import type { components, paths } from "./openapi";
 
 export type Schemas = components["schemas"];
 

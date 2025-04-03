@@ -1,9 +1,17 @@
+import { ListChecks, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
-import { Trash2, Plus, ListChecks } from "lucide-react";
 
+import api from "@/api";
 import { Button } from "@/components/ui/button";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
 import { Input } from "@/components/ui/input";
-import { Skeleton } from "@/components/ui/skeleton";
 import {
   Sheet,
   SheetContent,
@@ -12,15 +20,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import {
-  Command,
-  CommandInput,
-  CommandList,
-  CommandEmpty,
-  CommandGroup,
-  CommandItem,
-} from "@/components/ui/command";
-import api from "@/api";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface WorkflowInput {
   id: string;

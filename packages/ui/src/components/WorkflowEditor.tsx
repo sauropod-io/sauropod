@@ -1,6 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
 import {
-  addEdge,
   Background,
   type Connection,
   Controls,
@@ -8,6 +7,7 @@ import {
   type Node,
   ReactFlow,
   ReactFlowProvider,
+  addEdge,
   useEdgesState,
   useNodesState,
 } from "@xyflow/react";
@@ -19,6 +19,7 @@ import { useNavigate } from "react-router";
 import { Schemas } from "@sauropod-io/client";
 
 import { apiClient } from "@/api";
+import { WorkflowConfigSheet } from "@/components/WorkflowConfigSheet";
 import InputNode, { type InputNodeData } from "@/components/nodes/InputNode";
 import OutputNode from "@/components/nodes/OutputNode";
 import TaskNode, { type TaskNodeData } from "@/components/nodes/TaskNode";
@@ -35,21 +36,20 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { WorkflowConfigSheet } from "@/components/WorkflowConfigSheet";
+import {
+  GraphNode,
+  INPUT_NODE_TYPE,
+  OUTPUT_NODE_TYPE,
+  TASK_NODE_TYPE,
+  graphToWorkflow,
+  workflowToGraph,
+} from "@/lib/graphUtils";
 import {
   useCreateWorkflow,
   useDeleteWorkflow,
   useUpdateWorkflow,
 } from "@/mutations/workflowMutations";
 import { WORKFLOW_PREFIX, workflowRoute } from "@/routes";
-import {
-  GraphNode,
-  graphToWorkflow,
-  INPUT_NODE_TYPE,
-  OUTPUT_NODE_TYPE,
-  TASK_NODE_TYPE,
-  workflowToGraph,
-} from "@/lib/graphUtils";
 
 const nodeTypes = {
   [INPUT_NODE_TYPE]: InputNode,

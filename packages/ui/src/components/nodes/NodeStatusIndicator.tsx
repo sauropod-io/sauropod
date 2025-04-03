@@ -1,5 +1,5 @@
-import { ReactNode } from "react";
 import clsx from "clsx";
+import { ReactNode } from "react";
 
 export type NodeStatusIndicatorProps = {
   status?: "loading" | "success" | "error" | "initial";

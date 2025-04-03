@@ -1,10 +1,23 @@
-import { Trash2 } from "lucide-react";
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router";
 import { useQuery } from "@tanstack/react-query";
+import { Trash2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router";
 
 import { type Schemas } from "@sauropod-io/client";
 
+import { apiClient } from "@/api";
+import PromptEditor from "@/components/PromptEditor";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -23,25 +36,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import PromptEditor from "@/components/PromptEditor";
-import { TASK_PREFIX, taskRoute } from "@/routes";
-import { apiClient } from "@/api";
-import { ToolConsumer } from "@/providers/ToolsProvider";
-import {
-  useDeleteTask,
   useCreateTask,
+  useDeleteTask,
   useUpdateTask,
 } from "@/mutations/taskMutations";
+import { ToolConsumer } from "@/providers/ToolsProvider";
+import { TASK_PREFIX, taskRoute } from "@/routes";
+
 import ErrorCard from "./ErrorCard";
 
 type ModelSize = "weak" | "strong";

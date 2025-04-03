@@ -3,7 +3,7 @@ import { format } from "date-fns";
 import type { components } from "@sauropod-io/client/openapi";
 
 import api from "@/api";
-import { Level, ErrorBadge, LevelBadge } from "@/components/badge";
+import { ErrorBadge, Level, LevelBadge } from "@/components/badge";
 
 function LogElement({
   log,

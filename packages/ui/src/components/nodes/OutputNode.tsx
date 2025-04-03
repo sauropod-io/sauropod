@@ -1,15 +1,16 @@
-import { memo } from "react";
-import { Position, type NodeProps, type Node } from "@xyflow/react";
+import { type Node, type NodeProps, Position } from "@xyflow/react";
 import { Parentheses } from "lucide-react";
+import { memo } from "react";
 
 import { BaseNode } from "@/components/nodes/BaseNode";
 import {
   NodeHeader,
-  NodeHeaderTitle,
   NodeHeaderActions,
-  NodeHeaderIcon,
   NodeHeaderDeleteAction,
+  NodeHeaderIcon,
+  NodeHeaderTitle,
 } from "@/components/nodes/NodeHeader";
+
 import { LabeledHandle } from "./LabeledHandle";
 
 export type OutputNodeData = {

@@ -1,7 +1,8 @@
 import { PencilRuler } from "lucide-react";
 
-import { taskRoute, TASK_PREFIX } from "@/routes";
 import api from "@/api";
+import { TASK_PREFIX, taskRoute } from "@/routes";
+
 import SidebarLinkGroup from "./SidebarLinkGroup";
 
 export default function SidebarTaskGroup() {

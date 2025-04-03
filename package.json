@@ -10,8 +10,21 @@
   },
   "devDependencies": {
     "@redocly/cli": "^1.34.1",
+    "@trivago/prettier-plugin-sort-imports": "^5.2.2",
     "openapi-typescript": "^7.6.1",
     "prettier": "^3.5.3",
     "typescript": "~5.8.2"
+  },
+  "prettier": {
+    "plugins": [
+      "@trivago/prettier-plugin-sort-imports"
+    ],
+    "importOrder": [
+      "^@sauropod-io/(.*)$",
+      "^@/(.*)$",
+      "^\\./(.*)$"
+    ],
+    "importOrderSeparation": true,
+    "importOrderSortSpecifiers": true
   }
 }
