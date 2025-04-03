@@ -13,7 +13,7 @@ import {
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { Save, Trash2 } from "lucide-react";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 
 import { Schemas } from "@sauropod-io/client";
@@ -63,18 +63,22 @@ interface FlowProps {
 }
 
 function Flow({ workflowData, workflowId }: FlowProps) {
-  const { nodes: originalNodes, edges: originalEdges } =
-    workflowToGraph(workflowData);
-
   const createWorkflow = useCreateWorkflow();
   const updateWorkflow = useUpdateWorkflow();
   const deleteWorkflow = useDeleteWorkflow();
   const navigate = useNavigate();
 
-  const [name, setName] = useState(workflowData?.name);
-  const [nodes, setNodes, onNodesChange] =
-    useNodesState<GraphNode>(originalNodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>(originalEdges);
+  const [name, setName] = useState(workflowData?.name || "");
+  const [nodes, setNodes, onNodesChange] = useNodesState<GraphNode>([]);
+  const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
+
+  useEffect(() => {
+    const { nodes: graphNodes, edges: graphEdges } =
+      workflowToGraph(workflowData);
+    setNodes(graphNodes);
+    setEdges(graphEdges);
+  }, [workflowData, setNodes, setEdges]);
+
   const [inputs, setInputs] = useState<{ id: string; name: string }[]>([]);
   const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
   const [isTasksSheetOpen, setIsTasksSheetOpen] = useState(false);
@@ -249,6 +253,8 @@ export default function WorkflowEditor({
       if (!workflowId)
         return {
           name: "",
+          actions: {},
+          connections: [],
         } as Schemas["Workflow"];
       const response = await apiClient.GET("/api/workflow/{id}", {
         params: { path: { id: workflowId } },

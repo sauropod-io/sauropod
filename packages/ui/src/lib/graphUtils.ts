@@ -63,7 +63,6 @@ export function graphToWorkflow(
     }
   });
 
-  console.log(connections);
   return {
     name,
     actions,
