@@ -292,15 +292,12 @@ export default function WorkflowEditor({
     },
   });
 
-  if (isLoading) {
-    return <div className="p-4">Loading...</div>;
-  }
   if (error) {
     return <div className="p-4">Error: {error.message}</div>;
   }
 
-  if (data === undefined) {
-    return <div className="p-4">Loading</div>;
+  if (isLoading || data === undefined) {
+    return <div className="p-4">Loading...</div>;
   }
 
   return (

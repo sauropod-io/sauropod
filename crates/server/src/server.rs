@@ -179,10 +179,20 @@ impl sauropod_http::ServerInterface for Server {
         id: DatabaseId,
         input: Workflow,
     ) -> anyhow::Result<HttpResponse<()>> {
+        if let Err(e) = sauropod_workflows::validate_workflow(&input) {
+            tracing::error!("Invalid workflow definition: {:#?}", e);
+            return Ok(HttpResponse::BadRequest(e.to_string()));
+        }
+
         db_update_object::<Workflow>(&self.db, id, input)
     }
 
     async fn post_workflow(&self, input: Workflow) -> anyhow::Result<HttpResponse<DatabaseId>> {
+        if let Err(e) = sauropod_workflows::validate_workflow(&input) {
+            tracing::error!("Invalid workflow definition: {:#?}", e);
+            return Ok(HttpResponse::BadRequest(e.to_string()));
+        }
+
         db_create_object::<Workflow>(&self.db, input)
     }
 
@@ -284,6 +294,11 @@ impl sauropod_http::ServerInterface for Server {
     }
 
     async fn post_task_id(&self, id: DatabaseId, input: Task) -> anyhow::Result<HttpResponse<()>> {
+        if let Err(e) = sauropod_task::validate_task(&input) {
+            tracing::error!("Invalid task definition: {:#?}", e);
+            return Ok(HttpResponse::BadRequest(e.to_string()));
+        }
+
         db_update_object::<Task>(&self.db, id, input)
     }
 
@@ -307,6 +322,11 @@ impl sauropod_http::ServerInterface for Server {
     }
 
     async fn post_task(&self, input: Task) -> anyhow::Result<HttpResponse<DatabaseId>> {
+        if let Err(e) = sauropod_task::validate_task(&input) {
+            tracing::error!("Invalid task definition: {:#?}", e);
+            return Ok(HttpResponse::BadRequest(e.to_string()));
+        }
+
         db_create_object::<Task>(&self.db, input)
     }
 

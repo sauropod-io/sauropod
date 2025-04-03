@@ -41,7 +41,6 @@ function WorkflowCard({ item }: { item: Schemas["ObjectInfo"] }) {
     <Card onClick={() => navigate(workflowRoute(item.id))}>
       <CardHeader>
         <CardTitle>{data?.name}</CardTitle>
-        <CardDescription>TODO add a description</CardDescription>
       </CardHeader>
     </Card>
   );

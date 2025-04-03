@@ -26,6 +26,12 @@ enum Dependency {
     },
 }
 
+/// Check whether a workflow is valid.
+pub fn validate_workflow(_workflow: &sauropod_schemas::workflow::Workflow) -> anyhow::Result<()> {
+    // TODO: Validate the workflow definition
+    Ok(())
+}
+
 /// Parse a path like "task_id.output" into a task ID "task_id" and field name "output".
 fn parse_task_and_field(path: &str) -> (&str, &str) {
     match path.split_once('.') {

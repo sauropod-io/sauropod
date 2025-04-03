@@ -32,6 +32,13 @@ pub fn task_from_schema(task: sauropod_schemas::task::Task) -> anyhow::Result<Ta
     }
 }
 
+/// Check whether a task is valid.
+pub fn validate_task(task: &sauropod_schemas::task::Task) -> anyhow::Result<()> {
+    // Check that the template is parseable into an input schema.
+    let _ = input_schema_from_task_schema(task)?;
+    Ok(())
+}
+
 /// Get the JSON Schema from a task's schema representation.
 pub fn input_schema_from_task_schema(
     task: &sauropod_schemas::task::Task,

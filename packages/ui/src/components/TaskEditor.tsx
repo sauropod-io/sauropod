@@ -128,14 +128,19 @@ export default function TaskEditor({ taskId }: { taskId?: string }) {
     };
 
     if (taskId) {
-      await updateTask.mutateAsync({
-        params: {
-          path: {
-            id: taskId,
+      try {
+        await updateTask.mutateAsync({
+          params: {
+            path: {
+              id: taskId,
+            },
           },
-        },
-        body: taskData,
-      });
+          body: taskData,
+        });
+      } catch (error) {
+        alert(`Error updating task: ${JSON.stringify(error, null, 2)}`);
+        return;
+      }
     } else {
       let newTaskId: number;
       try {
@@ -143,7 +148,7 @@ export default function TaskEditor({ taskId }: { taskId?: string }) {
           body: taskData,
         });
       } catch (error) {
-        alert(`Error creating task: ${error}`);
+        alert(`Error creating task: ${JSON.stringify(error, null, 2)}`);
         return;
       }
 
