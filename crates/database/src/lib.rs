@@ -77,6 +77,18 @@ impl Database {
 
     /// Initialize the database.
     pub fn init(&self) -> anyhow::Result<()> {
+        // Create the directory if it doesn't exist
+        if let Some(parent) = self.path.parent() {
+            if !parent.exists() {
+                if let Err(e) = std::fs::create_dir_all(parent).with_context(|| {
+                    format!("creating database parent directory {}", parent.display())
+                }) {
+                    tracing::error!("Error {:?}", e);
+                    return Err(e);
+                }
+            }
+        }
+
         self.with_connection(|connection| {
             crate::generated::create_tables(connection)?;
             Ok(())

@@ -144,11 +144,6 @@ impl Config {
             std::fs::create_dir_all(dirs.config_dir())?;
         }
 
-        // Create the data directory.
-        if !dirs.data_dir().exists() {
-            std::fs::create_dir_all(dirs.data_dir())?;
-        }
-
         // Create the configuration file if it does not exist.
         if !config.exists() {
             let default_config = Config::default();
