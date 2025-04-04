@@ -26,9 +26,7 @@ pub async fn run_server(
     .await?;
     let cors = CorsLayer::new().allow_origin(Any);
     let api = sauropod_http::register_routes(server).layer(cors);
-    let app = axum::Router::new()
-        .nest(sauropod_http::API_PREFIX, api)
-        .fallback(sauropod_http::not_found);
+    let app = sauropod_http::make_ui_routes().nest(sauropod_http::API_PREFIX, api);
 
     tracing::info!("listening on {}", listener.local_addr().unwrap());
     Ok(axum::serve(listener, app).await?)

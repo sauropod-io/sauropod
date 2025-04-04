@@ -6,6 +6,9 @@ use axum::response::Json;
 mod generated;
 pub use generated::{API_PREFIX, ServerInterface, register_routes};
 
+mod ui_routes;
+pub use ui_routes::make_ui_routes;
+
 /// HTTP response.
 pub enum HttpResponse<T> {
     /// HTTP 200
@@ -48,14 +51,6 @@ where
         *response.status_mut() = status_code;
         response
     }
-}
-
-/// 404 Not Found response.
-pub async fn not_found() -> impl IntoResponse {
-    let mut response =
-        axum::response::Json(serde_json::json!({ "error": "Not found" })).into_response();
-    *response.status_mut() = axum::http::StatusCode::NOT_FOUND;
-    response
 }
 
 pub(crate) fn create_response_from_result<T>(
