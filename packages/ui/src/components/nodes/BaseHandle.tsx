@@ -1,21 +1,22 @@
 import { Handle, HandleProps, useNodeConnections } from "@xyflow/react";
 import { forwardRef } from "react";
 
+import "@/components/nodes/BaseHandle.css";
 import { cn } from "@/lib/utils";
 
 export type BaseHandleProps = HandleProps;
 
 export const BaseHandle = forwardRef<HTMLDivElement, BaseHandleProps>(
-  ({ className, children, isConnectable, type, ...props }, ref) => {
+  ({ className, children, isConnectable, id, type, ...props }, ref) => {
     const connections = useNodeConnections({
       handleType: type,
     });
 
     // Default isConnectable to true if not provided
     if (isConnectable === undefined) {
-      if (type == "target") {
+      if (type == "target" && id !== undefined) {
         // Only allow 1 connection to target handles by default
-        isConnectable = connections.length < 1;
+        isConnectable = !connections.some((x) => x.targetHandle === id);
       } else {
         isConnectable = true;
       }
@@ -31,6 +32,7 @@ export const BaseHandle = forwardRef<HTMLDivElement, BaseHandleProps>(
         )}
         isConnectable={isConnectable}
         type={type}
+        id={id}
         {...props}
       >
         {children}

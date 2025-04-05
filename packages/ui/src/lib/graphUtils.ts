@@ -3,11 +3,10 @@ import type { Edge, Node } from "@xyflow/react";
 import { Schemas } from "@sauropod-io/client";
 
 import { IONodeData } from "@/components/nodes/IONode";
-import type { InputNodeData } from "@/components/nodes/InputNode";
 import type { TaskNodeData } from "@/components/nodes/TaskNode";
 
 /** The node type used in the workflow graph. */
-export type GraphNode = Node<InputNodeData | TaskNodeData>;
+export type GraphNode = Node<IONodeData | TaskNodeData>;
 
 /** Convert from the graph representation of a workflow to its backend representation. */
 export function graphToWorkflow(
@@ -39,10 +38,10 @@ export function graphToWorkflow(
 
     if (sourceNode.type === INPUT_NODE_TYPE) {
       // This is a parameter connection (input parameter -> task)
-      const inputName = (sourceNode.data as InputNodeData).name;
+      const inputName = edge.sourceHandle;
 
       connections.push({
-        parameter: inputName,
+        parameter: inputName!,
         // TODO
         to: [`${targetNode.id}.input`], // Assuming 'input' as the parameter name
       });
@@ -84,6 +83,12 @@ export function workflowToGraph(workflow: Schemas["Workflow"]): {
 
   // Create task nodes from actions
   Object.entries(workflow.actions).forEach(([nodeId, action]) => {
+    if (!("taskId" in action)) {
+      throw new Error(
+        `Action ${nodeId} does not have a taskId - currently we don't support other types of actions`,
+      );
+    }
+
     nodes.push({
       id: nodeId,
       type: TASK_NODE_TYPE,
@@ -94,11 +99,11 @@ export function workflowToGraph(workflow: Schemas["Workflow"]): {
   });
 
   const inputs = workflow.connections
-    .map((x) => x.parameter)
-    .filter((x) => x !== undefined);
+    .filter((x): x is { parameter: string; to: string[] } => "parameter" in x)
+    .map((x) => x.parameter);
   if (inputs.length > 0) {
     nodes.push({
-      id: "input",
+      id: INPUT_NODE_ID,
       type: INPUT_NODE_TYPE,
       position: { x: 0, y: 100 },
       data: { names: inputs } as IONodeData,
@@ -108,7 +113,7 @@ export function workflowToGraph(workflow: Schemas["Workflow"]): {
   // Process connections to create input nodes and edges
   workflow.connections.forEach((connection) => {
     // Handle input parameter connections
-    if (connection.parameter) {
+    if ("parameter" in connection) {
       const inputNodeId = `input-${connection.parameter}`;
 
       // Create edges from input node to destination tasks
@@ -118,13 +123,13 @@ export function workflowToGraph(workflow: Schemas["Workflow"]): {
           id: `${inputNodeId}-${targetNodeId}`,
           source: inputNodeId,
           target: targetNodeId,
-          targetHandleId: targetPort,
+          targetHandle: targetPort,
         });
       });
     }
 
     // Handle task-to-task or task-to-output connections
-    if (connection.from) {
+    if ("from" in connection) {
       const [sourceNodeId, sourcePort] = connection.from.split(".");
 
       connection.to.forEach((target) => {
@@ -139,8 +144,8 @@ export function workflowToGraph(workflow: Schemas["Workflow"]): {
           id: `${sourceNodeId}-${sourcePort}-${targetNodeId}-${targetPort}`,
           source: sourceNodeId,
           target: targetNodeId,
-          sourceHandleId: sourcePort,
-          targetHandleId: targetPort,
+          sourceHandle: sourcePort,
+          targetHandle: targetPort,
         });
       });
     }
@@ -148,6 +153,12 @@ export function workflowToGraph(workflow: Schemas["Workflow"]): {
 
   return { nodes, edges };
 }
+
+/** The ID of the input node. */
+export const INPUT_NODE_ID = "input";
+/** The ID of the output node. */
+export const OUTPUT_NODE_ID = "output";
+
 export const INPUT_NODE_TYPE = "input-node";
 export const OUTPUT_NODE_TYPE = "output-node";
 export const TASK_NODE_TYPE = "task-node";

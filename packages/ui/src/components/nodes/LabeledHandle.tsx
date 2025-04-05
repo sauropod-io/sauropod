@@ -28,13 +28,18 @@ export const LabeledHandle = forwardRef<
       ref={ref}
       title={title}
       className={cn(
-        "relative flex items-center",
+        "relative flex items-center align-middle",
         flexDirections[position],
         className,
       )}
     >
       <BaseHandle position={position} className={handleClassName} {...props} />
-      <label className={cn("px-3 text-foreground", labelClassName)}>
+      <label
+        className={cn(
+          "inline px-3 text-foreground align-middle",
+          labelClassName,
+        )}
+      >
         {title}
       </label>
     </div>

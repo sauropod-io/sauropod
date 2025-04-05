@@ -11,8 +11,8 @@ import {
   useEdgesState,
   useNodesState,
 } from "@xyflow/react";
-import "@xyflow/react/dist/style.css";
-import { Play, Save, Trash2 } from "lucide-react";
+import "@xyflow/react/dist/base.css";
+import { Play, Plus, Save, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 
@@ -20,7 +20,10 @@ import { Schemas } from "@sauropod-io/client";
 
 import { apiClient } from "@/api";
 import { InvocationModal } from "@/components/InvocationModal";
+import TaskSelector from "@/components/TaskSelector";
 import { WorkflowConfigSheet } from "@/components/WorkflowConfigSheet";
+import CustomEdge from "@/components/nodes/CustomEdge";
+import { IONodeData } from "@/components/nodes/IONode";
 import InputNode from "@/components/nodes/InputNode";
 import OutputNode from "@/components/nodes/OutputNode";
 import TaskNode, { type TaskNodeData } from "@/components/nodes/TaskNode";
@@ -35,11 +38,18 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import {
   GraphNode,
+  INPUT_NODE_ID,
   INPUT_NODE_TYPE,
+  OUTPUT_NODE_ID,
   OUTPUT_NODE_TYPE,
   TASK_NODE_TYPE,
   graphToWorkflow,
@@ -52,12 +62,14 @@ import {
 } from "@/mutations/workflowMutations";
 import { WORKFLOW_PREFIX, workflowRoute } from "@/routes";
 
-import { IONodeData } from "./nodes/IONode";
-
 const nodeTypes = {
   [INPUT_NODE_TYPE]: InputNode,
   [TASK_NODE_TYPE]: TaskNode,
   [OUTPUT_NODE_TYPE]: OutputNode,
+};
+
+const edgeTypes = {
+  edge: CustomEdge,
 };
 
 interface FlowProps {
@@ -74,8 +86,6 @@ function Flow({ workflowData, workflowId }: FlowProps) {
   const [name, setName] = useState(workflowData?.name || "");
   const [nodes, setNodes, onNodesChange] = useNodesState<GraphNode>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
-
-  // Simplified state for workflow invocation
   const [isRunModalOpen, setIsRunModalOpen] = useState(false);
 
   useEffect(() => {
@@ -86,11 +96,9 @@ function Flow({ workflowData, workflowId }: FlowProps) {
   }, [workflowData, setNodes, setEdges]);
 
   const [inputs, setInputs] = useState<string[]>([]);
+  const [outputs, setOutputs] = useState<string[]>(["output"]);
   const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
-  const [isTasksSheetOpen, setIsTasksSheetOpen] = useState(false);
-  const [selectedTasks, setSelectedTasks] = useState<
-    { id: number; name: string }[]
-  >([]);
+  const [isSettingsSheetOpen, setIsSettingsSheetOpen] = useState(false);
 
   const onConnect = useCallback(
     (params: Connection | Edge) => setEdges((eds) => addEdge(params, eds)),
@@ -98,15 +106,30 @@ function Flow({ workflowData, workflowId }: FlowProps) {
   );
 
   useEffect(() => {
-    const nodeId = "input";
     const newNode: Node<IONodeData> = {
-      id: nodeId,
+      id: INPUT_NODE_ID,
       type: INPUT_NODE_TYPE,
-      position: { x: 100, y: 100 },
+      position: { x: -100, y: 100 },
       data: { names: inputs },
     };
-    setNodes((nodes) => [...nodes.filter((x) => x.id != nodeId), newNode]);
+    setNodes((nodes) => [
+      ...nodes.filter((x) => x.id != INPUT_NODE_ID),
+      newNode,
+    ]);
   }, [inputs, setNodes]);
+
+  useEffect(() => {
+    const newNode: Node<IONodeData> = {
+      id: OUTPUT_NODE_ID,
+      type: OUTPUT_NODE_TYPE,
+      position: { x: 100, y: 100 },
+      data: { names: outputs },
+    };
+    setNodes((nodes) => [
+      ...nodes.filter((x) => x.id != OUTPUT_NODE_ID),
+      newNode,
+    ]);
+  }, [outputs, setNodes]);
 
   const handleSave = async () => {
     const workflow = graphToWorkflow(name, nodes, edges);
@@ -145,17 +168,13 @@ function Flow({ workflowData, workflowId }: FlowProps) {
   };
 
   const handleAddTask = (taskId: number, taskName: string) => {
-    if (!selectedTasks.some((task) => task.id === taskId)) {
-      setSelectedTasks([...selectedTasks, { id: taskId, name: taskName }]);
-
-      const newNode: Node<TaskNodeData> = {
-        id: `${taskId}-${Date.now()}`,
-        type: TASK_NODE_TYPE,
-        position: { x: 250, y: 250 },
-        data: { taskId, taskName },
-      };
-      setNodes((nodes) => [...nodes, newNode]);
-    }
+    const newNode: Node<TaskNodeData> = {
+      id: `${taskId}-${Date.now()}`,
+      type: TASK_NODE_TYPE,
+      position: { x: 250, y: 250 },
+      data: { taskId, taskName },
+    };
+    setNodes((nodes) => [...nodes, newNode]);
   };
 
   const handleAddInput = (inputName: string) => {
@@ -164,13 +183,18 @@ function Flow({ workflowData, workflowId }: FlowProps) {
   };
 
   const handleRemoveInput = (inputId: string) => {
-    setInputs(inputs.filter((input) => input.id !== inputId));
+    setInputs(inputs.filter((input) => input !== inputId));
     setNodes(nodes.filter((node) => node.id !== inputId));
   };
 
-  const handleRemoveTask = (taskId: number) => {
-    setSelectedTasks(selectedTasks.filter((task) => task.id !== taskId));
-    setNodes(nodes.filter((node) => !node.id.startsWith(`${taskId}-`)));
+  const handleAddOutput = (outputName: string) => {
+    if (!outputName.trim() || outputs.includes(outputName)) return;
+    setOutputs([...outputs, outputName]);
+  };
+
+  const handleRemoveOutput = (outputId: string) => {
+    setOutputs(outputs.filter((output) => output !== outputId));
+    setNodes(nodes.filter((node) => node.id !== outputId));
   };
 
   const handleRunClick = () => {
@@ -183,27 +207,38 @@ function Flow({ workflowData, workflowId }: FlowProps) {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between p-4">
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between p-4">
         <Input
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="Workflow name"
-          className="text-xl font-bold h-10"
+          className="text-xl font-bold h-10 w-full md:w-auto flex-grow mb-2 md:mb-0"
         />
-        <div className="flex gap-2 pl-2">
+        <div className="flex flex-wrap gap-2 w-full pl-0 md:pl-4 md:w-auto justify-end">
           <Button
             onClick={handleRunClick}
             size="sm"
             variant="default"
             disabled={workflowId === undefined}
           >
-            <Play className="mr-2 h-4 w-4" />
-            Run
+            <Play className="h-4 w-4" />
+            <span className="hidden md:inline">Run</span>
           </Button>
 
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              className={buttonVariants({ size: "sm", variant: "outline" })}
+            >
+              <Plus className="h-4 w-4" />
+              <span className="hidden md:inline">Task</span>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="border-0">
+              <TaskSelector autoFocus={true} onSelect={handleAddTask} />
+            </DropdownMenuContent>
+          </DropdownMenu>
+
           <Button onClick={handleSave} size="sm" variant="outline">
-            <Save className="mr-2 h-4 w-4" />
-            Save
+            <Save className="h-4 w-4" />
           </Button>
 
           <AlertDialog
@@ -217,8 +252,7 @@ function Flow({ workflowData, workflowId }: FlowProps) {
                 disabled={workflowId === undefined}
                 onClick={() => setIsDeleteAlertOpen(true)}
               >
-                <Trash2 className="mr-2 h-4 w-4" />
-                Delete
+                <Trash2 className="h-4 w-4" />
               </Button>
             </AlertDialogTrigger>
             <AlertDialogContent>
@@ -238,14 +272,15 @@ function Flow({ workflowData, workflowId }: FlowProps) {
           </AlertDialog>
 
           <WorkflowConfigSheet
-            open={isTasksSheetOpen}
-            onOpenChange={setIsTasksSheetOpen}
+            open={isSettingsSheetOpen}
+            onOpenChange={setIsSettingsSheetOpen}
             inputs={inputs}
             onAddInput={handleAddInput}
             onRemoveInput={handleRemoveInput}
-            selectedTasks={selectedTasks}
+            outputs={outputs}
+            onAddOutput={handleAddOutput}
+            onRemoveOutput={handleRemoveOutput}
             onAddTask={handleAddTask}
-            onRemoveTask={handleRemoveTask}
           />
         </div>
       </div>
@@ -254,6 +289,8 @@ function Flow({ workflowData, workflowId }: FlowProps) {
         edges={edges}
         nodes={nodes}
         nodeTypes={nodeTypes}
+        edgeTypes={edgeTypes}
+        defaultEdgeOptions={{ type: "edge", animated: true }}
         onConnect={onConnect}
         onEdgesChange={onEdgesChange}
         onNodesChange={onNodesChange}

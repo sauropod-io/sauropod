@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState } from "react";
 
 import { apiClient } from "@/api";
@@ -28,9 +29,14 @@ export function InvocationModal({
   open,
   onOpenChange,
 }: InvocationModalProps) {
-  const [inputSchema, setInputSchema] = useState<any>(null);
+  const [inputSchema, setInputSchema] = useState<Record<string, any> | null>(
+    null,
+  );
   const [inputValues, setInputValues] = useState<Record<string, any>>({});
-  const [workflowResult, setWorkflowResult] = useState<any>(null);
+  const [workflowResult, setWorkflowResult] = useState<Record<
+    string,
+    any
+  > | null>(null);
   const [isRunning, setIsRunning] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -47,7 +53,7 @@ export function InvocationModal({
         const response = await apiClient.GET("/api/workflow/{id}/inputSchema", {
           params: { path: { id: workflowId } },
         });
-        setInputSchema(response.data);
+        setInputSchema(response.data!);
 
         // Initialize input values with defaults
         const initialValues: Record<string, any> = {};
@@ -59,8 +65,10 @@ export function InvocationModal({
           );
         }
         setInputValues(initialValues);
-      } catch (err: any) {
-        setError(`Failed to fetch input schema: ${err.message}`);
+      } catch (err) {
+        setError(
+          `Failed to fetch input schema: ${JSON.stringify(err, null, 4)}`,
+        );
       } finally {
         setIsRunning(false);
       }
@@ -94,7 +102,7 @@ export function InvocationModal({
         params: { path: { id: workflowId } },
         body: inputValues,
       });
-      setWorkflowResult(response.data);
+      setWorkflowResult(response.data!);
     } catch (err: any) {
       setError(`Failed to run workflow: ${err.message}`);
     } finally {

@@ -5,7 +5,7 @@ import IONode, { type IONodeData } from "@/components/nodes/IONode";
 
 /** Node used for workflow outputs. */
 const OutputNode = memo((props: NodeProps<Node<IONodeData>>) => {
-  return <IONode title="Outputs" handleType="source" {...props} />;
+  return <IONode title="Outputs" handleType="target" {...props} />;
 });
 
 export default OutputNode;
