@@ -46,8 +46,8 @@ const TaskNode = memo(
 
     const HeaderIcon = isLoading ? Spinner : PencilRuler;
     return (
-      <BaseNode selected={selected} className="px-3 py-2">
-        <NodeHeader className="-mx-3 -mt-2 border-b">
+      <BaseNode selected={selected}>
+        <NodeHeader className="border-b">
           <NodeHeaderIcon>
             <HeaderIcon className="h-6 w-6" />
           </NodeHeaderIcon>

@@ -290,7 +290,10 @@ function Flow({ workflowData, workflowId }: FlowProps) {
         nodes={nodes}
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
-        defaultEdgeOptions={{ type: "edge", animated: true }}
+        defaultEdgeOptions={{
+          type: "edge",
+          animated: true,
+        }}
         onConnect={onConnect}
         onEdgesChange={onEdgesChange}
         onNodesChange={onNodesChange}

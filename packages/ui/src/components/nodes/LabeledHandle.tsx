@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 
 const flexDirections = {
   top: "flex-col",
-  right: "flex-row-reverse justify-end",
+  right: "justify-end",
   bottom: "flex-col-reverse justify-end",
   left: "flex-row",
 };
@@ -36,7 +36,7 @@ export const LabeledHandle = forwardRef<
       <BaseHandle position={position} className={handleClassName} {...props} />
       <label
         className={cn(
-          "inline px-3 text-foreground align-middle",
+          "inline px-3 font-mono text-sm text-foreground align-middle",
           labelClassName,
         )}
       >

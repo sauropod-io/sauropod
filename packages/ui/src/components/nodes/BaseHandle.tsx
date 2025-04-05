@@ -27,7 +27,7 @@ export const BaseHandle = forwardRef<HTMLDivElement, BaseHandleProps>(
         ref={ref}
         {...props}
         className={cn(
-          "h-[11px] w-[11px] rounded-full border border-slate-300 bg-slate-100 transition dark:border-secondary dark:bg-secondary",
+          "h-2 w-2 p-1 border border-slate-300 !bg-slate-600 transition dark:border-secondary dark:bg-secondary",
           className,
         )}
         isConnectable={isConnectable}
