@@ -4,6 +4,7 @@ import { Link, useNavigate } from "react-router";
 import type { Schemas } from "@sauropod-io/client";
 
 import api from "@/api";
+import WorkflowPreview from "@/components/WorkflowPreview";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -51,7 +52,7 @@ function WorkflowCard({ item }: { item: Schemas["ObjectInfo"] }) {
     navigate(`${workflowRoute(item.id)}?run=true`);
   };
 
-  if (isLoading) {
+  if (isLoading || data === undefined) {
     return <SkeletonCard />;
   }
 
@@ -97,6 +98,12 @@ function WorkflowCard({ item }: { item: Schemas["ObjectInfo"] }) {
       >
         <CardTitle>{data?.name}</CardTitle>
       </CardHeader>
+      <CardContent
+        className="cursor-pointer pt-0"
+        onClick={() => navigate(workflowRoute(item.id))}
+      >
+        <WorkflowPreview workflow={data} />
+      </CardContent>
       <CardFooter className="flex justify-end gap-2 pt-0">
         <Button variant="default" size="sm" onClick={handleRun}>
           <Play className="h-4 w-4 mr-1" />

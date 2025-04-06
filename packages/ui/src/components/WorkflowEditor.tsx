@@ -22,11 +22,9 @@ import { apiClient } from "@/api";
 import { InvocationModal } from "@/components/InvocationModal";
 import TaskSelector from "@/components/TaskSelector";
 import { WorkflowConfigSheet } from "@/components/WorkflowConfigSheet";
-import CustomEdge from "@/components/nodes/CustomEdge";
+import { EDGE_TYPES, NODE_TYPES } from "@/components/nodes/CustomNodes";
 import { IONodeData } from "@/components/nodes/IONode";
-import InputNode from "@/components/nodes/InputNode";
-import OutputNode from "@/components/nodes/OutputNode";
-import TaskNode, { type TaskNodeData } from "@/components/nodes/TaskNode";
+import { type TaskNodeData } from "@/components/nodes/TaskNode";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -63,16 +61,6 @@ import {
   useUpdateWorkflow,
 } from "@/mutations/workflowMutations";
 import { WORKFLOW_PREFIX, workflowRoute } from "@/routes";
-
-const nodeTypes = {
-  [INPUT_NODE_TYPE]: InputNode,
-  [TASK_NODE_TYPE]: TaskNode,
-  [OUTPUT_NODE_TYPE]: OutputNode,
-};
-
-const edgeTypes = {
-  edge: CustomEdge,
-};
 
 interface FlowProps {
   workflowId?: string;
@@ -329,8 +317,8 @@ function Flow({
       <ReactFlow
         edges={edges}
         nodes={nodes}
-        nodeTypes={nodeTypes}
-        edgeTypes={edgeTypes}
+        nodeTypes={NODE_TYPES}
+        edgeTypes={EDGE_TYPES}
         defaultEdgeOptions={{
           type: "edge",
           animated: true,
