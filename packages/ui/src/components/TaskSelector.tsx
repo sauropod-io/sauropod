@@ -15,7 +15,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export interface TaskSelectorProps {
   autoFocus?: boolean;
-  onSelect: (taskId: number, taskName: string) => void;
+  onSelect: (taskId: number) => void;
 }
 
 export default function TaskSelector({
@@ -53,10 +53,7 @@ export default function TaskSelector({
                   task.name.toLowerCase().includes(searchQuery.toLowerCase()),
                 )
                 .map((task) => (
-                  <CommandItem
-                    key={task.id}
-                    onSelect={() => onSelect(task.id, task.name)}
-                  >
+                  <CommandItem key={task.id} onSelect={() => onSelect(task.id)}>
                     {task.name}
                     <Button
                       size="sm"
@@ -64,7 +61,7 @@ export default function TaskSelector({
                       className="ml-auto"
                       onClick={(e) => {
                         e.stopPropagation();
-                        onSelect(task.id, task.name);
+                        onSelect(task.id);
                       }}
                     >
                       <Plus className="h-3 w-3" />

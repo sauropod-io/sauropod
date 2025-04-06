@@ -22,7 +22,7 @@ interface WorkflowConfigSheetProps {
   outputs: string[];
   onAddOutput: (outputName: string) => void;
   onRemoveOutput: (outputName: string) => void;
-  onAddTask: (taskId: number, taskName: string) => void;
+  onAddTask: (taskId: number) => void;
 }
 
 export function WorkflowConfigSheet({

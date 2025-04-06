@@ -18,33 +18,48 @@ import {
   NodeHeaderIcon,
   NodeHeaderTitle,
 } from "@/components/nodes/NodeHeader";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { NODE_X_SPACING } from "@/lib/workflowGraph";
 
 export type TaskNodeData = {
   taskId: number;
-  taskName: string;
 };
 
 export default function TaskNode({
   selected,
-  data: { taskId, taskName },
+  data: { taskId },
   id,
 }: NodeProps<Node<TaskNodeData>>) {
   const updateNodeInternals = useUpdateNodeInternals();
-  const { data, isLoading } = api.useQuery(
+  const { data: schemaData, isLoading: inputSchemaLoading } = api.useQuery(
     "get",
     `/api/task/{id}/inputSchema`,
     {
       params: { path: { id: `${taskId}` } },
     },
   );
+  const { data: taskData, isLoading: inputTaskLoading } = api.useQuery(
+    "get",
+    `/api/task/{id}`,
+    {
+      params: { path: { id: `${taskId}` } },
+    },
+  );
+
+  const isLoading = inputSchemaLoading || inputTaskLoading;
 
   useEffect(() => {
     updateNodeInternals(id);
-  }, [id, updateNodeInternals, data]);
+  }, [id, updateNodeInternals, schemaData]);
 
   const inputs = [];
-  if (data) {
-    for (const input in data["properties"] as string[]) {
+  if (schemaData) {
+    for (const input in schemaData["properties"] as string[]) {
       inputs.push(
         <LabeledHandle
           key={input}
@@ -64,7 +79,21 @@ export default function TaskNode({
         <NodeHeaderIcon>
           <HeaderIcon className="h-6 w-6" />
         </NodeHeaderIcon>
-        <NodeHeaderTitle>{taskName}</NodeHeaderTitle>
+        <NodeHeaderTitle
+          className="truncate"
+          style={{ maxWidth: NODE_X_SPACING - 100 }}
+        >
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild className="truncate">
+                <div>{taskData?.name}</div>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>{taskData?.name}</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </NodeHeaderTitle>
         <NodeHeaderActions>
           <NodeHeaderDeleteAction />
         </NodeHeaderActions>

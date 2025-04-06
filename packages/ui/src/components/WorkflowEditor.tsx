@@ -208,12 +208,12 @@ function Flow({
     await navigate(WORKFLOW_PREFIX);
   };
 
-  const handleAddTask = (taskId: number, taskName: string) => {
+  const handleAddTask = (taskId: number) => {
     const newNode: Node<TaskNodeData> = {
       id: `${taskId}-${Date.now()}`,
       type: TASK_NODE_TYPE,
       position: { x: 250, y: 250 },
-      data: { taskId, taskName },
+      data: { taskId },
     };
     setNodes((nodes) => [...nodes, newNode]);
   };

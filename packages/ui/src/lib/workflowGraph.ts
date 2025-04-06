@@ -11,6 +11,9 @@ export type GraphNodeData = IONodeData | TaskNodeData;
 /** The node type used in the workflow graph. */
 export type GraphNode = Node<GraphNodeData>;
 
+/** The horizontal spacing between nodes when automatically laying them out. */
+export const NODE_X_SPACING = 200;
+
 /** Convert from the graph representation of a workflow to its backend representation. */
 export function graphToWorkflow(
   name: string,
@@ -101,7 +104,6 @@ export function graphToWorkflow(
 /** Lay the workflow graph nodes out based on topological sorting, from left to right */
 export function topologicalLayout(nodes: GraphNode[], edges: Edge[]): void {
   // Position nodes by level
-  const xSpacing = 200; // Horizontal spacing between levels
   const ySpacing = 100; // Vertical spacing between nodes in same level
 
   // The in-degree (number of incoming edges) for each node
@@ -173,7 +175,7 @@ export function topologicalLayout(nodes: GraphNode[], edges: Edge[]): void {
         throw new Error(`Node with ID ${nodeId} not found`);
       }
       node.position = {
-        x: level * xSpacing,
+        x: level * NODE_X_SPACING,
         y: index * ySpacing - totalHeight / 2,
       };
     });

@@ -208,7 +208,6 @@ export default function TaskEditor({ taskId }: { taskId?: string }) {
         <CardContent>
           <PromptEditor
             onChange={(prompt) => setPromptText(prompt!)}
-            onValidate={(markers) => console.log("onValidate", markers)}
             value={promptText}
           />
           <div className="mt-4">
