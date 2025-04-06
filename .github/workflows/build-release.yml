@@ -1,0 +1,26 @@
+name: Build Release
+
+on:
+  # Generate release artifacts when any tag is pushed
+  push:
+    tags:
+      - "*"
+
+env:
+  # We don't need incremental compilation in CI
+  CARGO_INCREMENTAL: "0"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up
+        uses: ./.github/actions/set-up
+
+      - name: Build the release
+        run: make release
+        env:
+          SCCACHE_GHA_ENABLED: "true"
+          RUSTC_WRAPPER: "sccache"

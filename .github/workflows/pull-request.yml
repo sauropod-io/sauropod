@@ -25,42 +25,16 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      - name: Set up
+        uses: ./.github/actions/set-up
+
+      # Pre-commit cache
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.13"
           cache: "pip"
-      # Rust
-      - uses: dtolnay/rust-toolchain@stable
-      - name: Cache Cargo dependencies
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-cargo-
-      - uses: mozilla-actions/sccache-action@v0.0.9
-      # NPM cache
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "18"
-      - name: Get npm cache directory
-        id: npm-cache-dir
-        shell: bash
-        run: echo "dir=$(npm config get cache)" >> ${GITHUB_OUTPUT}
-      - uses: actions/cache@v4
-        with:
-          path: ${{ steps.npm-cache-dir.outputs.dir }}
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
-      - name: Install Node.js dependencies
-        run: npm ci
-      # Pre-commit cache
+
       - name: Cache pre-commit dependencies
         uses: actions/cache@v4
         with:
