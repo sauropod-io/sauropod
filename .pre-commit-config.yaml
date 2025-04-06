@@ -111,5 +111,16 @@ repos:
         language: system
         types_or: ["ts", "tsx", "javascript", "jsx"]
         entry: npm run --if-present --workspaces test:ts
-        args: []
+        pass_filenames: false
+      - id: npm-test
+        name: npm-test
+        language: system
+        types_or: ["ts", "tsx", "javascript", "jsx"]
+        entry: npm run test
+        pass_filenames: false
+      - id: cargo-test
+        name: cargo-test
+        language: system
+        types_or: ["rust"]
+        entry: cargo test
         pass_filenames: false

@@ -7,13 +7,27 @@ use tracing::Instrument as _;
 
 use sauropod_task::{Task, TaskArc, task_from_schema};
 
+/// A field in a task output.
+struct TaskField {
+    /// The ID of the task.
+    id: String,
+    /// The field name.
+    field: Option<String>,
+}
+
+/// An output mapping from a task to the workflow output.
+struct OutputMapping {
+    /// The task field that provides the output data.
+    from: TaskField,
+    /// The name of the output in the workflow result.
+    output_name: String,
+}
+
 enum Dependency {
     /// A task that depends on another task.
     Task {
-        /// The ID of the task that is the dependencytask.
-        input_id: String,
-        /// The output field
-        input_field: String,
+        /// The task field that provides the input to the current task.
+        input_data: TaskField,
         /// The field to map the data to.
         field: String,
     },
@@ -27,16 +41,101 @@ enum Dependency {
 }
 
 /// Check whether a workflow is valid.
-pub fn validate_workflow(_workflow: &sauropod_schemas::workflow::Workflow) -> anyhow::Result<()> {
-    // TODO: Validate the workflow definition
+pub fn validate_workflow(workflow: &sauropod_schemas::workflow::Workflow) -> anyhow::Result<()> {
+    // Validate workflow has a name
+    if workflow.name.trim().is_empty() {
+        return Err(anyhow::anyhow!("Workflow must have a name"));
+    }
+
+    let task_ids: HashSet<String> = workflow.actions.keys().cloned().collect();
+    // Track output names to check for duplicates
+    let mut output_names = HashSet::new();
+
+    // Validate all connections
+    for connection in &workflow.connections {
+        match connection {
+            sauropod_schemas::workflow::Connection::Task { from, to } => {
+                // Validate "from" task exists
+                let (from_task_id, _) = parse_task_and_field(from);
+                if !task_ids.contains(&from_task_id.to_string()) {
+                    return Err(anyhow::anyhow!(
+                        "Task '{from_task_id}' referenced in connection does not exist"
+                    ));
+                }
+
+                // Validate all "to" tasks exist
+                let (to_task_id, to_field) = parse_task_and_field(to);
+                if !task_ids.contains(&to_task_id.to_string()) {
+                    return Err(anyhow::anyhow!(
+                        "Task '{}' referenced in connection does not exist",
+                        to_task_id
+                    ));
+                }
+
+                // Check that to_field is specified
+                if to_field.is_none() {
+                    return Err(anyhow::anyhow!(
+                        "Task path '{}' is missing a field, like '{}.field_name_here'",
+                        to,
+                        to_task_id
+                    ));
+                }
+            }
+            sauropod_schemas::workflow::Connection::Output { from, output } => {
+                // Validate that referenced task exists
+                let (from_task_id, _) = parse_task_and_field(from);
+                if !task_ids.contains(&from_task_id.to_string()) {
+                    return Err(anyhow::anyhow!(
+                        "Task '{}' referenced in output connection does not exist",
+                        from_task_id
+                    ));
+                }
+
+                // Validate output name is not empty
+                if output.trim().is_empty() {
+                    return Err(anyhow::anyhow!("Output name cannot be empty"));
+                }
+
+                // Check for duplicate output names
+                if !output_names.insert(output.clone()) {
+                    return Err(anyhow::anyhow!("Duplicate output name: {}", output));
+                }
+            }
+            sauropod_schemas::workflow::Connection::Parameter { parameter, to } => {
+                // Validate parameter name is not empty
+                if parameter.trim().is_empty() {
+                    return Err(anyhow::anyhow!("Parameter name cannot be empty"));
+                }
+
+                // Validate all "to" tasks exist
+                let (to_task_id, to_field) = parse_task_and_field(to);
+                if !task_ids.contains(&to_task_id.to_string()) {
+                    return Err(anyhow::anyhow!(
+                        "Task '{}' referenced in parameter connection does not exist",
+                        to_task_id
+                    ));
+                }
+
+                // Check that to_field is specified
+                if to_field.is_none() {
+                    return Err(anyhow::anyhow!(
+                        "Task path '{}' is missing a field, like '{}.field_name_here'",
+                        to,
+                        to_task_id
+                    ));
+                }
+            }
+        }
+    }
+
     Ok(())
 }
 
 /// Parse a path like "task_id.output" into a task ID "task_id" and field name "output".
-fn parse_task_and_field(path: &str) -> (&str, &str) {
+fn parse_task_and_field(path: &str) -> (&str, Option<&str>) {
     match path.split_once('.') {
-        Some((task_id, field)) => (task_id, field),
-        None => (path, ""),
+        Some((task_id, field)) => (task_id, Some(field)),
+        None => (path, None),
     }
 }
 
@@ -48,6 +147,8 @@ pub struct Workflow {
     task_dependency_map: HashMap<String, HashSet<String>>,
     /// The data dependency mapping.
     task_data_dependencies: HashMap<String, Vec<Dependency>>,
+    /// The output mappings from tasks to workflow outputs.
+    output_mappings: Vec<OutputMapping>,
     /// The input schema for the workflow.
     input_schema: serde_json::Value,
     /// The output schema for the workflow.
@@ -93,56 +194,126 @@ impl Workflow {
             task_data_dependencies.insert(id.clone(), Vec::with_capacity(1));
         }
 
+        // Track workflow outputs
+        let mut output_mappings = Vec::new();
+
         // Process connections to build the dependency graph
         for connection in &schema_workflow.connections {
             match connection {
                 sauropod_schemas::workflow::Connection::Parameter { parameter, to } => {
                     // Parameters create a data dependency, but not a task dependency
-                    for task_path in to {
-                        let (task, field) = parse_task_and_field(task_path);
-                        task_data_dependencies
-                            .entry(task.to_string())
-                            .or_default()
-                            .push(Dependency::Parameter {
-                                parameter_name: parameter.clone(),
-                                field: field.to_string(),
-                            });
-                    }
+                    let (task, Some(field)) = parse_task_and_field(to) else {
+                        anyhow::bail!("Invalid task path: {}", to);
+                    };
+
+                    task_data_dependencies
+                        .entry(task.to_string())
+                        .or_default()
+                        .push(Dependency::Parameter {
+                            parameter_name: parameter.clone(),
+                            field: field.to_string(),
+                        });
+                }
+                sauropod_schemas::workflow::Connection::Output { from, output } => {
+                    // Parse the task ID from "task_id.output" format
+                    let (from_task_id, from_field_path) = parse_task_and_field(from);
+
+                    // Add to output mappings
+                    output_mappings.push(OutputMapping {
+                        from: TaskField {
+                            id: from_task_id.to_string(),
+                            field: from_field_path.map(|x| x.to_string()),
+                        },
+                        output_name: output.clone(),
+                    });
                 }
                 sauropod_schemas::workflow::Connection::Task { from, to } => {
                     // Parse the task ID from "task_id.output" format
                     let (from_task_id, from_field_path) = parse_task_and_field(from);
+                    let (to_task_id, Some(to_field_path)) = parse_task_and_field(to) else {
+                        anyhow::bail!(
+                            "Task path '{0}' is missing a field, like '{0}.field_name_here'",
+                            to
+                        );
+                    };
 
-                    // Add dependencies: each "to" task depends on the "from" task
-                    for to_path in to {
-                        let (to_task_id, to_field_path) = parse_task_and_field(to_path);
-
-                        task_dependency_map
-                            .entry(to_task_id.to_string())
-                            .or_default()
-                            .insert(from_task_id.to_string());
-                        task_data_dependencies
-                            .entry(to_task_id.to_string())
-                            .or_default()
-                            .push(Dependency::Task {
-                                input_id: from_task_id.to_string(),
-                                input_field: from_field_path.to_string(),
-                                field: to_field_path.to_string(),
-                            });
-                    }
+                    task_dependency_map
+                        .entry(to_task_id.to_string())
+                        .or_default()
+                        .insert(from_task_id.to_string());
+                    task_data_dependencies
+                        .entry(to_task_id.to_string())
+                        .or_default()
+                        .push(Dependency::Task {
+                            input_data: TaskField {
+                                id: from_task_id.to_string(),
+                                field: from_field_path.map(|x| x.to_string()),
+                            },
+                            field: to_field_path.to_string(),
+                        });
                 }
             }
         }
+
+        // Generate output schema based on output mappings
+        let mut properties = serde_json::Map::new();
+        for mapping in &output_mappings {
+            let Some(task) = task_map.get(&mapping.from.id) else {
+                anyhow::bail!(
+                    "Task {} (connected to {}) not found",
+                    mapping.from.id,
+                    mapping.output_name
+                );
+            };
+
+            let task_schema = task.output_schema();
+            let output_field_schema = if let Some(field) = &mapping.from.field {
+                if task_schema["type"] != "object" {
+                    anyhow::bail!(
+                        "Task {} output (connected to {}) is not an object",
+                        mapping.from.id,
+                        mapping.output_name
+                    );
+                }
+
+                if let Some(field) = task_schema["properties"]
+                    .as_object()
+                    .and_then(|props| props.get(field))
+                {
+                    field.clone()
+                } else {
+                    anyhow::bail!(
+                        "Task {} output (connected to {}) does not have field {}",
+                        mapping.from.id,
+                        mapping.output_name,
+                        field
+                    );
+                }
+            } else {
+                task_schema.clone()
+            };
+
+            properties.insert(
+                mapping.output_name.clone(),
+                serde_json::json!({
+                    "type": output_field_schema
+                }),
+            );
+        }
+
+        let output_schema = serde_json::json!({
+            "type": "object",
+            "properties": properties,
+            "required": output_mappings.iter().map(|m| m.output_name.clone()).collect::<Vec<_>>()
+        });
 
         Ok(Self {
             task_map,
             task_data_dependencies,
             task_dependency_map,
+            output_mappings,
             input_schema: serde_json::json!(input_schema_from_workflow_schema(&schema_workflow)),
-            // For now, just return a string.
-            output_schema: serde_json::json!({
-                "type": "string"
-            }),
+            output_schema,
         })
     }
 }
@@ -217,22 +388,18 @@ impl Task for Workflow {
                                     }
                                 }
                             }
-                            Dependency::Task {
-                                input_id,
-                                input_field,
-                                field,
-                            } => {
+                            Dependency::Task { input_data, field } => {
                                 // Get the output from the previously executed task
-                                if let Some(source_output) = task_outputs.get(input_id) {
-                                    let source_value = if input_field.is_empty() {
-                                        // If no field specified, use the entire output
-                                        source_output.clone()
-                                    } else {
+                                if let Some(source_output) = task_outputs.get(&input_data.id) {
+                                    let source_value = if let Some(field) = &input_data.field {
                                         // Otherwise get the specific field
                                         source_output
-                                            .get(input_field)
+                                            .get(field)
                                             .cloned()
                                             .unwrap_or(serde_json::Value::Null)
+                                    } else {
+                                        // If no field specified, use the entire output
+                                        source_output.clone()
                                     };
 
                                     // Set the value in the appropriate field
@@ -268,13 +435,30 @@ impl Task for Workflow {
             }
         }
 
-        // For now, return the output of the last executed task
-        // In the future, we'll determine which task is the final output based on the workflow definition
-        if let Some((_id, output)) = task_outputs.iter().next() {
-            Ok(output.clone())
-        } else {
-            Ok(serde_json::json!({}))
+        // Construct output based on output mappings
+        let mut result = serde_json::Map::new();
+
+        for mapping in &self.output_mappings {
+            if let Some(source_output) = task_outputs.get(&mapping.from.id) {
+                let source_value = if let Some(field) = &mapping.from.field {
+                    // Otherwise get the specific field
+                    source_output
+                        .get(field)
+                        .cloned()
+                        .unwrap_or(serde_json::Value::Null)
+                } else {
+                    // If no field specified, use the entire output
+                    source_output.clone()
+                };
+
+                result.insert(mapping.output_name.clone(), source_value);
+            } else {
+                // Task not found or didn't produce output
+                result.insert(mapping.output_name.clone(), serde_json::Value::Null);
+            }
         }
+
+        Ok(serde_json::Value::Object(result))
     }
 
     fn input_schema(&self) -> &serde_json::Value {

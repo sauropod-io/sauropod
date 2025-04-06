@@ -12,16 +12,29 @@ pub enum Connection {
     /// A parameter passed in from outside the workflow.
     Parameter {
         /// The name of the parameter.
+        #[cfg_attr(feature = "json_schema", schemars(example = &"url"))]
         parameter: String,
-        /// The task parameters to connect the workflow parameter to.
-        to: Vec<String>,
+        /// The task parameter to connect the workflow parameter to.
+        #[cfg_attr(feature = "json_schema", schemars(example = &"uploader.target_url"))]
+        to: String,
+    },
+    /// An output from workflow.
+    Output {
+        /// The task parameter to connect to the output.
+        #[cfg_attr(feature = "json_schema", schemars(example = &"retriever.content"))]
+        from: String,
+        /// The name of the output value.
+        #[cfg_attr(feature = "json_schema", schemars(example = &"document_content"))]
+        output: String,
     },
     /// A connection between the output of one task and the input of another.
     Task {
         /// The ID of the task that produces the output.
+        #[cfg_attr(feature = "json_schema", schemars(example = &"retriever.content"))]
         from: String,
         /// The ID of the task that consumes the output.
-        to: Vec<String>,
+        #[cfg_attr(feature = "json_schema", schemars(example = &"summarizer.document"))]
+        to: String,
     },
 }
 
@@ -72,12 +85,17 @@ pub struct Workflow {
     ///   {
     ///     // Make the workflow parameter `url` available to the task `foo`.
     ///     "parameter": "url",
-    ///     "to": ["foo.url"]
+    ///     "to": "foo.url"
     ///   },
     ///   {
-    ///     // Pipe the output of the `foo` task to the  `content` parameter of task `bar`.
+    ///     // Pipe the output of the `foo` task to the `content` parameter of task `bar`.
     ///     "from": "foo.output",
-    ///     "to": ["bar.content"]
+    ///     "to": "bar.content"
+    ///   }
+    ///   {
+    ///     // Pipe the output of the `bar` task to the `my_output` output of the workflow.
+    ///     "from": "bar.output",
+    ///     "output": "my_output"
     ///   }
     /// ]
     /// ```

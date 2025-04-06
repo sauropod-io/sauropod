@@ -1,6 +1,8 @@
 import { LucideIcon, PlusCircle } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router";
 
+import type { Schemas } from "@sauropod-io/client";
+
 import { ErrorBadge } from "@/components/badge";
 import Spinner from "@/components/icons/Spinner";
 import {
@@ -24,7 +26,7 @@ interface SidebarLinkGroupProps {
   addActionTitle: string;
   isFetching: boolean;
   isLoading: boolean;
-  error: Error | null;
+  error: Schemas["Error"] | null;
 }
 
 /** A link group. */
@@ -51,7 +53,7 @@ export default function SidebarLinkGroup({
   if (error != null) {
     menuItems = [
       <SidebarMenuItem>
-        <ErrorBadge>Error</ErrorBadge> {error.message}
+        <ErrorBadge>Error</ErrorBadge> {error.error}
       </SidebarMenuItem>,
     ];
   } else if (!isLoading) {

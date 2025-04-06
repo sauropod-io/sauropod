@@ -2,6 +2,8 @@ use std::borrow::Cow;
 use std::collections::BTreeMap;
 use std::io::Write;
 
+use schemars::JsonSchema;
+
 use crate::openapi_schema::*;
 
 use crate::{Route, RouteData};
@@ -110,6 +112,30 @@ pub fn generate_openapi_schema(
     Ok(())
 }
 
+fn make_error_response(description: &str) -> ReferenceOr<Response> {
+    let mut content = BTreeMap::new();
+    content.insert(
+        "application/json".to_string(),
+        MediaType {
+            schema: Some(ReferenceOr::Reference(Reference {
+                ref_path: format!(
+                    "#/components/schemas/{}",
+                    sauropod_schemas::Error::schema_name()
+                ),
+            })),
+            example: None,
+            examples: None,
+        },
+    );
+
+    ReferenceOr::Item(Response {
+        description: description.to_string(),
+        headers: None,
+        content: Some(content),
+        links: None,
+    })
+}
+
 fn create_operation_from_route_data(route_data: &RouteData) -> Operation {
     // Create parameters
     let parameters = if route_data.path.parameters().count() > 0 {
@@ -179,6 +205,11 @@ fn create_operation_from_route_data(route_data: &RouteData) -> Operation {
         links: None,
     });
     responses.insert("200".to_string(), success_response);
+    responses.insert("400".to_string(), make_error_response("Bad Request"));
+    responses.insert(
+        "500".to_string(),
+        make_error_response("Internal Server Error"),
+    );
 
     Operation {
         summary: Some(route_data.description.clone()),

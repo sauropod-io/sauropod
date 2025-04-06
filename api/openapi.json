@@ -42,6 +42,26 @@
                 }
               }
             }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           }
         }
       }
@@ -56,6 +76,26 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Array_of_ModelDefinition"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
                 }
               }
             }
@@ -76,6 +116,26 @@
                 }
               }
             }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           }
         }
       }
@@ -90,6 +150,26 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Array_of_ObjectInfo"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
                 }
               }
             }
@@ -114,6 +194,26 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/int64"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
                 }
               }
             }
@@ -144,6 +244,26 @@
                 }
               }
             }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           }
         }
       },
@@ -171,6 +291,26 @@
         "responses": {
           "200": {
             "description": "Successful response"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           }
         }
       },
@@ -189,6 +329,26 @@
         "responses": {
           "200": {
             "description": "Successful response"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           }
         }
       }
@@ -216,6 +376,26 @@
                 }
               }
             }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           }
         }
       }
@@ -233,6 +413,26 @@
                 }
               }
             }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           }
         }
       }
@@ -247,6 +447,26 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Array_of_ObjectInfo"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
                 }
               }
             }
@@ -271,6 +491,26 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/int64"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
                 }
               }
             }
@@ -301,6 +541,26 @@
                 }
               }
             }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           }
         }
       },
@@ -328,6 +588,26 @@
         "responses": {
           "200": {
             "description": "Successful response"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           }
         }
       },
@@ -346,6 +626,26 @@
         "responses": {
           "200": {
             "description": "Successful response"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           }
         }
       }
@@ -370,6 +670,26 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Map_of_AnyValue"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
                 }
               }
             }
@@ -406,6 +726,26 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Map_of_AnyValue"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
                 }
               }
             }
@@ -446,14 +786,27 @@
                 "type": "string"
               },
               "to": {
-                "description": "The task parameters to connect the workflow parameter to.",
-                "type": "array",
-                "items": {
-                  "type": "string"
-                }
+                "description": "The task parameter to connect the workflow parameter to.",
+                "type": "string"
               }
             },
             "required": ["parameter", "to"],
+            "additionalProperties": false
+          },
+          {
+            "description": "An output from workflow.",
+            "type": "object",
+            "properties": {
+              "from": {
+                "description": "The task parameter to connect to the output.",
+                "type": "string"
+              },
+              "output": {
+                "description": "The name of the output value.",
+                "type": "string"
+              }
+            },
+            "required": ["from", "output"],
             "additionalProperties": false
           },
           {
@@ -466,16 +819,25 @@
               },
               "to": {
                 "description": "The ID of the task that consumes the output.",
-                "type": "array",
-                "items": {
-                  "type": "string"
-                }
+                "type": "string"
               }
             },
             "required": ["from", "to"],
             "additionalProperties": false
           }
         ]
+      },
+      "Error": {
+        "description": "An error message.",
+        "type": "object",
+        "properties": {
+          "error": {
+            "description": "The error message.",
+            "type": "string"
+          }
+        },
+        "required": ["error"],
+        "additionalProperties": false
       },
       "HealthCheckResponse": {
         "description": "Response to a health check request.",
@@ -686,7 +1048,7 @@
             }
           },
           "connections": {
-            "description": "A mapping of connections between tasks.\n\n # Example\n\n ```json\n [\n   {\n     // Make the workflow parameter `url` available to the task `foo`.\n     \"parameter\": \"url\",\n     \"to\": [\"foo.url\"]\n   },\n   {\n     // Pipe the output of the `foo` task to the  `content` parameter of task `bar`.\n     \"from\": \"foo.output\",\n     \"to\": [\"bar.content\"]\n   }\n ]\n ```",
+            "description": "A mapping of connections between tasks.\n\n # Example\n\n ```json\n [\n   {\n     // Make the workflow parameter `url` available to the task `foo`.\n     \"parameter\": \"url\",\n     \"to\": \"foo.url\"\n   },\n   {\n     // Pipe the output of the `foo` task to the `content` parameter of task `bar`.\n     \"from\": \"foo.output\",\n     \"to\": \"bar.content\"\n   }\n   {\n     // Pipe the output of the `bar` task to the `my_output` output of the workflow.\n     \"from\": \"bar.output\",\n     \"output\": \"my_output\"\n   }\n ]\n ```",
             "type": "array",
             "default": [],
             "items": {

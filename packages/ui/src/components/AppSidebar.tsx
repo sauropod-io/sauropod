@@ -2,8 +2,8 @@ import { GitHubLogoIcon } from "@radix-ui/react-icons";
 import { Logs, Settings } from "lucide-react";
 import { Link, useLocation } from "react-router";
 
-import SauropodIcon from "@/assets/icon.svg";
-import Sauropod from "@/assets/sauropod.svg";
+import SauropodIcon from "@/assets/icon.svg?url";
+import Sauropod from "@/assets/sauropod.svg?url";
 import SidebarTaskGroup from "@/components/sidebar/SidebarTaskGroup";
 import SidebarWorkflowGroup from "@/components/sidebar/SidebarWorkflowGroup";
 import {

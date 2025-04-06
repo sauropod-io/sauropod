@@ -1,6 +1,6 @@
 import { format } from "date-fns";
 
-import type { components } from "@sauropod-io/client/openapi";
+import type { Schemas } from "@sauropod-io/client";
 
 import api from "@/api";
 import { ErrorBadge, Level, LevelBadge } from "@/components/badge";
@@ -9,7 +9,7 @@ function LogElement({
   log,
   index,
 }: {
-  log: components["schemas"]["LogMessage"];
+  log: Schemas["LogMessage"];
   index: number;
 }) {
   const { message, ...rest } = log.fields;
@@ -45,8 +45,8 @@ function LogMessageRows() {
   if (error != null) {
     return (
       <div>
-        <ErrorBadge>Error</ErrorBadge> Could not load system logs:{" "}
-        {(error as Error).message}
+        <ErrorBadge>Error</ErrorBadge> Could not load system logs:
+        {` ${error.error}`}
       </div>
     );
   }

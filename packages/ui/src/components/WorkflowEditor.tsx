@@ -45,8 +45,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
+import { useIsMobile } from "@/hooks/use-mobile";
 import {
-  GraphNode,
+  type GraphNode,
+  type GraphNodeData,
   INPUT_NODE_ID,
   INPUT_NODE_TYPE,
   OUTPUT_NODE_ID,
@@ -54,7 +56,7 @@ import {
   TASK_NODE_TYPE,
   graphToWorkflow,
   workflowToGraph,
-} from "@/lib/graphUtils";
+} from "@/lib/workflowGraph";
 import {
   useCreateWorkflow,
   useDeleteWorkflow,
@@ -74,62 +76,101 @@ const edgeTypes = {
 
 interface FlowProps {
   workflowId?: string;
-  workflowData: Schemas["Workflow"];
+  name?: string;
+  initialNodes: GraphNode[];
+  initialEdges: Edge[];
 }
 
-function Flow({ workflowData, workflowId }: FlowProps) {
+function setNodeData(
+  nodeId: string,
+  nodeType: string,
+  data: GraphNodeData,
+  nodes: GraphNode[],
+): GraphNode[] {
+  const existingNode = nodes.find((node) => node.id === nodeId);
+  if (existingNode) {
+    return nodes.map((node) =>
+      node.id === nodeId ? { ...node, data: { ...node.data, ...data } } : node,
+    );
+  }
+  return [
+    ...nodes,
+    {
+      id: nodeId,
+      type: nodeType,
+      position: { x: 0, y: 0 },
+      data: { ...data },
+    },
+  ];
+}
+
+function Flow({
+  workflowId,
+  name: initialName,
+  initialNodes,
+  initialEdges,
+}: FlowProps) {
   const createWorkflow = useCreateWorkflow();
   const updateWorkflow = useUpdateWorkflow();
   const deleteWorkflow = useDeleteWorkflow();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
 
-  const [name, setName] = useState(workflowData?.name || "");
-  const [nodes, setNodes, onNodesChange] = useNodesState<GraphNode>([]);
-  const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
+  // Graph state
+  const [name, setName] = useState(initialName || "");
+  const [nodes, setNodes, onNodesChange] =
+    useNodesState<GraphNode>(initialNodes);
+  const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>(initialEdges);
+  const [inputs, setInputs] = useState<string[]>(
+    initialNodes.find(
+      (node): node is Node<IONodeData> => node.id === INPUT_NODE_ID,
+    )?.data.names || [],
+  );
+  const [outputs, setOutputs] = useState<string[]>(
+    initialNodes.find(
+      (node): node is Node<IONodeData> => node.id === OUTPUT_NODE_ID,
+    )?.data.names || [],
+  );
+
+  // UI state
   const [isRunModalOpen, setIsRunModalOpen] = useState(false);
-
-  useEffect(() => {
-    const { nodes: graphNodes, edges: graphEdges } =
-      workflowToGraph(workflowData);
-    setNodes(graphNodes);
-    setEdges(graphEdges);
-  }, [workflowData, setNodes, setEdges]);
-
-  const [inputs, setInputs] = useState<string[]>([]);
-  const [outputs, setOutputs] = useState<string[]>(["output"]);
   const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
   const [isSettingsSheetOpen, setIsSettingsSheetOpen] = useState(false);
 
-  const onConnect = useCallback(
-    (params: Connection | Edge) => setEdges((eds) => addEdge(params, eds)),
-    [setEdges],
-  );
-
   useEffect(() => {
-    const newNode: Node<IONodeData> = {
-      id: INPUT_NODE_ID,
-      type: INPUT_NODE_TYPE,
-      position: { x: -100, y: 100 },
-      data: { names: inputs },
-    };
-    setNodes((nodes) => [
-      ...nodes.filter((x) => x.id != INPUT_NODE_ID),
-      newNode,
-    ]);
+    setNodes((nodes) => {
+      if (inputs.length === 0) {
+        return nodes.filter((node) => node.id !== INPUT_NODE_ID);
+      } else {
+        return setNodeData(
+          INPUT_NODE_ID,
+          INPUT_NODE_TYPE,
+          { names: inputs },
+          nodes,
+        );
+      }
+    });
   }, [inputs, setNodes]);
 
   useEffect(() => {
-    const newNode: Node<IONodeData> = {
-      id: OUTPUT_NODE_ID,
-      type: OUTPUT_NODE_TYPE,
-      position: { x: 100, y: 100 },
-      data: { names: outputs },
-    };
-    setNodes((nodes) => [
-      ...nodes.filter((x) => x.id != OUTPUT_NODE_ID),
-      newNode,
-    ]);
+    setNodes((nodes) => {
+      if (outputs.length === 0) {
+        return nodes.filter((node) => node.id !== OUTPUT_NODE_ID);
+      } else {
+        return setNodeData(
+          OUTPUT_NODE_ID,
+          OUTPUT_NODE_TYPE,
+          { names: outputs },
+          nodes,
+        );
+      }
+    });
   }, [outputs, setNodes]);
+
+  const onConnect = useCallback(
+    (params: Connection | Edge) => setEdges((edges) => addEdge(params, edges)),
+    [setEdges],
+  );
 
   const handleSave = async () => {
     const workflow = graphToWorkflow(name, nodes, edges);
@@ -294,6 +335,12 @@ function Flow({ workflowData, workflowId }: FlowProps) {
           type: "edge",
           animated: true,
         }}
+        onInit={(reactFlow) => {
+          // Fit to view to existing nodes
+          reactFlow.fitView({ padding: 0.1 });
+        }}
+        connectOnClick={isMobile /* Allow tap to connect on Mobile */}
+        deleteKeyCode={["Delete", "Backspace"]}
         onConnect={onConnect}
         onEdgesChange={onEdgesChange}
         onNodesChange={onNodesChange}
@@ -321,21 +368,40 @@ export default function WorkflowEditor({
   const { data, isLoading, error } = useQuery({
     queryKey: ["get", `/api/task/${workflowId}`],
     queryFn: async () => {
-      if (!workflowId)
-        return {
+      let workflowData: Schemas["Workflow"];
+      if (workflowId) {
+        const response = await apiClient.GET("/api/workflow/{id}", {
+          params: { path: { id: workflowId } },
+        });
+
+        if (response.error) {
+          throw new Error(response.error.error);
+        }
+
+        workflowData = response.data;
+      } else {
+        workflowData = {
           name: "",
           actions: {},
           connections: [],
         } as Schemas["Workflow"];
-      const response = await apiClient.GET("/api/workflow/{id}", {
-        params: { path: { id: workflowId } },
-      });
-      return response.data;
+      }
+
+      const { nodes, edges } = workflowToGraph(workflowData);
+      return {
+        name: workflowData.name,
+        nodes,
+        edges,
+      };
     },
   });
 
   if (error) {
-    return <div className="p-4">Error: {error.message}</div>;
+    return (
+      <div className="p-4">
+        Encountered error while fetching workflow: {error.message}
+      </div>
+    );
   }
 
   if (isLoading || data === undefined) {
@@ -344,7 +410,12 @@ export default function WorkflowEditor({
 
   return (
     <ReactFlowProvider>
-      <Flow workflowId={workflowId} workflowData={data} />
+      <Flow
+        workflowId={workflowId}
+        initialNodes={data.nodes}
+        initialEdges={data.edges}
+        name={data.name}
+      />
     </ReactFlowProvider>
   );
 }

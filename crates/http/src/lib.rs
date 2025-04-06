@@ -17,6 +17,8 @@ pub enum HttpResponse<T> {
     NotFound(Option<String>),
     /// HTTP 400
     BadRequest(String),
+    /// HTTP 500
+    InternalServerError(String),
 }
 
 impl<T> From<T> for HttpResponse<T> {
@@ -38,16 +40,18 @@ where
             HttpResponse::Ok(_) => axum::http::StatusCode::OK,
             HttpResponse::NotFound(_) => axum::http::StatusCode::NOT_FOUND,
             HttpResponse::BadRequest(_) => axum::http::StatusCode::BAD_REQUEST,
+            HttpResponse::InternalServerError(_) => axum::http::StatusCode::INTERNAL_SERVER_ERROR,
         };
         let message = match self {
             HttpResponse::Ok(_) => "OK".to_string(),
             HttpResponse::NotFound(Some(message)) => message,
             HttpResponse::NotFound(None) => "Not found".to_string(),
             HttpResponse::BadRequest(message) => message,
+            HttpResponse::InternalServerError(message) => message,
         };
 
-        let mut response =
-            axum::response::Json(serde_json::json!({ "error": message })).into_response();
+        let mut response: axum::http::Response<axum::body::Body> =
+            axum::response::Json(sauropod_schemas::Error { error: message }).into_response();
         *response.status_mut() = status_code;
         response
     }
@@ -61,6 +65,8 @@ where
 {
     match data {
         Ok(data) => data.into_response(),
-        Err(_) => axum::http::StatusCode::INTERNAL_SERVER_ERROR.into_response(),
+        Err(_) => {
+            HttpResponse::InternalServerError("Internal server error".to_string()).into_response()
+        }
     }
 }

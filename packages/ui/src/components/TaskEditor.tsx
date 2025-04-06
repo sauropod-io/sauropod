@@ -83,9 +83,15 @@ export default function TaskEditor({ taskId }: { taskId?: string }) {
             },
           },
         } as Schemas["Task"];
+
       const response = await apiClient.GET("/api/task/{id}", {
         params: { path: { id: taskId } },
       });
+
+      if (response.error) {
+        throw new Error(response.error.error);
+      }
+
       return response.data;
     },
   });
@@ -158,7 +164,10 @@ export default function TaskEditor({ taskId }: { taskId?: string }) {
 
   if (taskDataError) {
     return (
-      <ErrorCard message="Error loading task data" error={taskDataError} />
+      <ErrorCard
+        message="Error loading task data"
+        error={{ error: taskDataError.message }}
+      />
     );
   }
 

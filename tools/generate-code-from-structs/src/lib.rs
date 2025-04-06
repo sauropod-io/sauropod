@@ -300,6 +300,10 @@ macro_rules! openapi {
         let mut schema_generator = schemars::SchemaGenerator::new(schemars::generate::SchemaSettings::openapi3());
         let mut schema = std::collections::BTreeMap::<_, serde_json::Value>::new();
 
+        // Make sure the schema for the `Error` type is emitted.
+        // It's a little special because it's implicitly used in the OpenAPI schema for the error routes.
+        schema.insert(<sauropod_schemas::Error as schemars::JsonSchema>::schema_name(), <sauropod_schemas::Error as schemars::JsonSchema>::json_schema(&mut schema_generator).to_value());
+
         let routes = vec![
             $(
                 $crate::Route::new(

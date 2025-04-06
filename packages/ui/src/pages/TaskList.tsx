@@ -5,6 +5,7 @@ import { useNavigate } from "react-router";
 import { Schemas } from "@sauropod-io/client";
 
 import api from "@/api";
+import ErrorCard from "@/components/ErrorCard";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -32,7 +33,7 @@ function SkeletonCard() {
 }
 
 function TaskCard({ item }: { item: Schemas["ObjectInfo"] }) {
-  const { data, isLoading } = api.useQuery("get", `/api/task/{id}`, {
+  const { data, isLoading, error } = api.useQuery("get", `/api/task/{id}`, {
     params: { path: { id: `${item.id}` } },
   });
   const navigate = useNavigate();
@@ -47,6 +48,16 @@ function TaskCard({ item }: { item: Schemas["ObjectInfo"] }) {
 
   if (isLoading) {
     return <SkeletonCard />;
+  }
+
+  if (error != null) {
+    return (
+      <ErrorCard
+        className="relative group"
+        message={`${item.name}`}
+        error={error}
+      />
+    );
   }
 
   return (

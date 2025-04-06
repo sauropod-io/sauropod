@@ -30,6 +30,24 @@ export interface paths {
             "application/json": components["schemas"]["HealthCheckResponse"];
           };
         };
+        /** @description Bad Request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["Error"];
+          };
+        };
+        /** @description Internal Server Error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["Error"];
+          };
+        };
       };
     };
     put?: never;
@@ -64,6 +82,24 @@ export interface paths {
           };
           content: {
             "application/json": components["schemas"]["Array_of_ModelDefinition"];
+          };
+        };
+        /** @description Bad Request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["Error"];
+          };
+        };
+        /** @description Internal Server Error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["Error"];
           };
         };
       };
@@ -102,6 +138,24 @@ export interface paths {
             "application/json": components["schemas"]["LogResponse"];
           };
         };
+        /** @description Bad Request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["Error"];
+          };
+        };
+        /** @description Internal Server Error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["Error"];
+          };
+        };
       };
     };
     put?: never;
@@ -138,6 +192,24 @@ export interface paths {
             "application/json": components["schemas"]["Array_of_ObjectInfo"];
           };
         };
+        /** @description Bad Request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["Error"];
+          };
+        };
+        /** @description Internal Server Error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["Error"];
+          };
+        };
       };
     };
     put?: never;
@@ -162,6 +234,24 @@ export interface paths {
           };
           content: {
             "application/json": components["schemas"]["int64"];
+          };
+        };
+        /** @description Bad Request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["Error"];
+          };
+        };
+        /** @description Internal Server Error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["Error"];
           };
         };
       };
@@ -200,6 +290,24 @@ export interface paths {
             "application/json": components["schemas"]["Task"];
           };
         };
+        /** @description Bad Request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["Error"];
+          };
+        };
+        /** @description Internal Server Error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["Error"];
+          };
+        };
       };
     };
     put?: never;
@@ -226,6 +334,24 @@ export interface paths {
           };
           content?: never;
         };
+        /** @description Bad Request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["Error"];
+          };
+        };
+        /** @description Internal Server Error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["Error"];
+          };
+        };
       };
     };
     /** Delete a task */
@@ -246,6 +372,24 @@ export interface paths {
             [name: string]: unknown;
           };
           content?: never;
+        };
+        /** @description Bad Request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["Error"];
+          };
+        };
+        /** @description Internal Server Error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["Error"];
+          };
         };
       };
     };
@@ -280,6 +424,24 @@ export interface paths {
           };
           content: {
             "application/json": components["schemas"]["Map_of_AnyValue"];
+          };
+        };
+        /** @description Bad Request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["Error"];
+          };
+        };
+        /** @description Internal Server Error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["Error"];
           };
         };
       };
@@ -318,6 +480,24 @@ export interface paths {
             "application/json": components["schemas"]["Array_of_ToolDefinition"];
           };
         };
+        /** @description Bad Request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["Error"];
+          };
+        };
+        /** @description Internal Server Error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["Error"];
+          };
+        };
       };
     };
     put?: never;
@@ -354,6 +534,24 @@ export interface paths {
             "application/json": components["schemas"]["Array_of_ObjectInfo"];
           };
         };
+        /** @description Bad Request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["Error"];
+          };
+        };
+        /** @description Internal Server Error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["Error"];
+          };
+        };
       };
     };
     put?: never;
@@ -378,6 +576,24 @@ export interface paths {
           };
           content: {
             "application/json": components["schemas"]["int64"];
+          };
+        };
+        /** @description Bad Request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["Error"];
+          };
+        };
+        /** @description Internal Server Error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["Error"];
           };
         };
       };
@@ -416,6 +632,24 @@ export interface paths {
             "application/json": components["schemas"]["Workflow"];
           };
         };
+        /** @description Bad Request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["Error"];
+          };
+        };
+        /** @description Internal Server Error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["Error"];
+          };
+        };
       };
     };
     put?: never;
@@ -442,6 +676,24 @@ export interface paths {
           };
           content?: never;
         };
+        /** @description Bad Request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["Error"];
+          };
+        };
+        /** @description Internal Server Error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["Error"];
+          };
+        };
       };
     };
     /** Delete a workflow */
@@ -462,6 +714,24 @@ export interface paths {
             [name: string]: unknown;
           };
           content?: never;
+        };
+        /** @description Bad Request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["Error"];
+          };
+        };
+        /** @description Internal Server Error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["Error"];
+          };
         };
       };
     };
@@ -496,6 +766,24 @@ export interface paths {
           };
           content: {
             "application/json": components["schemas"]["Map_of_AnyValue"];
+          };
+        };
+        /** @description Bad Request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["Error"];
+          };
+        };
+        /** @description Internal Server Error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["Error"];
           };
         };
       };
@@ -542,6 +830,24 @@ export interface paths {
             "application/json": components["schemas"]["Map_of_AnyValue"];
           };
         };
+        /** @description Bad Request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["Error"];
+          };
+        };
+        /** @description Internal Server Error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["Error"];
+          };
+        };
       };
     };
     delete?: never;
@@ -562,15 +868,26 @@ export interface components {
       | {
           /** @description The name of the parameter. */
           parameter: string;
-          /** @description The task parameters to connect the workflow parameter to. */
-          to: string[];
+          /** @description The task parameter to connect the workflow parameter to. */
+          to: string;
+        }
+      | {
+          /** @description The task parameter to connect to the output. */
+          from: string;
+          /** @description The name of the output value. */
+          output: string;
         }
       | {
           /** @description The ID of the task that produces the output. */
           from: string;
           /** @description The ID of the task that consumes the output. */
-          to: string[];
+          to: string;
         };
+    /** @description An error message. */
+    Error: {
+      /** @description The error message. */
+      error: string;
+    };
     /** @description Response to a health check request. */
     HealthCheckResponse: Record<string, never>;
     /** @description Run an LLM. */
@@ -677,12 +994,17 @@ export interface components {
        *        {
        *          // Make the workflow parameter `url` available to the task `foo`.
        *          "parameter": "url",
-       *          "to": ["foo.url"]
+       *          "to": "foo.url"
        *        },
        *        {
-       *          // Pipe the output of the `foo` task to the  `content` parameter of task `bar`.
+       *          // Pipe the output of the `foo` task to the `content` parameter of task `bar`.
        *          "from": "foo.output",
-       *          "to": ["bar.content"]
+       *          "to": "bar.content"
+       *        }
+       *        {
+       *          // Pipe the output of the `bar` task to the `my_output` output of the workflow.
+       *          "from": "bar.output",
+       *          "output": "my_output"
        *        }
        *      ]
        *      ```

@@ -129,8 +129,7 @@ mod tests {
 
     #[test]
     fn test_two_variables() -> anyhow::Result<()> {
-        let tpl_str =
-            r#"Classify "{{ input.sentence }}" into the categories "{{ input.categories }}""#;
+        let tpl_str = r#"Classify "{{ sentence }}" into the categories "{{ categories }}""#;
         let mut env: Environment<'_> = Environment::new();
         env.add_template("template", tpl_str)?;
         let result = template_to_inputs(env.get_template("template")?)?;
@@ -171,7 +170,7 @@ mod tests {
 
     #[test]
     fn test_nested_input() -> anyhow::Result<()> {
-        let tpl_str = r#"Hi {{ input.user.name }} welcome!"#;
+        let tpl_str = r#"Hi {{ user.name }} welcome!"#;
         let mut env = Environment::new();
         env.add_template("template", tpl_str)?;
         let result = template_to_inputs(env.get_template("template")?)?;

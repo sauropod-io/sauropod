@@ -1,6 +1,11 @@
-import { type Node, type NodeProps, Position } from "@xyflow/react";
+import {
+  type Node,
+  type NodeProps,
+  Position,
+  useUpdateNodeInternals,
+} from "@xyflow/react";
 import { PencilRuler } from "lucide-react";
-import { memo } from "react";
+import { useEffect } from "react";
 
 import api from "@/api";
 import Spinner from "@/components/icons/Spinner";
@@ -19,56 +24,61 @@ export type TaskNodeData = {
   taskName: string;
 };
 
-const TaskNode = memo(
-  ({ selected, data: { taskId, taskName } }: NodeProps<Node<TaskNodeData>>) => {
-    const { data, isLoading } = api.useQuery(
-      "get",
-      `/api/task/{id}/inputSchema`,
-      {
-        params: { path: { id: `${taskId}` } },
-      },
-    );
+export default function TaskNode({
+  selected,
+  data: { taskId, taskName },
+  id,
+}: NodeProps<Node<TaskNodeData>>) {
+  const updateNodeInternals = useUpdateNodeInternals();
+  const { data, isLoading } = api.useQuery(
+    "get",
+    `/api/task/{id}/inputSchema`,
+    {
+      params: { path: { id: `${taskId}` } },
+    },
+  );
 
-    const inputs = [];
-    if (data) {
-      for (const input in data["properties"] as string[]) {
-        inputs.push(
-          <LabeledHandle
-            key={input}
-            title={input}
-            type="target"
-            position={Position.Left}
-            id={input}
-          />,
-        );
-      }
+  useEffect(() => {
+    updateNodeInternals(id);
+  }, [id, updateNodeInternals, data]);
+
+  const inputs = [];
+  if (data) {
+    for (const input in data["properties"] as string[]) {
+      inputs.push(
+        <LabeledHandle
+          key={input}
+          title={input}
+          type="target"
+          position={Position.Left}
+          id={input}
+        />,
+      );
     }
+  }
 
-    const HeaderIcon = isLoading ? Spinner : PencilRuler;
-    return (
-      <BaseNode selected={selected}>
-        <NodeHeader className="border-b">
-          <NodeHeaderIcon>
-            <HeaderIcon className="h-6 w-6" />
-          </NodeHeaderIcon>
-          <NodeHeaderTitle>{taskName}</NodeHeaderTitle>
-          <NodeHeaderActions>
-            <NodeHeaderDeleteAction />
-          </NodeHeaderActions>
-        </NodeHeader>
-        <div className="flex gap flex-row">
-          <div>{inputs}</div>
-          <div className="flex-grow" />
-          <LabeledHandle
-            title="output"
-            type="source"
-            position={Position.Right}
-            id="value"
-          />
-        </div>
-      </BaseNode>
-    );
-  },
-);
-
-export default TaskNode;
+  const HeaderIcon = isLoading ? Spinner : PencilRuler;
+  return (
+    <BaseNode selected={selected}>
+      <NodeHeader className="border-b">
+        <NodeHeaderIcon>
+          <HeaderIcon className="h-6 w-6" />
+        </NodeHeaderIcon>
+        <NodeHeaderTitle>{taskName}</NodeHeaderTitle>
+        <NodeHeaderActions>
+          <NodeHeaderDeleteAction />
+        </NodeHeaderActions>
+      </NodeHeader>
+      <div className="flex gap flex-row">
+        <div>{inputs}</div>
+        <div className="flex-grow" />
+        <LabeledHandle
+          title="output"
+          type="source"
+          position={Position.Right}
+          id="value"
+        />
+      </div>
+    </BaseNode>
+  );
+}

@@ -49,3 +49,12 @@ pub struct ModelDefinition {
     /// The URI of the model.
     pub uri: String,
 }
+
+/// An error message.
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[cfg_attr(feature = "json_schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct Error {
+    /// The error message.
+    pub error: String,
+}

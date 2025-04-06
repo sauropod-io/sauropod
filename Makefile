@@ -32,6 +32,7 @@ lint:
 	pre-commit run
 
 test:
+	npm run test
 	cargo test
 
 release: generate ui
