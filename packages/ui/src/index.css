@@ -119,3 +119,13 @@
     @apply bg-background text-foreground;
   }
 }
+
+.lucide {
+  /* Use a thinner stroke for icons by default. */
+  stroke-width: 1px;
+}
+
+.bg-destructive .lucide {
+  /* Use a thicker stroke for icons in destructive backgrounds to add some contrast. */
+  stroke-width: 2px;
+}
