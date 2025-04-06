@@ -14,7 +14,7 @@ import {
 import "@xyflow/react/dist/base.css";
 import { Play, Plus, Save, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
-import { useNavigate } from "react-router";
+import { useNavigate, useSearchParams } from "react-router";
 
 import { Schemas } from "@sauropod-io/client";
 
@@ -103,6 +103,7 @@ function Flow({
   const deleteWorkflow = useDeleteWorkflow();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   // Graph state
   const [name, setName] = useState(initialName || "");
@@ -124,6 +125,16 @@ function Flow({
   const [isRunModalOpen, setIsRunModalOpen] = useState(false);
   const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
   const [isSettingsSheetOpen, setIsSettingsSheetOpen] = useState(false);
+
+  // Open the run modal automatically if the URL contains the "run" parameter
+  useEffect(() => {
+    if (searchParams.has("run") && workflowId !== undefined) {
+      setIsRunModalOpen(true);
+      // Remove the parameter from the URL to prevent reopening on refresh
+      searchParams.delete("run");
+      setSearchParams(searchParams);
+    }
+  }, [searchParams, setSearchParams, workflowId]);
 
   useEffect(() => {
     setNodes((nodes) => {
