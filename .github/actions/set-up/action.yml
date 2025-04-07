@@ -30,5 +30,5 @@ runs:
         node-version: ${{ inputs.node-version }}
         cache: "npm"
     - name: Install Node.js dependencies
-      run: npm ci
+      run: npm i # We can't do `npm ci` because of a bug where NPM doesn't pull down the right rollup binary
       shell: bash
