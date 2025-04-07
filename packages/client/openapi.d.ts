@@ -904,6 +904,12 @@ export interface components {
     /** @description Run an LLM. */
     InvokeLLM: {
       modelStrength: components["schemas"]["ModelStrength"];
+      /** @description The output schema.
+       *
+       *      If unspecified the task will return an object with a single "output" string. */
+      outputSchema?: {
+        [key: string]: unknown;
+      } | null;
       template: components["schemas"]["Template"];
     };
     /** @description The log level. */

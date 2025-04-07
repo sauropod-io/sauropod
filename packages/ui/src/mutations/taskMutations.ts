@@ -29,7 +29,7 @@ export function useUpdateTask() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["get", "/api/task/{id}"] });
       queryClient.invalidateQueries({
-        queryKey: ["get", "/api/task/{id}/inputSchema"],
+        queryKey: ["get", "/api/task/{id}/schema"],
       });
     },
   });

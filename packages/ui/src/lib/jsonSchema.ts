@@ -1,12 +1,15 @@
+export type FieldType = "string" | "number" | "boolean" | "object" | "array";
+
 /** A subset of a JSON schema object. */
 export type JsonSchemaBase = {
-  type: "string" | "number" | "boolean" | "object" | "array";
+  type: FieldType;
   description?: string;
 };
 
 export type JsonSchemaObject = JsonSchemaBase & {
   properties: Record<string, JsonSchemaBase>;
   required?: string[];
+  additionalProperties?: boolean;
 };
 
 /** Check whether a JSON schema object is an object schema. */
@@ -28,4 +31,17 @@ export function assertIsJsonSchemaObject(
     );
   }
   return schema;
+}
+
+/** Get an iterator over the properties of a JSON schema object. */
+export function jsonSchemaObjectProperties(
+  schema: JsonSchemaBase,
+): [string, JsonSchemaBase][] {
+  const result = [];
+  for (const [key, value] of Object.entries(
+    assertIsJsonSchemaObject(schema).properties,
+  )) {
+    result.push([key, value] as [string, JsonSchemaBase]);
+  }
+  return result;
 }

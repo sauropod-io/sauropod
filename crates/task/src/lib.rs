@@ -50,12 +50,8 @@ pub fn input_schema_from_task_schema(
     })
 }
 
-/// Get the output JSON Schema from a task's schema representation.
-pub fn output_schema_from_task_schema(
-    _task: &sauropod_schemas::task::Task,
-) -> anyhow::Result<serde_json::Map<String, serde_json::Value>> {
-    // For now, just return a single string.
-    Ok(serde_json::json!({
+fn default_task_output_schema() -> serde_json::Map<String, serde_json::Value> {
+    serde_json::json!({
         "type": "object",
         "properties": {
             "output": {
@@ -63,9 +59,22 @@ pub fn output_schema_from_task_schema(
                 "description": "The content of the LLM response.",
             },
         },
-        "required": ["output"]
+        "required": ["output"],
+        "additionalProperties": false,
     })
     .as_object()
     .unwrap()
-    .clone())
+    .clone()
+}
+
+/// Get the output JSON Schema from a task's schema representation.
+pub fn output_schema_from_task_schema(
+    task: &sauropod_schemas::task::Task,
+) -> anyhow::Result<serde_json::Map<String, serde_json::Value>> {
+    Ok(match &task.action {
+        sauropod_schemas::task::TaskAction::InvokeLLM(invoke_llm) => invoke_llm
+            .output_schema
+            .clone()
+            .unwrap_or_else(default_task_output_schema),
+    })
 }

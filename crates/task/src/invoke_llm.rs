@@ -16,6 +16,8 @@ pub(crate) struct InvokeLlmTask {
     input_schema: serde_json::Value,
     /// The output JSON schema for the task.
     output_schema: serde_json::Value,
+    /// Whether to use structured output.
+    use_structured_output: bool,
 }
 
 /// Parse a JSON value from a string.
@@ -47,31 +49,47 @@ impl InvokeLlmTask {
         let input_schema = sauropod_prompt_templates::template_to_inputs(
             template_env.get_template(TEMPLATE_NAME)?,
         )?;
+        let use_structured_output = invoke_llm.output_schema.is_some();
+        let output_schema = serde_json::json!(
+            invoke_llm
+                .output_schema
+                .unwrap_or_else(crate::default_task_output_schema)
+        );
 
         Ok(Self {
             model_strength: invoke_llm.model_strength,
             template_env,
             input_schema,
-            // For now, just return a string.
-            // In the future we will support structured outputs.
-            output_schema: serde_json::json!({
-                "type": "object",
-                "properties": {
-                    "output": {
-                        "type": "string",
-                        "description": "The content of the LLM response.",
-                    },
-                },
-                "required": ["output"]
-            }),
+            output_schema,
+            use_structured_output,
         })
     }
 
     /// Create the response value.
-    fn make_response(&self, output: String) -> serde_json::Value {
-        serde_json::json!({
-            "output": output,
-        })
+    fn make_response(&self, output: String) -> anyhow::Result<serde_json::Value> {
+        if !self.use_structured_output {
+            return Ok(serde_json::json!({
+                "output": output,
+            }));
+        }
+
+        let Ok(object) = parse_json_text::<serde_json::Value>(&output) else {
+            tracing::error!("The LLM output was not valid JSON: {output}");
+            anyhow::bail!("The LLM output was not valid JSON: {output}");
+        };
+
+        // Validate the output against the schema
+        if let Err(validation_error) = jsonschema::validate(&self.output_schema, &object) {
+            tracing::error!(
+                "The LLM output did not conform to the schema: {}\nThe output was:\n{output}",
+                &validation_error
+            );
+            anyhow::bail!(
+                "The LLM output did not conform to the schema: {}\nThe output was:\n{output}",
+                validation_error
+            )
+        }
+        Ok(object)
     }
 }
 
@@ -89,20 +107,18 @@ impl Task for InvokeLlmTask {
         }
 
         let template = self.template_env.get_template(TEMPLATE_NAME)?;
-        let expanded_template = template.render(serde_json::json!(input))?;
         let model = context.get_model(self.model_strength)?;
         let llm_context = LlmContext {
+            user_prompt: template.render(serde_json::json!(input))?,
             tools: context.tools.values().map(|x| x.get_definition()).collect(),
             system_prompt: context.system_prompt.clone(),
+            output_schema: if self.use_structured_output {
+                Some(&self.output_schema)
+            } else {
+                None
+            },
         };
         let mut request = sauropod_llm_inference::prepare_completion_request(model, llm_context)?;
-        request.messages.push(Message {
-            role: Role::User,
-            content: Some(expanded_template),
-            tool_calls: vec![],
-            tool_call_id: None,
-        });
-
         loop {
             let result = context
                 .llm_engine
@@ -126,16 +142,12 @@ impl Task for InvokeLlmTask {
                         parse_json_text::<serde_json::Map<String, serde_json::Value>>(x).ok()
                     }) {
                         let Some(parameters) = content.remove("parameters") else {
-                            return Ok(
-                                self.make_response(choice.message.content.unwrap_or_default())
-                            );
+                            return self.make_response(choice.message.content.unwrap_or_default());
                         };
                         let Some(function_call) =
                             content.get("call_function").and_then(|x| x.as_str())
                         else {
-                            return Ok(
-                                self.make_response(choice.message.content.unwrap_or_default())
-                            );
+                            return self.make_response(choice.message.content.unwrap_or_default());
                         };
                         let Some(tool) = context.tools.get(function_call).cloned() else {
                             anyhow::bail!(
@@ -152,14 +164,14 @@ impl Task for InvokeLlmTask {
                             tool_calls: vec![],
                         })
                     } else {
-                        return Ok(self.make_response(choice.message.content.unwrap_or_default()));
+                        return self.make_response(choice.message.content.unwrap_or_default());
                     }
                 }
                 FinishReason::Length => {
                     tracing::error!(
                         "The LLM stopped because it reached the maximum number of tokens"
                     );
-                    return Ok(self.make_response(choice.message.content.unwrap_or_default()));
+                    return self.make_response(choice.message.content.unwrap_or_default());
                 }
                 FinishReason::ToolCalls => {
                     let tool_calls = choice.message.tool_calls.clone();

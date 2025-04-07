@@ -34,6 +34,10 @@ pub struct InvokeLLM {
     pub template: Template,
     /// The model strength to use.
     pub model_strength: ModelStrength,
+    /// The output schema.
+    ///
+    /// If unspecified the task will return an object with a single "output" string.
+    pub output_schema: Option<serde_json::Map<String, serde_json::Value>>,
 }
 
 /// A description of the action associated with a task.

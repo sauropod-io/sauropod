@@ -24,7 +24,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { JsonSchemaBase, assertIsJsonSchemaObject } from "@/lib/jsonSchema";
+import { JsonSchemaBase, jsonSchemaObjectProperties } from "@/lib/jsonSchema";
 import { NODE_X_SPACING } from "@/lib/workflowGraph";
 
 export type TaskNodeData = {
@@ -61,11 +61,8 @@ export default function TaskNode({
   const inputs = [];
   const outputs = [];
   if (schemaData) {
-    const inputSchema = assertIsJsonSchemaObject(
+    for (const [input, inputType] of jsonSchemaObjectProperties(
       schemaData.inputSchema as JsonSchemaBase,
-    );
-    for (const [input, inputType] of Object.entries(
-      inputSchema["properties"],
     )) {
       inputs.push(
         <LabeledHandle
@@ -79,11 +76,8 @@ export default function TaskNode({
       );
     }
 
-    const outputSchema = assertIsJsonSchemaObject(
+    for (const [output, outputType] of jsonSchemaObjectProperties(
       schemaData.outputSchema as JsonSchemaBase,
-    );
-    for (const [output, outputType] of Object.entries(
-      outputSchema["properties"],
     )) {
       outputs.push(
         <LabeledHandle

@@ -25,6 +25,11 @@
           "description": "The model strength to use.",
           "$ref": "#/$defs/ModelStrength"
         },
+        "outputSchema": {
+          "description": "The output schema.\n\n If unspecified the task will return an object with a single \"output\" string.",
+          "type": ["object", "null"],
+          "additionalProperties": true
+        },
         "template": {
           "description": "The template to use.",
           "$ref": "#/$defs/Template"

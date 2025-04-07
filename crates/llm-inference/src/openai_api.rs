@@ -77,6 +77,22 @@ pub struct Tool {
     pub r#type: String,
 }
 
+/// Response JSON schema format field.
+#[derive(Debug, serde::Serialize)]
+pub struct ResponseJsonSchema {
+    pub name: String,
+    pub strict: bool,
+    pub schema: serde_json::Value,
+}
+
+/// Response format field.
+#[derive(Debug, serde::Serialize)]
+#[serde(tag = "type")]
+pub enum ResponseFormat {
+    #[serde(rename = "json_schema")]
+    JsonSchema { json_schema: ResponseJsonSchema },
+}
+
 /// Request to the chat completions endpoint.
 #[derive(Debug, serde::Serialize, Default)]
 pub struct CompletionRequest {
@@ -88,6 +104,8 @@ pub struct CompletionRequest {
     pub max_tokens: Option<u32>,
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub tools: Vec<Tool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub response_format: Option<ResponseFormat>,
 }
 
 /// Reason for the completion call to finish.

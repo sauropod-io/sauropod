@@ -126,7 +126,7 @@ export function InvocationModal({
       if (response.error) {
         setError(`Error: ${response.error.error}`);
       } else {
-        setWorkflowResult(response.data!);
+        setWorkflowResult(response.data!.result as any);
       }
     } catch (err: any) {
       setError(`Error invoking workflow: ${err.message}`);
