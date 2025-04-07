@@ -39,7 +39,7 @@ pub fn validate_task(task: &sauropod_schemas::task::Task) -> anyhow::Result<()> 
     Ok(())
 }
 
-/// Get the JSON Schema from a task's schema representation.
+/// Get the input JSON Schema from a task's schema representation.
 pub fn input_schema_from_task_schema(
     task: &sauropod_schemas::task::Task,
 ) -> anyhow::Result<serde_json::Value> {
@@ -48,4 +48,24 @@ pub fn input_schema_from_task_schema(
             sauropod_prompt_templates::template_string_to_inputs(&invoke_llm.template.0)?
         }
     })
+}
+
+/// Get the output JSON Schema from a task's schema representation.
+pub fn output_schema_from_task_schema(
+    _task: &sauropod_schemas::task::Task,
+) -> anyhow::Result<serde_json::Map<String, serde_json::Value>> {
+    // For now, just return a single string.
+    Ok(serde_json::json!({
+        "type": "object",
+        "properties": {
+            "output": {
+                "type": "string",
+                "description": "The content of the LLM response.",
+            },
+        },
+        "required": ["output"]
+    })
+    .as_object()
+    .unwrap()
+    .clone())
 }

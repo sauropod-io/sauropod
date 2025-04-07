@@ -57,12 +57,7 @@ function WorkflowCard({ item }: { item: Schemas["ObjectInfo"] }) {
   }
 
   const deleteButton = (
-    <Button
-      variant="destructive"
-      size="sm"
-      className="cursor-pointer"
-      onClick={handleDelete}
-    >
+    <Button variant="destructive" size="sm" onClick={handleDelete}>
       <Trash2 className="h-4 w-4 mr-1" />
       Delete
     </Button>

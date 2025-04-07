@@ -24,13 +24,11 @@ pub trait ServerInterface {
     ) -> anyhow::Result<crate::HttpResponse<()>>;
     /// Delete a task
     async fn delete_task_id(&self, id: i64) -> anyhow::Result<crate::HttpResponse<()>>;
-    /// Get the input JSON Schema for a task
-    async fn get_task_id_input_schema(
+    /// Get the input and output JSON Schemas for a task
+    async fn get_task_id_schema(
         &self,
         id: i64,
-    ) -> anyhow::Result<
-        crate::HttpResponse<serde_json::map::Map<std::string::String, serde_json::value::Value>>,
-    >;
+    ) -> anyhow::Result<crate::HttpResponse<sauropod_schemas::InputAndOutputSchema>>;
     /// Get the list of tasks
     async fn get_task(
         &self,
@@ -70,13 +68,11 @@ pub trait ServerInterface {
     ) -> anyhow::Result<
         crate::HttpResponse<serde_json::map::Map<std::string::String, serde_json::value::Value>>,
     >;
-    /// Get the input JSON Schema for a workflow
-    async fn get_workflow_id_input_schema(
+    /// Get the input and output JSON Schemas for a workflow
+    async fn get_workflow_id_schema(
         &self,
         id: i64,
-    ) -> anyhow::Result<
-        crate::HttpResponse<serde_json::map::Map<std::string::String, serde_json::value::Value>>,
-    >;
+    ) -> anyhow::Result<crate::HttpResponse<sauropod_schemas::InputAndOutputSchema>>;
     /// Get the list of available tools
     async fn get_tools(
         &self,
@@ -195,17 +191,17 @@ pub fn register_routes<T: ServerInterface + Sync + Send + 'static>(
             }),
         )
         .route(
-            "/task/{id}/inputSchema",
+            "/task/{id}/schema",
             axum::routing::get({
                 let server_clone = server.clone();
                 async move |axum::extract::Path(id): axum::extract::Path<i64>| {
-                    tracing::debug!("GET /task/{{id}}/inputSchema");
+                    tracing::debug!("GET /task/{{id}}/schema");
                     let response = server_clone
-                        .get_task_id_input_schema(id)
+                        .get_task_id_schema(id)
                         .instrument(tracing::info_span!(
                             "Request",
                             method = "GET",
-                            path = "/task/{{id}}/inputSchema"
+                            path = "/task/{{id}}/schema"
                         ))
                         .await;
                     if let Err(error) = &response {
@@ -382,17 +378,17 @@ pub fn register_routes<T: ServerInterface + Sync + Send + 'static>(
             }),
         )
         .route(
-            "/workflow/{id}/inputSchema",
+            "/workflow/{id}/schema",
             axum::routing::get({
                 let server_clone = server.clone();
                 async move |axum::extract::Path(id): axum::extract::Path<i64>| {
-                    tracing::debug!("GET /workflow/{{id}}/inputSchema");
+                    tracing::debug!("GET /workflow/{{id}}/schema");
                     let response = server_clone
-                        .get_workflow_id_input_schema(id)
+                        .get_workflow_id_schema(id)
                         .instrument(tracing::info_span!(
                             "Request",
                             method = "GET",
-                            path = "/workflow/{{id}}/inputSchema"
+                            path = "/workflow/{{id}}/schema"
                         ))
                         .await;
                     if let Err(error) = &response {

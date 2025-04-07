@@ -349,12 +349,14 @@ function Flow({
         <Background gap={12} size={1} />
       </ReactFlow>
 
-      <InvocationModal
-        workflowId={workflowId}
-        workflowName={name}
-        open={isRunModalOpen}
-        onOpenChange={setIsRunModalOpen}
-      />
+      {workflowId !== undefined && (
+        <InvocationModal
+          workflowId={workflowId}
+          workflowName={name}
+          open={isRunModalOpen}
+          onOpenChange={setIsRunModalOpen}
+        />
+      )}
     </div>
   );
 }

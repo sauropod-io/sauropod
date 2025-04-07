@@ -1,5 +1,5 @@
 use sauropod_schemas::{
-    ModelDefinition, ToolDefinition,
+    InputAndOutputSchema, ModelDefinition, ToolDefinition,
     task::Task,
     workflow::{ObjectInfo, Workflow},
 };
@@ -19,8 +19,8 @@ fn main() -> anyhow::Result<()> {
             DELETE (()) -> () : "Delete a task"
             POST (Task) -> () : "Update a task"
         )
-        route "/task/{id:i64}/inputSchema" (
-            GET (()) -> Object : "Get the input JSON Schema for a task"
+        route "/task/{id:i64}/schema" (
+            GET (()) -> InputAndOutputSchema : "Get the input and output JSON Schemas for a task"
         )
         route "/task" (
             POST (Task) -> i64 : "Create a task"
@@ -38,8 +38,8 @@ fn main() -> anyhow::Result<()> {
         route "/workflow/{id:i64}/invoke" (
             POST (Object) -> Object : "Invoke a workflow by ID"
         )
-        route "/workflow/{id:i64}/inputSchema" (
-            GET (()) -> Object : "Get the input JSON Schema for a workflow"
+        route "/workflow/{id:i64}/schema" (
+            GET (()) -> InputAndOutputSchema : "Get the input and output JSON Schemas for a workflow"
         )
         route "/tools" (
             GET (()) -> Vec<ToolDefinition> : "Get the list of available tools"

@@ -1,3 +1,9 @@
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "../ui/tooltip";
 import { HandleProps } from "@xyflow/react";
 import { HTMLAttributes, forwardRef } from "react";
 
@@ -18,10 +24,19 @@ export const LabeledHandle = forwardRef<
       title: string;
       handleClassName?: string;
       labelClassName?: string;
+      description?: string;
     }
 >(
   (
-    { className, labelClassName, handleClassName, title, position, ...props },
+    {
+      className,
+      labelClassName,
+      handleClassName,
+      title,
+      position,
+      description,
+      ...props
+    },
     ref,
   ) => (
     <div
@@ -34,14 +49,23 @@ export const LabeledHandle = forwardRef<
       )}
     >
       <BaseHandle position={position} className={handleClassName} {...props} />
-      <label
-        className={cn(
-          "inline px-3 font-mono text-sm text-foreground align-middle",
-          labelClassName,
-        )}
-      >
-        {title}
-      </label>
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <label
+              className={cn(
+                "inline px-3 font-mono text-sm text-foreground align-middle",
+                labelClassName,
+              )}
+            >
+              {title}
+            </label>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>{description || title}</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
     </div>
   ),
 );

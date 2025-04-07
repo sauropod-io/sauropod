@@ -5,6 +5,7 @@ use std::sync::Arc;
 
 use sauropod_config::ModelConfig;
 use sauropod_database::{DatabaseId, DatabaseTypeWithID, DatabaseTypeWithName};
+use sauropod_schemas::InputAndOutputSchema;
 use sauropod_schemas::task::{ModelStrength, Task, TaskId};
 use sauropod_schemas::workflow::{ObjectInfo, Workflow};
 use tracing::Instrument;
@@ -267,12 +268,10 @@ impl sauropod_http::ServerInterface for Server {
         Ok(HttpResponse::Ok(result))
     }
 
-    async fn get_workflow_id_input_schema(
+    async fn get_workflow_id_schema(
         &self,
         id: i64,
-    ) -> anyhow::Result<
-        HttpResponse<serde_json::map::Map<std::string::String, serde_json::value::Value>>,
-    > {
+    ) -> anyhow::Result<HttpResponse<InputAndOutputSchema>> {
         let workflow = match self.db.get_by_id::<Workflow>(id)? {
             Some(workflow) => workflow,
             None => {
@@ -280,9 +279,10 @@ impl sauropod_http::ServerInterface for Server {
             }
         };
 
-        Ok(HttpResponse::Ok(
-            sauropod_workflows::input_schema_from_workflow_schema(&workflow),
-        ))
+        Ok(HttpResponse::Ok(InputAndOutputSchema {
+            input_schema: sauropod_workflows::input_schema_from_workflow_schema(&workflow),
+            output_schema: sauropod_workflows::output_schema_from_workflow_schema(&workflow),
+        }))
     }
 
     async fn get_task_id(&self, id: DatabaseId) -> anyhow::Result<HttpResponse<Task>> {
@@ -302,23 +302,25 @@ impl sauropod_http::ServerInterface for Server {
         db_update_object::<Task>(&self.db, id, input)
     }
 
-    async fn get_task_id_input_schema(
+    async fn get_task_id_schema(
         &self,
         id: i64,
-    ) -> anyhow::Result<
-        HttpResponse<serde_json::map::Map<std::string::String, serde_json::value::Value>>,
-    > {
+    ) -> anyhow::Result<HttpResponse<InputAndOutputSchema>> {
         let Some(task) = self.db.get_by_id::<Task>(id)? else {
             return Ok(HttpResponse::NotFound(None));
         };
 
-        match sauropod_task::input_schema_from_task_schema(&task)? {
-            serde_json::Value::Object(obj) => Ok(HttpResponse::Ok(obj)),
+        let input_schema = match sauropod_task::input_schema_from_task_schema(&task)? {
+            serde_json::Value::Object(obj) => obj,
             x => {
                 tracing::error!("Generated schema wasn't an object: {:#?}", x);
                 anyhow::bail!("Couldn't generated schema");
             }
-        }
+        };
+        Ok(HttpResponse::Ok(InputAndOutputSchema {
+            input_schema,
+            output_schema: sauropod_task::output_schema_from_task_schema(&task)?,
+        }))
     }
 
     async fn post_task(&self, input: Task) -> anyhow::Result<HttpResponse<DatabaseId>> {

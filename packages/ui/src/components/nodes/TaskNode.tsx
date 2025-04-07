@@ -24,6 +24,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { JsonSchemaBase, assertIsJsonSchemaObject } from "@/lib/jsonSchema";
 import { NODE_X_SPACING } from "@/lib/workflowGraph";
 
 export type TaskNodeData = {
@@ -36,9 +37,9 @@ export default function TaskNode({
   id,
 }: NodeProps<Node<TaskNodeData>>) {
   const updateNodeInternals = useUpdateNodeInternals();
-  const { data: schemaData, isLoading: inputSchemaLoading } = api.useQuery(
+  const { data: schemaData, isLoading: schemaLoading } = api.useQuery(
     "get",
-    `/api/task/{id}/inputSchema`,
+    `/api/task/{id}/schema`,
     {
       params: { path: { id: `${taskId}` } },
     },
@@ -51,22 +52,47 @@ export default function TaskNode({
     },
   );
 
-  const isLoading = inputSchemaLoading || inputTaskLoading;
+  const isLoading = schemaLoading || inputTaskLoading;
 
   useEffect(() => {
     updateNodeInternals(id);
   }, [id, updateNodeInternals, schemaData]);
 
   const inputs = [];
+  const outputs = [];
   if (schemaData) {
-    for (const input in schemaData["properties"] as string[]) {
+    const inputSchema = assertIsJsonSchemaObject(
+      schemaData.inputSchema as JsonSchemaBase,
+    );
+    for (const [input, inputType] of Object.entries(
+      inputSchema["properties"],
+    )) {
       inputs.push(
         <LabeledHandle
           key={input}
           title={input}
           type="target"
           position={Position.Left}
+          description={inputType.description}
           id={input}
+        />,
+      );
+    }
+
+    const outputSchema = assertIsJsonSchemaObject(
+      schemaData.outputSchema as JsonSchemaBase,
+    );
+    for (const [output, outputType] of Object.entries(
+      outputSchema["properties"],
+    )) {
+      outputs.push(
+        <LabeledHandle
+          key={output}
+          title={output}
+          type="source"
+          position={Position.Right}
+          description={outputType.description}
+          id={output}
         />,
       );
     }
@@ -101,12 +127,7 @@ export default function TaskNode({
       <div className="flex gap flex-row">
         <div>{inputs}</div>
         <div className="flex-grow" />
-        <LabeledHandle
-          title="output"
-          type="source"
-          position={Position.Right}
-          id="value"
-        />
+        <div>{outputs}</div>
       </div>
     </BaseNode>
   );

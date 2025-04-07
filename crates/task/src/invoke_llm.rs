@@ -55,8 +55,22 @@ impl InvokeLlmTask {
             // For now, just return a string.
             // In the future we will support structured outputs.
             output_schema: serde_json::json!({
-                "type": "string"
+                "type": "object",
+                "properties": {
+                    "output": {
+                        "type": "string",
+                        "description": "The content of the LLM response.",
+                    },
+                },
+                "required": ["output"]
             }),
+        })
+    }
+
+    /// Create the response value.
+    fn make_response(&self, output: String) -> serde_json::Value {
+        serde_json::json!({
+            "output": output,
         })
     }
 }
@@ -112,12 +126,16 @@ impl Task for InvokeLlmTask {
                         parse_json_text::<serde_json::Map<String, serde_json::Value>>(x).ok()
                     }) {
                         let Some(parameters) = content.remove("parameters") else {
-                            return Ok(serde_json::json!(choice.message.content));
+                            return Ok(
+                                self.make_response(choice.message.content.unwrap_or_default())
+                            );
                         };
                         let Some(function_call) =
                             content.get("call_function").and_then(|x| x.as_str())
                         else {
-                            return Ok(serde_json::json!(choice.message.content));
+                            return Ok(
+                                self.make_response(choice.message.content.unwrap_or_default())
+                            );
                         };
                         let Some(tool) = context.tools.get(function_call).cloned() else {
                             anyhow::bail!(
@@ -134,14 +152,14 @@ impl Task for InvokeLlmTask {
                             tool_calls: vec![],
                         })
                     } else {
-                        return Ok(serde_json::json!(choice.message.content));
+                        return Ok(self.make_response(choice.message.content.unwrap_or_default()));
                     }
                 }
                 FinishReason::Length => {
                     tracing::error!(
                         "The LLM stopped because it reached the maximum number of tokens"
                     );
-                    return Ok(serde_json::json!(choice.message.content));
+                    return Ok(self.make_response(choice.message.content.unwrap_or_default()));
                 }
                 FinishReason::ToolCalls => {
                     let tool_calls = choice.message.tool_calls.clone();

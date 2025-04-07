@@ -398,14 +398,14 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/api/task/{id}/inputSchema": {
+  "/api/task/{id}/schema": {
     parameters: {
       query?: never;
       header?: never;
       path?: never;
       cookie?: never;
     };
-    /** Get the input JSON Schema for a task */
+    /** Get the input and output JSON Schemas for a task */
     get: {
       parameters: {
         query?: never;
@@ -423,7 +423,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            "application/json": components["schemas"]["Map_of_AnyValue"];
+            "application/json": components["schemas"]["InputAndOutputSchema"];
           };
         };
         /** @description Bad Request */
@@ -740,62 +740,6 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/api/workflow/{id}/inputSchema": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** Get the input JSON Schema for a workflow */
-    get: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          id: string;
-        };
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Successful response */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["Map_of_AnyValue"];
-          };
-        };
-        /** @description Bad Request */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["Error"];
-          };
-        };
-        /** @description Internal Server Error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["Error"];
-          };
-        };
-      };
-    };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
   "/api/workflow/{id}/invoke": {
     parameters: {
       query?: never;
@@ -856,6 +800,62 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/workflow/{id}/schema": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get the input and output JSON Schemas for a workflow */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          id: string;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Successful response */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["InputAndOutputSchema"];
+          };
+        };
+        /** @description Bad Request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["Error"];
+          };
+        };
+        /** @description Internal Server Error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["Error"];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -890,6 +890,17 @@ export interface components {
     };
     /** @description Response to a health check request. */
     HealthCheckResponse: Record<string, never>;
+    /** @description Input and output schemas. */
+    InputAndOutputSchema: {
+      /** @description The input schema for a task or workflow. */
+      inputSchema: {
+        [key: string]: unknown;
+      };
+      /** @description The output schema for a task or workflow. */
+      outputSchema: {
+        [key: string]: unknown;
+      };
+    };
     /** @description Run an LLM. */
     InvokeLLM: {
       modelStrength: components["schemas"]["ModelStrength"];

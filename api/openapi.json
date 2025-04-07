@@ -353,9 +353,9 @@
         }
       }
     },
-    "/api/task/{id}/inputSchema": {
+    "/api/task/{id}/schema": {
       "get": {
-        "summary": "Get the input JSON Schema for a task",
+        "summary": "Get the input and output JSON Schemas for a task",
         "parameters": [
           {
             "name": "id",
@@ -372,7 +372,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Map_of_AnyValue"
+                  "$ref": "#/components/schemas/InputAndOutputSchema"
                 }
               }
             }
@@ -650,9 +650,9 @@
         }
       }
     },
-    "/api/workflow/{id}/inputSchema": {
-      "get": {
-        "summary": "Get the input JSON Schema for a workflow",
+    "/api/workflow/{id}/invoke": {
+      "post": {
+        "summary": "Invoke a workflow by ID",
         "parameters": [
           {
             "name": "id",
@@ -663,6 +663,15 @@
             }
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Map_of_AnyValue"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "Successful response",
@@ -697,9 +706,9 @@
         }
       }
     },
-    "/api/workflow/{id}/invoke": {
-      "post": {
-        "summary": "Invoke a workflow by ID",
+    "/api/workflow/{id}/schema": {
+      "get": {
+        "summary": "Get the input and output JSON Schemas for a workflow",
         "parameters": [
           {
             "name": "id",
@@ -710,22 +719,13 @@
             }
           }
         ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/Map_of_AnyValue"
-              }
-            }
-          }
-        },
         "responses": {
           "200": {
             "description": "Successful response",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Map_of_AnyValue"
+                  "$ref": "#/components/schemas/InputAndOutputSchema"
                 }
               }
             }
@@ -842,6 +842,24 @@
       "HealthCheckResponse": {
         "description": "Response to a health check request.",
         "type": "object",
+        "additionalProperties": false
+      },
+      "InputAndOutputSchema": {
+        "description": "Input and output schemas.",
+        "type": "object",
+        "properties": {
+          "inputSchema": {
+            "description": "The input schema for a task or workflow.",
+            "type": "object",
+            "additionalProperties": true
+          },
+          "outputSchema": {
+            "description": "The output schema for a task or workflow.",
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "required": ["inputSchema", "outputSchema"],
         "additionalProperties": false
       },
       "InvokeLLM": {

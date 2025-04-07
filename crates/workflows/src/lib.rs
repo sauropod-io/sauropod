@@ -57,7 +57,7 @@ pub fn validate_workflow(workflow: &sauropod_schemas::workflow::Workflow) -> any
             sauropod_schemas::workflow::Connection::Task { from, to } => {
                 // Validate "from" task exists
                 let (from_task_id, _) = parse_task_and_field(from);
-                if !task_ids.contains(&from_task_id.to_string()) {
+                if !task_ids.contains(from_task_id) {
                     return Err(anyhow::anyhow!(
                         "Task '{from_task_id}' referenced in connection does not exist"
                     ));
@@ -65,7 +65,7 @@ pub fn validate_workflow(workflow: &sauropod_schemas::workflow::Workflow) -> any
 
                 // Validate all "to" tasks exist
                 let (to_task_id, to_field) = parse_task_and_field(to);
-                if !task_ids.contains(&to_task_id.to_string()) {
+                if !task_ids.contains(to_task_id) {
                     return Err(anyhow::anyhow!(
                         "Task '{}' referenced in connection does not exist",
                         to_task_id
@@ -84,7 +84,7 @@ pub fn validate_workflow(workflow: &sauropod_schemas::workflow::Workflow) -> any
             sauropod_schemas::workflow::Connection::Output { from, output } => {
                 // Validate that referenced task exists
                 let (from_task_id, _) = parse_task_and_field(from);
-                if !task_ids.contains(&from_task_id.to_string()) {
+                if !task_ids.contains(from_task_id) {
                     return Err(anyhow::anyhow!(
                         "Task '{}' referenced in output connection does not exist",
                         from_task_id
@@ -109,7 +109,7 @@ pub fn validate_workflow(workflow: &sauropod_schemas::workflow::Workflow) -> any
 
                 // Validate all "to" tasks exist
                 let (to_task_id, to_field) = parse_task_and_field(to);
-                if !task_ids.contains(&to_task_id.to_string()) {
+                if !task_ids.contains(to_task_id) {
                     return Err(anyhow::anyhow!(
                         "Task '{}' referenced in parameter connection does not exist",
                         to_task_id
@@ -270,9 +270,10 @@ impl Workflow {
             let output_field_schema = if let Some(field) = &mapping.from.field {
                 if task_schema["type"] != "object" {
                     anyhow::bail!(
-                        "Task {} output (connected to {}) is not an object",
+                        "Task {} output (connected to {}) is a {} but needs to be an object instead",
                         mapping.from.id,
-                        mapping.output_name
+                        mapping.output_name,
+                        task_schema["type"]
                     );
                 }
 
@@ -499,4 +500,35 @@ pub fn input_schema_from_workflow_schema(
     inputs.insert("properties".to_string(), serde_json::json!(properties));
     inputs.insert("required".to_string(), serde_json::json!(input_names));
     inputs
+}
+
+/// Get the output schema for a workflow.
+///
+/// This function uses workflow's connections to determine the outputs it produces.
+pub fn output_schema_from_workflow_schema(
+    schema_workflow: &sauropod_schemas::workflow::Workflow,
+) -> serde_json::Map<String, serde_json::Value> {
+    // Process outputs for workflow parameters
+    let output_names = schema_workflow
+        .connections
+        .iter()
+        .flat_map(|x| {
+            if let sauropod_schemas::workflow::Connection::Output { output, .. } = x {
+                Some(output)
+            } else {
+                None
+            }
+        })
+        .collect::<Vec<_>>();
+
+    let mut properties = HashMap::with_capacity(output_names.len());
+    for output in output_names.iter() {
+        properties.insert(output, serde_json::json!({ "type": "string" }));
+    }
+
+    let mut outputs = serde_json::Map::with_capacity(3);
+    outputs.insert("type".to_string(), serde_json::json!("object"));
+    outputs.insert("properties".to_string(), serde_json::json!(properties));
+    outputs.insert("required".to_string(), serde_json::json!(output_names));
+    outputs
 }
