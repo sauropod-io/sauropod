@@ -353,6 +353,62 @@
         }
       }
     },
+    "/api/task/{id}/run": {
+      "post": {
+        "summary": "Run a task by ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Map_of_AnyValue"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Map_of_AnyValue"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/task/{id}/schema": {
       "get": {
         "summary": "Get the input and output JSON Schemas for a task",
@@ -650,9 +706,9 @@
         }
       }
     },
-    "/api/workflow/{id}/invoke": {
+    "/api/workflow/{id}/run": {
       "post": {
-        "summary": "Invoke a workflow by ID",
+        "summary": "Run a workflow by ID",
         "parameters": [
           {
             "name": "id",

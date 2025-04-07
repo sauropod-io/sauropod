@@ -1,7 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { Play } from "lucide-react";
 import { JSX, useEffect, useState } from "react";
 
 import api, { apiClient } from "@/api";
+import ExampleCodeBlock from "@/components/ExampleCodeBlock";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -14,6 +16,14 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  makeCurlSample,
+  makePythonSample,
+  makeRustSample,
+  makeTypeScriptSample,
+} from "@/lib/codeSamples";
+import { JsonSchemaBase, makeExampleObject } from "@/lib/jsonSchema";
 
 interface ModalInputsProps {
   schema?: Record<string, any>;
@@ -67,14 +77,20 @@ function ModalInputs({
 
   return (
     <>
-      <div className="grid gap-4">{fields}</div>
+      <div className="grid gap-4 py-4">{fields}</div>
       <DialogFooter>
         <Button onClick={() => onRun(inputValues)} disabled={isRunning}>
-          {isRunning ? "Running..." : "Run Workflow"}
+          <Play className="h-4 w-4" />
+          {isRunning ? "Running..." : "Run"}
         </Button>
       </DialogFooter>
     </>
   );
+}
+
+/** Get the URL to make the API call to invoke a run. */
+function getRunUrl(workflowId: string) {
+  return `${window.location.origin}/api/workflow/${workflowId}/run`;
 }
 
 interface InvocationModalProps {
@@ -85,7 +101,7 @@ interface InvocationModalProps {
 }
 
 /** Modal used to fill out parameters when invoking tasks and workflows. */
-export function InvocationModal({
+export function RunModal({
   workflowId,
   workflowName,
   open,
@@ -112,6 +128,14 @@ export function InvocationModal({
     }
   }, [open]);
 
+  const runUrl = getRunUrl(workflowId!);
+  const exampleInput = schema?.inputSchema
+    ? makeExampleObject(schema.inputSchema as JsonSchemaBase)
+    : {};
+  const exampleOutput = schema?.outputSchema
+    ? makeExampleObject(schema.outputSchema as JsonSchemaBase)
+    : {};
+
   const runWorkflow = async (parameters: Record<string, any>) => {
     if (!workflowId) return;
 
@@ -119,7 +143,7 @@ export function InvocationModal({
     setError(null);
 
     try {
-      const response = await apiClient.POST("/api/workflow/{id}/invoke", {
+      const response = await apiClient.POST("/api/workflow/{id}/run", {
         params: { path: { id: workflowId } },
         body: parameters,
       });
@@ -140,20 +164,52 @@ export function InvocationModal({
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Run {workflowName}</DialogTitle>
-          <DialogDescription>
-            {workflowResult
-              ? "Workflow execution results"
-              : "Enter input parameters to run this workflow"}
-          </DialogDescription>
+          <DialogDescription></DialogDescription>
         </DialogHeader>
 
         {!schemaError ? (
-          <ModalInputs
-            schema={schema?.inputSchema}
-            isLoading={schemaLoading}
-            isRunning={isRunning}
-            onRun={runWorkflow}
-          />
+          <Tabs defaultValue="ui">
+            <TabsList className="grid grid-cols-5">
+              <TabsTrigger value="ui">UI</TabsTrigger>
+              <TabsTrigger value="curl">cURL</TabsTrigger>
+              <TabsTrigger value="python">Python</TabsTrigger>
+              <TabsTrigger value="typescript">TypeScript</TabsTrigger>
+              <TabsTrigger value="rust">Rust</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="ui">
+              <ModalInputs
+                schema={schema?.inputSchema}
+                isLoading={schemaLoading}
+                isRunning={isRunning}
+                onRun={runWorkflow}
+              />
+            </TabsContent>
+
+            <TabsContent value="curl">
+              <ExampleCodeBlock language="bash">
+                {makeCurlSample(runUrl, exampleInput, exampleOutput)}
+              </ExampleCodeBlock>
+            </TabsContent>
+
+            <TabsContent value="python">
+              <ExampleCodeBlock language="python">
+                {makePythonSample(runUrl, exampleInput, exampleOutput)}
+              </ExampleCodeBlock>
+            </TabsContent>
+
+            <TabsContent value="typescript">
+              <ExampleCodeBlock language="typescript">
+                {makeTypeScriptSample(runUrl, exampleInput, exampleOutput)}
+              </ExampleCodeBlock>
+            </TabsContent>
+
+            <TabsContent value="rust">
+              <ExampleCodeBlock language="rust">
+                {makeRustSample(runUrl, exampleInput, exampleOutput)}
+              </ExampleCodeBlock>
+            </TabsContent>
+          </Tabs>
         ) : (
           <div className="p-4 my-2 bg-red-50 text-red-600 rounded-md">
             {schemaError.error}

@@ -24,6 +24,14 @@ pub trait ServerInterface {
     ) -> anyhow::Result<crate::HttpResponse<()>>;
     /// Delete a task
     async fn delete_task_id(&self, id: i64) -> anyhow::Result<crate::HttpResponse<()>>;
+    /// Run a task by ID
+    async fn post_task_id_run(
+        &self,
+        id: i64,
+        input: serde_json::map::Map<std::string::String, serde_json::value::Value>,
+    ) -> anyhow::Result<
+        crate::HttpResponse<serde_json::map::Map<std::string::String, serde_json::value::Value>>,
+    >;
     /// Get the input and output JSON Schemas for a task
     async fn get_task_id_schema(
         &self,
@@ -60,8 +68,8 @@ pub trait ServerInterface {
         &self,
         input: sauropod_schemas::workflow::Workflow,
     ) -> anyhow::Result<crate::HttpResponse<i64>>;
-    /// Invoke a workflow by ID
-    async fn post_workflow_id_invoke(
+    /// Run a workflow by ID
+    async fn post_workflow_id_run(
         &self,
         id: i64,
         input: serde_json::map::Map<std::string::String, serde_json::value::Value>,
@@ -181,6 +189,30 @@ pub fn register_routes<T: ServerInterface + Sync + Send + 'static>(
                             "Request",
                             method = "DELETE",
                             path = "/task/{{id}}"
+                        ))
+                        .await;
+                    if let Err(error) = &response {
+                        tracing::error!("Error responding to request: {:?}", error);
+                    }
+                    crate::create_response_from_result(response)
+                }
+            }),
+        )
+        .route(
+            "/task/{id}/run",
+            axum::routing::post({
+                let server_clone = server.clone();
+                async move |axum::extract::Path(id): axum::extract::Path<i64>,
+                            axum::extract::Json(input): axum::extract::Json<
+                    serde_json::map::Map<std::string::String, serde_json::value::Value>,
+                >| {
+                    tracing::debug!("POST /task/{{id}}/run");
+                    let response = server_clone
+                        .post_task_id_run(id, input)
+                        .instrument(tracing::info_span!(
+                            "Request",
+                            method = "POST",
+                            path = "/task/{{id}}/run"
                         ))
                         .await;
                     if let Err(error) = &response {
@@ -354,20 +386,20 @@ pub fn register_routes<T: ServerInterface + Sync + Send + 'static>(
             }),
         )
         .route(
-            "/workflow/{id}/invoke",
+            "/workflow/{id}/run",
             axum::routing::post({
                 let server_clone = server.clone();
                 async move |axum::extract::Path(id): axum::extract::Path<i64>,
                             axum::extract::Json(input): axum::extract::Json<
                     serde_json::map::Map<std::string::String, serde_json::value::Value>,
                 >| {
-                    tracing::debug!("POST /workflow/{{id}}/invoke");
+                    tracing::debug!("POST /workflow/{{id}}/run");
                     let response = server_clone
-                        .post_workflow_id_invoke(id, input)
+                        .post_workflow_id_run(id, input)
                         .instrument(tracing::info_span!(
                             "Request",
                             method = "POST",
-                            path = "/workflow/{{id}}/invoke"
+                            path = "/workflow/{{id}}/run"
                         ))
                         .await;
                     if let Err(error) = &response {

@@ -8,6 +8,7 @@ use sauropod_database::{DatabaseId, DatabaseTypeWithID, DatabaseTypeWithName};
 use sauropod_schemas::InputAndOutputSchema;
 use sauropod_schemas::task::{ModelStrength, Task, TaskId};
 use sauropod_schemas::workflow::{ObjectInfo, Workflow};
+use sauropod_task_context::TaskContext;
 use tracing::Instrument;
 
 use sauropod_http::HttpResponse;
@@ -48,6 +49,30 @@ impl Server {
             tools: sauropod_task_context::get_default_tools(),
             llm_engine: sauropod_llm_inference::create_engine(config).await?,
         }))
+    }
+
+    /// Create a task context.
+    pub async fn make_task_context(&self) -> anyhow::Result<Arc<TaskContext>> {
+        let model_names = make_model_selection(&self.llm_engine, &self._config).await?;
+
+        // Ensure that the models are available
+        let available_models = self.llm_engine.list_models().await?;
+        for model in model_names.values() {
+            let has_model = available_models.iter().any(|m| m.name == model.model);
+
+            if !has_model {
+                if self.llm_engine.can_pull_model() {
+                    self.llm_engine.pull_model(&model.model).await?;
+                } else {
+                    tracing::error!("Model {} not available", model.model);
+                }
+            }
+        }
+
+        Ok(sauropod_task_context::make_default_task_context(
+            self.llm_engine.clone(),
+            model_names,
+        ))
     }
 }
 
@@ -201,7 +226,7 @@ impl sauropod_http::ServerInterface for Server {
         db_list_objects::<Workflow>(&self.db, None)
     }
 
-    async fn post_workflow_id_invoke(
+    async fn post_workflow_id_run(
         &self,
         id: DatabaseId,
         input: serde_json::Map<String, serde_json::Value>,
@@ -240,24 +265,7 @@ impl sauropod_http::ServerInterface for Server {
             .instrument(tracing::info_span!("loading workflow"))
             .await?;
 
-        let model_names = make_model_selection(&self.llm_engine, &self._config).await?;
-
-        // Ensure that the models are available
-        let available_models = self.llm_engine.list_models().await?;
-        for model in model_names.values() {
-            let has_model = available_models.iter().any(|m| m.name == model.model);
-
-            if !has_model {
-                if self.llm_engine.can_pull_model() {
-                    self.llm_engine.pull_model(&model.model).await?;
-                } else {
-                    tracing::error!("Model {} not available", model.model);
-                }
-            }
-        }
-
-        let context =
-            sauropod_task_context::make_default_task_context(self.llm_engine.clone(), model_names);
+        let context = self.make_task_context().await?;
         let mut result = serde_json::Map::<String, serde_json::Value>::with_capacity(1);
         result.insert(
             "result".to_string(),
@@ -300,6 +308,28 @@ impl sauropod_http::ServerInterface for Server {
         }
 
         db_update_object::<Task>(&self.db, id, input)
+    }
+
+    async fn post_task_id_run(
+        &self,
+        id: DatabaseId,
+        input: serde_json::Map<String, serde_json::Value>,
+    ) -> anyhow::Result<HttpResponse<serde_json::Map<String, serde_json::Value>>> {
+        let task = match self.db.get_by_id::<Task>(id)? {
+            Some(task) => sauropod_task::task_from_schema(task)?,
+            None => {
+                tracing::error!("Task not found: {id}");
+                return Ok(HttpResponse::NotFound(None));
+            }
+        };
+
+        let context = self.make_task_context().await?;
+        let mut result = serde_json::Map::<String, serde_json::Value>::with_capacity(1);
+        result.insert(
+            "result".to_string(),
+            task.execute(serde_json::to_value(input)?, context).await?,
+        );
+        Ok(HttpResponse::Ok(result))
     }
 
     async fn get_task_id_schema(

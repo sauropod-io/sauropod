@@ -19,6 +19,9 @@ fn main() -> anyhow::Result<()> {
             DELETE (()) -> () : "Delete a task"
             POST (Task) -> () : "Update a task"
         )
+        route "/task/{id:i64}/run" (
+            POST (Object) -> Object : "Run a task by ID"
+        )
         route "/task/{id:i64}/schema" (
             GET (()) -> InputAndOutputSchema : "Get the input and output JSON Schemas for a task"
         )
@@ -35,8 +38,8 @@ fn main() -> anyhow::Result<()> {
             POST (Workflow) -> i64 : "Create a workflow"
             GET (()) -> Vec<ObjectInfo> : "Get the list of workflows"
         )
-        route "/workflow/{id:i64}/invoke" (
-            POST (Object) -> Object : "Invoke a workflow by ID"
+        route "/workflow/{id:i64}/run" (
+            POST (Object) -> Object : "Run a workflow by ID"
         )
         route "/workflow/{id:i64}/schema" (
             GET (()) -> InputAndOutputSchema : "Get the input and output JSON Schemas for a workflow"

@@ -19,7 +19,7 @@ import { useNavigate, useSearchParams } from "react-router";
 import { Schemas } from "@sauropod-io/client";
 
 import { apiClient } from "@/api";
-import { InvocationModal } from "@/components/InvocationModal";
+import { RunModal } from "@/components/RunModal";
 import TaskSelector from "@/components/TaskSelector";
 import { WorkflowConfigSheet } from "@/components/WorkflowConfigSheet";
 import { EDGE_TYPES, NODE_TYPES } from "@/components/nodes/CustomNodes";
@@ -350,7 +350,7 @@ function Flow({
       </ReactFlow>
 
       {workflowId !== undefined && (
-        <InvocationModal
+        <RunModal
           workflowId={workflowId}
           workflowName={name}
           open={isRunModalOpen}
