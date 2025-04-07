@@ -3,10 +3,6 @@ description: |
   This action set up the environment for the project.
 
 inputs:
-  python-version:
-    description: "Python version to use"
-    default: "3.13"
-    required: false
   node-version:
     description: "Node.js version to use"
     default: "18"
@@ -15,19 +11,12 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: ${{ inputs.python-version }}
-        cache: "pip"
-
     # Rust
     - uses: dtolnay/rust-toolchain@stable
     - name: Cache Cargo dependencies
       uses: actions/cache@v4
       with:
         path: |
-          ~/.cargo/bin/
           ~/.cargo/registry/index/
           ~/.cargo/registry/cache/
           ~/.cargo/git/db/
@@ -39,16 +28,7 @@ runs:
     - uses: actions/setup-node@v4
       with:
         node-version: ${{ inputs.node-version }}
-    - name: Get npm cache directory
-      id: npm-cache-dir
-      shell: bash
-      run: echo "dir=$(npm config get cache)" >> ${GITHUB_OUTPUT}
-    - uses: actions/cache@v4
-      with:
-        path: ${{ steps.npm-cache-dir.outputs.dir }}
-        key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-        restore-keys: |
-          ${{ runner.os }}-node-
+        cache: "npm"
     - name: Install Node.js dependencies
       run: npm ci
       shell: bash
