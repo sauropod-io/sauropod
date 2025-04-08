@@ -33,7 +33,7 @@
     "@sauropod-io/client": "*",
     "@tailwindcss/vite": "^4.1.2",
     "@tanstack/react-query": "^5.71.5",
-    "@xyflow/react": "^12.5.4",
+    "@xyflow/react": "^12.5.5",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
