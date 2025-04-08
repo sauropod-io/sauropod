@@ -14,9 +14,7 @@ sauropod-tool-spec = { path = "../tool-spec" }
 sauropod-schemas = { path = "../schemas" }
 
 anyhow.workspace = true
-async-trait.workspace = true
 reqwest.workspace = true
 serde_json.workspace = true
 serde.workspace = true
-thiserror.workspace = true
 tracing.workspace = true

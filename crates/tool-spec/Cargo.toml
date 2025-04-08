@@ -10,7 +10,6 @@ publish.workspace = true
 sauropod-schemas = { path = "../schemas" }
 
 anyhow.workspace = true
-async-trait.workspace = true
 schemars.workspace = true
 serde_json.workspace = true
 serde.workspace = true

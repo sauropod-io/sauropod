@@ -17,6 +17,14 @@ backend = "http://localhost:11434"
 [models.strong]
 model = "hf.co/unsloth/gemma-3-27b-it-GGUF:Q6_K"
 type = "Gemma3"
+
+[[mcp_servers]]
+# Spawn an MCP server as a subprocess controlled by the server
+command = "docker run -it --rm markitdown-mcp:latest"
+
+[[mcp_servers]]
+# Connect to a remote MCP server
+url = "http://localhost:1234"
 ```
 
 ## Build from source

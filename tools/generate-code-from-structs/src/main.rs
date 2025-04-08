@@ -60,5 +60,7 @@ fn main() -> anyhow::Result<()> {
     write_schema::<Workflow>()?;
     write_schema::<Task>()?;
 
+    generate_code_from_structs::generate_code_for_config()?;
+
     Ok(())
 }

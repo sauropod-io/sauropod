@@ -10,7 +10,6 @@ publish.workspace = true
 sauropod-tool-spec = { path = "../tool-spec" }
 
 anyhow.workspace = true
-async-trait.workspace = true
 reqwest.workspace = true
 tracing.workspace = true
 serde.workspace = true

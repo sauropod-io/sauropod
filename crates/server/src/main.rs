@@ -1,34 +1,26 @@
-use {
-    argh::FromArgs,
-    std::{fmt::Debug, net::IpAddr, path::PathBuf},
-};
+use std::path::PathBuf;
 
-#[derive(FromArgs, PartialEq, Debug)]
-/// Sauropod Scales server entrypoint.
-struct Command {
-    /// the config file to load
-    #[argh(option, short = 'c')]
-    config: Option<PathBuf>,
-    /// the host address to listen on - e.g. 127.0.0.1
-    #[argh(option, short = 'h')]
-    host: Option<IpAddr>,
-    /// the port to listen on - e.g. 3140
-    #[argh(option, short = 'p')]
-    port: Option<u16>,
-}
+const CONFIG_FLAG: &str = "config";
 
 #[tokio::main(flavor = "current_thread")]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let toplevel: Command = argh::from_env();
-    let overrides = Some(sauropod_config::Config {
-        host: toplevel.host.map(|addr| addr.to_string()),
-        port: toplevel.port,
-        ..sauropod_config::Config::default()
-    });
-    let config = if let Some(config_path) = toplevel.config {
-        sauropod_config::Config::load_from_file(config_path, overrides)?
+    let command = sauropod_server::add_config_flags(
+        clap::Command::new("sauropod").arg(
+            clap::Arg::new(CONFIG_FLAG)
+                .long(CONFIG_FLAG)
+                .short('c')
+                .help("Path to the configuration file.")
+                .value_parser(clap::value_parser!(PathBuf)),
+        ),
+    );
+    let cli_matches = command.get_matches();
+    let config_path = cli_matches.get_one::<PathBuf>(CONFIG_FLAG).cloned();
+    let cli_config_overrides = sauropod_server::clap_to_config_source(cli_matches);
+
+    let config = if let Some(config_path) = config_path {
+        sauropod_config::Config::load_from_file(config_path, cli_config_overrides)?
     } else {
-        sauropod_config::Config::load(overrides)?
+        sauropod_config::Config::load(cli_config_overrides)?
     };
 
     let log_buffer = sauropod_logging::InMemoryLogBuffer::new(50, 20);

@@ -7,3 +7,7 @@ pub fn get_crate_path(crate_name: &str) -> std::path::PathBuf {
 pub fn get_api_path(file_or_directory: &str) -> std::path::PathBuf {
     std::path::PathBuf::from("api").join(file_or_directory)
 }
+
+pub fn get_docs_path(file_or_directory: &str) -> std::path::PathBuf {
+    std::path::PathBuf::from("docs").join(file_or_directory)
+}

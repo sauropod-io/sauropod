@@ -16,7 +16,6 @@ sauropod-config = { path = "../config" }
 
 anyhow.workspace = true
 async-trait.workspace = true
-futures.workspace = true
 minijinja.workspace = true
 schemars.workspace = true
 serde_json.workspace = true
@@ -24,9 +23,3 @@ serde.workspace = true
 tokio.workspace = true
 tracing.workspace = true
 jsonschema.workspace = true
-
-[dev-dependencies]
-sauropod-logging = { path = "../logging" }
-
-tokio.workspace = true
-argh.workspace = true

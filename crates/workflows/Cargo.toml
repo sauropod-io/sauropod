@@ -9,7 +9,6 @@ publish.workspace = true
 [dependencies]
 sauropod-config = { path = "../config" }
 sauropod-llm-inference = { path = "../llm-inference" }
-sauropod-logging = { path = "../logging" }
 sauropod-prompt-templates = { path = "../prompt-templates" }
 sauropod-schemas = { path = "../schemas" }
 sauropod-task = { path = "../task" }
@@ -17,13 +16,8 @@ sauropod-task-context = { path = "../task-context" }
 
 anyhow.workspace = true
 async-trait.workspace = true
-futures.workspace = true
 jsonschema.workspace = true
 serde_json.workspace = true
 serde.workspace = true
 tokio.workspace = true
 tracing.workspace = true
-
-[dev-dependencies]
-tokio.workspace = true
-argh.workspace = true

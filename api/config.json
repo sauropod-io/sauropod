@@ -1,0 +1,148 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Config",
+  "description": "Sauropod configuration.",
+  "type": "object",
+  "properties": {
+    "backend": {
+      "description": "The backend to use.",
+      "type": "string",
+      "default": "http://localhost:11434"
+    },
+    "cache_directory": {
+      "description": "The cache directory.",
+      "type": ["string", "null"],
+      "default": null,
+      "examples": ["/data/cache"]
+    },
+    "database_path": {
+      "description": "The path to the SQLite database.",
+      "type": ["string", "null"],
+      "default": null,
+      "examples": ["/data/database.sqlite"]
+    },
+    "host": {
+      "description": "The host address to listen on.",
+      "type": ["string", "null"],
+      "default": null
+    },
+    "mcp_servers": {
+      "description": "The MCP servers.",
+      "type": "array",
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/McpServer"
+      }
+    },
+    "models": {
+      "description": "The model configuration.",
+      "$ref": "#/$defs/Models",
+      "default": {
+        "strong": null,
+        "weak": null
+      }
+    },
+    "port": {
+      "description": "The port to listen on.",
+      "type": ["integer", "null"],
+      "format": "uint16",
+      "default": null,
+      "examples": [80],
+      "minimum": 0
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "McpServer": {
+      "description": "Model Context Protocol server definitions.",
+      "anyOf": [
+        {
+          "description": "Spawn a process and communicate with the MCP server over stdio.",
+          "type": "object",
+          "properties": {
+            "command": {
+              "type": "string"
+            }
+          },
+          "required": ["command"]
+        },
+        {
+          "description": "Communicate with the MCP server over HTTP.",
+          "type": "object",
+          "properties": {
+            "url": {
+              "type": "string"
+            }
+          },
+          "required": ["url"]
+        }
+      ]
+    },
+    "ModelConfig": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "description": "The type of model.",
+          "$ref": "#/$defs/ModelType",
+          "default": "Default"
+        },
+        "model": {
+          "description": "The name of the model.",
+          "type": "string",
+          "examples": ["hf.co/unsloth/gemma-3-27b-it-GGUF:Q6_K"]
+        }
+      },
+      "additionalProperties": false,
+      "required": ["model"]
+    },
+    "ModelType": {
+      "description": "The type of a model.",
+      "oneOf": [
+        {
+          "description": "The default model type.",
+          "type": "string",
+          "const": "Default"
+        },
+        {
+          "description": "Google's Gemma 3 model.",
+          "type": "string",
+          "const": "Gemma3"
+        },
+        {
+          "description": "Microsoft's Phi 4.",
+          "type": "string",
+          "const": "Phi4"
+        }
+      ]
+    },
+    "Models": {
+      "description": "Configuration for models.",
+      "type": "object",
+      "properties": {
+        "strong": {
+          "description": "A model to use for more complex tasks.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ModelConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "weak": {
+          "description": "A model to use for simple tasks.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ModelConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

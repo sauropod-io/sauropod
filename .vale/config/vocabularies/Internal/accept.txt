@@ -4,10 +4,13 @@ gRPC
 HSM
 HTTPS?
 LLM
+MCP
+Model Context Protocol
 OTA
 Phi
 Protobuf
 Sauropod
 Scales
+TOML
 TPM
 UI

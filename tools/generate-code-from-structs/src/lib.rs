@@ -2,11 +2,13 @@ use std::io::Write;
 
 use schemars::JsonSchema;
 
+mod config_file;
 pub mod database;
 pub mod json_schema;
 pub mod openapi;
 pub mod openapi_schema;
 pub mod paths;
+pub use config_file::generate_code_for_config;
 
 pub type Object = serde_json::Map<String, serde_json::Value>;
 

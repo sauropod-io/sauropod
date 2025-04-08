@@ -2,8 +2,11 @@
 
 use std::{collections::BTreeMap, path::PathBuf};
 
+pub const ENV_VAR_PREFIX: &str = "SAUROPOD";
+
 /// The type of a model.
-#[derive(Clone, Copy, Debug, serde::Deserialize, serde::Serialize, Default)]
+#[derive(Clone, Copy, Debug, Default, serde::Deserialize, serde::Serialize)]
+#[cfg_attr(feature = "json_schema", derive(schemars::JsonSchema))]
 pub enum ModelType {
     /// The default model type.
     #[default]
@@ -14,10 +17,26 @@ pub enum ModelType {
     Phi4,
 }
 
-#[derive(Clone, Debug, serde::Deserialize, serde::Serialize, Default)]
+/// Model Context Protocol server definitions.
+#[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
+#[cfg_attr(feature = "json_schema", derive(schemars::JsonSchema))]
+#[serde(untagged)]
+pub enum McpServer {
+    /// Spawn a process and communicate with the MCP server over stdio.
+    Process { command: String },
+    /// Communicate with the MCP server over HTTP.
+    Http { url: String },
+}
+
+#[derive(Clone, Debug, Default, serde::Deserialize, serde::Serialize)]
+#[cfg_attr(feature = "json_schema", derive(schemars::JsonSchema))]
 #[serde(deny_unknown_fields)]
 pub struct ModelConfig {
     /// The name of the model.
+    #[cfg_attr(
+        feature = "json_schema",
+        schemars(example = "hf.co/unsloth/gemma-3-27b-it-GGUF:Q6_K")
+    )]
     pub model: String,
     /// The type of model.
     #[serde(default, rename = "type")]
@@ -25,7 +44,8 @@ pub struct ModelConfig {
 }
 
 /// Configuration for models.
-#[derive(Clone, Debug, serde::Deserialize, serde::Serialize, Default)]
+#[derive(Clone, Debug, Default, serde::Deserialize, serde::Serialize)]
+#[cfg_attr(feature = "json_schema", derive(schemars::JsonSchema))]
 #[serde(deny_unknown_fields)]
 pub struct Models {
     /// A model to use for simple tasks.
@@ -58,19 +78,23 @@ fn default_backend() -> String {
 
 /// Sauropod configuration.
 #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
+#[cfg_attr(feature = "json_schema", derive(schemars::JsonSchema))]
 #[serde(deny_unknown_fields)]
 pub struct Config {
     /// The cache directory.
     #[serde(default)]
+    #[cfg_attr(feature = "json_schema", schemars(example = "/data/cache"))]
     pub cache_directory: Option<String>,
     /// The path to the SQLite database.
     #[serde(default)]
+    #[cfg_attr(feature = "json_schema", schemars(example = "/data/database.sqlite"))]
     pub database_path: Option<String>,
     /// The host address to listen on.
     #[serde(default)]
     pub host: Option<String>,
     /// The port to listen on.
     #[serde(default)]
+    #[cfg_attr(feature = "json_schema", schemars(example = 80))]
     pub port: Option<u16>,
     /// The backend to use.
     #[serde(default = "default_backend")]
@@ -78,35 +102,30 @@ pub struct Config {
     /// The model configuration.
     #[serde(default)]
     pub models: Models,
-}
-
-macro_rules! set_cli_override {
-    ($settings_builder:ident , $cli_overrides:ident . $field:ident) => {
-        if let Some(override_val) = $cli_overrides.$field {
-            $settings_builder.set_override(stringify!($field), override_val)?
-        } else {
-            $settings_builder
-        }
-    };
+    /// The MCP servers.
+    #[serde(default)]
+    pub mcp_servers: Vec<McpServer>,
 }
 
 impl Config {
     /// Load the configuration from a file.
     pub fn load_from_file(
         file_path: PathBuf,
-        cli_overrides: Option<Config>,
+        cli_overrides: Box<dyn config::Source + Send + Sync>,
     ) -> anyhow::Result<Self> {
         let dirs = directories::ProjectDirs::from("io", "sauropod", "sauropod");
         let cache_dir = dirs
             .as_ref()
             .map(|dirs| dirs.cache_dir().to_string_lossy().to_string());
         let data_dir = dirs.as_ref().map(|dirs| dirs.data_dir());
-        let default_database_path =
-            data_dir.map(|path| path.join("database.sqlite").to_string_lossy().to_string());
+        let default_database_path = data_dir.map(|path: &std::path::Path| {
+            path.join("database.sqlite").to_string_lossy().to_string()
+        });
 
         let settings_builder = config::Config::builder()
             .add_source(config::File::from(file_path))
-            .add_source(config::Environment::with_prefix("SAUROPOD"));
+            .add_source(config::Environment::with_prefix(ENV_VAR_PREFIX))
+            .add_source(vec![cli_overrides]);
 
         let settings_builder = if let Some(default_cache_directory) = cache_dir {
             settings_builder.set_default("cache_directory", default_cache_directory)?
@@ -119,17 +138,12 @@ impl Config {
             settings_builder
         };
 
-        let cli_overrides = cli_overrides.unwrap_or_default();
-        let settings_builder = set_cli_override!(settings_builder, cli_overrides.cache_directory);
-        let settings_builder = set_cli_override!(settings_builder, cli_overrides.host);
-        let settings_builder = set_cli_override!(settings_builder, cli_overrides.port);
-
         let settings = settings_builder.build()?;
         Ok(settings.try_deserialize::<Config>()?)
     }
 
     /// Load the configuration.
-    pub fn load(cli_overrides: Option<Config>) -> anyhow::Result<Self> {
+    pub fn load(cli_overrides: Box<dyn config::Source + Send + Sync>) -> anyhow::Result<Self> {
         let dirs = match directories::ProjectDirs::from("io", "sauropod", "sauropod") {
             Some(dirs) => dirs,
             None => {
@@ -163,6 +177,7 @@ impl Default for Config {
             port: None,
             backend: default_backend(),
             models: Models::default(),
+            mcp_servers: vec![],
         }
     }
 }
