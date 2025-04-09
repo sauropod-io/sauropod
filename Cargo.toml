@@ -15,10 +15,11 @@ members = [
     "crates/tool-spec",
     "crates/workflows",
     "tools/generate-code-from-structs",
+    "tools/create-release-tag",
 ]
 
 [workspace.package]
-version = "0.1.0"
+version = "0.0.0"
 edition = "2024"
 license = "AGPL-3.0-only"
 authors = ["Sauropod <contact@sauropod.io>"]

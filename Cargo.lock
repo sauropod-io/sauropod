@@ -316,6 +316,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "773648b94d0e5d620f64f280777445740e61fe701025087ec8b57f45c791888b"
 
 [[package]]
+name = "create-release-tag"
+version = "0.0.0"
+dependencies = [
+ "anyhow",
+ "clap",
+ "toml_edit",
+]
+
+[[package]]
 name = "directories"
 version = "6.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -514,7 +523,7 @@ dependencies = [
 
 [[package]]
 name = "generate-code-from-structs"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "anyhow",
  "sauropod-config",
@@ -851,9 +860,9 @@ dependencies = [
 
 [[package]]
 name = "indexmap"
-version = "2.8.0"
+version = "2.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3954d50fe15b02142bf25d3b8bdadb634ec3948f103d04ffe3031bc8fe9d7058"
+checksum = "cea70ddb795996207ad57735b50c5982d8844f38ba9ee5f1aedcfb708a2aa11e"
 dependencies = [
  "equivalent",
  "hashbrown",
@@ -1018,9 +1027,9 @@ dependencies = [
 
 [[package]]
 name = "miniz_oxide"
-version = "0.8.7"
+version = "0.8.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ff70ce3e48ae43fa075863cef62e8b43b71a4f2382229920e0df362592919430"
+checksum = "3be647b768db090acb35d5ec5db2b0e1f1de11133ca123b9eacf5137868f892a"
 dependencies = [
  "adler2",
 ]
@@ -1298,9 +1307,9 @@ checksum = "74765f6d916ee2faa39bc8e68e4f3ed8949b48cccdac59983d287a7cb71ce9c5"
 
 [[package]]
 name = "redox_syscall"
-version = "0.5.10"
+version = "0.5.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0b8c0c260b63a8219631167be35e6a988e9554dbd323f8bd08439c8ed1302bd1"
+checksum = "d2f103c6d277498fbceb16e84d317e2a400f160f46904d5f5410848c829511a3"
 dependencies = [
  "bitflags",
 ]
@@ -1539,7 +1548,7 @@ checksum = "28d3b2b1366ec20994f1fd18c3c594f05c5dd4bc44d8bb0c1c632c8d6829481f"
 
 [[package]]
 name = "sauropod-config"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "anyhow",
  "config",
@@ -1552,7 +1561,7 @@ dependencies = [
 
 [[package]]
 name = "sauropod-core-tools"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "anyhow",
  "reqwest",
@@ -1565,7 +1574,7 @@ dependencies = [
 
 [[package]]
 name = "sauropod-database"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "anyhow",
  "rusqlite",
@@ -1577,7 +1586,7 @@ dependencies = [
 
 [[package]]
 name = "sauropod-http"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -1590,7 +1599,7 @@ dependencies = [
 
 [[package]]
 name = "sauropod-llm-inference"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "anyhow",
  "reqwest",
@@ -1604,7 +1613,7 @@ dependencies = [
 
 [[package]]
 name = "sauropod-logging"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "serde_json",
  "tracing",
@@ -1613,7 +1622,7 @@ dependencies = [
 
 [[package]]
 name = "sauropod-prompt-templates"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "anyhow",
  "minijinja",
@@ -1623,7 +1632,7 @@ dependencies = [
 
 [[package]]
 name = "sauropod-schemas"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "schemars",
  "serde",
@@ -1632,7 +1641,7 @@ dependencies = [
 
 [[package]]
 name = "sauropod-server"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -1659,7 +1668,7 @@ dependencies = [
 
 [[package]]
 name = "sauropod-task"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -1680,7 +1689,7 @@ dependencies = [
 
 [[package]]
 name = "sauropod-task-context"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "anyhow",
  "sauropod-config",
@@ -1693,7 +1702,7 @@ dependencies = [
 
 [[package]]
 name = "sauropod-tool-spec"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "anyhow",
  "sauropod-schemas",
@@ -1705,7 +1714,7 @@ dependencies = [
 
 [[package]]
 name = "sauropod-workflows"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -1900,9 +1909,9 @@ dependencies = [
 
 [[package]]
 name = "smallvec"
-version = "1.14.0"
+version = "1.15.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7fcf8323ef1faaee30a44a340193b1ac6814fd9b7b4e88e9d4519a3e4abe1cfd"
+checksum = "8917285742e9f3e1683f0a9c4e6b57960b7314d0b08d30d1ecd426713ee2eee9"
 
 [[package]]
 name = "socket2"
@@ -2635,9 +2644,9 @@ checksum = "271414315aff87387382ec3d271b52d7ae78726f5d44ac98b4f4030c91880486"
 
 [[package]]
 name = "winnow"
-version = "0.7.4"
+version = "0.7.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0e97b544156e9bebe1a0ffbc03484fc1ffe3100cbce3ffb17eac35f7cdd7ab36"
+checksum = "63d3fcd9bba44b03821e7d699eeee959f3126dcc4aa8e4ae18ec617c2a5cea10"
 dependencies = [
  "memchr",
 ]

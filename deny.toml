@@ -8,7 +8,9 @@ feature-depth = 1
 
 [advisories]
 db-urls = ["https://github.com/rustsec/advisory-db"]
-ignore = []
+ignore = [
+    "RUSTSEC-2024-0436", # Allow paste dependency for now
+]
 
 [licenses]
 allow = [
@@ -29,21 +31,6 @@ exceptions = []
 [licenses.private]
 ignore = true
 registries = []
-
-[[licenses.clarify]]
-name = "toktrie_hf_tokenizers"
-expression = "MIT"
-license-files = []
-
-[[licenses.clarify]]
-name = "toktrie"
-expression = "MIT"
-license-files = []
-
-[[licenses.clarify]]
-name = "llguidance"
-expression = "MIT"
-license-files = []
 
 [bans]
 multiple-versions = "allow" # TODO change this to deny
