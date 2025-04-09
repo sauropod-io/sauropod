@@ -5,13 +5,21 @@ const CONFIG_FLAG: &str = "config";
 #[tokio::main(flavor = "current_thread")]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let command = sauropod_server::add_config_flags(
-        clap::Command::new("sauropod").arg(
-            clap::Arg::new(CONFIG_FLAG)
-                .long(CONFIG_FLAG)
-                .short('c')
-                .help("Path to the configuration file.")
-                .value_parser(clap::value_parser!(PathBuf)),
-        ),
+        clap::Command::new("sauropod")
+            .version(env!("CARGO_PKG_VERSION"))
+            .about(concat!(
+                env!("CARGO_PKG_DESCRIPTION"),
+                "\n\nSee ",
+                env!("CARGO_PKG_HOMEPAGE"),
+                "/docs for more information."
+            ))
+            .arg(
+                clap::Arg::new(CONFIG_FLAG)
+                    .long(CONFIG_FLAG)
+                    .short('c')
+                    .help("Path to the configuration file.")
+                    .value_parser(clap::value_parser!(PathBuf)),
+            ),
     );
     let cli_matches = command.get_matches();
     let config_path = cli_matches.get_one::<PathBuf>(CONFIG_FLAG).cloned();

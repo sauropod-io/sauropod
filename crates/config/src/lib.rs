@@ -94,7 +94,7 @@ pub struct Config {
     pub port: Option<u16>,
     /// The backend to use.
     ///
-    /// This is expected to be a URL that points to an OpenAPI-compatible backend like Ollama or llama-cpp.
+    /// This is expected to be a URL that points to an OpenAPI-compatible backend like [Ollama](https://ollama.com/) or [llama-cpp](https://github.com/ggml-org/llama.cpp).
     #[serde(default = "default_backend")]
     pub backend: String,
     /// The API key to use to access the backend.

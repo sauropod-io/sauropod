@@ -1,5 +1,6 @@
 # Define variables
 SCHEMA_DIR = $(CURDIR)/api
+DOCS_DIR = $(CURDIR)/docs
 PACKAGES_DIR = $(CURDIR)/packages
 SCHEMA_FILE = $(SCHEMA_DIR)/openapi.json
 
@@ -16,7 +17,7 @@ _generate-ts-clients:
 	npx openapi-typescript
 
 _prettier:
-	npx prettier --write $(PACKAGES_DIR)/client $(SCHEMA_DIR)
+	npx prettier --write $(PACKAGES_DIR)/client $(SCHEMA_DIR) $(DOCS_DIR)
 
 # Public targets
 .PHONY: generate format-rust lint-all lint test release ui

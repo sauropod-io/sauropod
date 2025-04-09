@@ -4,6 +4,8 @@ A local AI orchestrator.
 
 ## Running Sauropod
 
+See [docs/config.md](./docs/config.md) for configuration settings.
+
 ### Example configuration
 
 `~/.config/sauropod/config.toml`

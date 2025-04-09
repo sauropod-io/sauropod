@@ -3,7 +3,6 @@
 use std::{future::Future, pin::Pin, sync::Arc};
 
 use anyhow::Context;
-use schemars::JsonSchema;
 use tracing::Instrument;
 
 pub use sauropod_schemas::ToolDefinition;
@@ -44,11 +43,14 @@ where
     <Self as ConcreteTool>::Input: for<'a> serde::Deserialize<'a> + schemars::JsonSchema,
 {
     fn get_definition(&self) -> ToolDefinition {
-        let mut schema_settings = schemars::generate::SchemaSettings::draft2020_12();
-        schema_settings.inline_subschemas = true;
-        let mut schema_generator = schemars::SchemaGenerator::new(schema_settings);
-        let input_schema: serde_json::Value =
-            <Self as ConcreteTool>::Input::json_schema(&mut schema_generator).into();
+        let schema_generator = schemars::SchemaGenerator::new({
+            let mut schema_settings = schemars::generate::SchemaSettings::draft2020_12();
+            schema_settings.inline_subschemas = true;
+            schema_settings
+        });
+        let input_schema = schema_generator
+            .into_root_schema_for::<<Self as ConcreteTool>::Input>()
+            .to_value();
 
         ToolDefinition {
             name: self.get_name(),

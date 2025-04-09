@@ -1,10 +1,13 @@
 [package]
 name = "sauropod-server"
-version.workspace = true
-edition.workspace = true
-license.workspace = true
+description = "Sauropod is a system for making local AI workflows."
 authors.workspace = true
+edition.workspace = true
+homepage.workspace = true
+license.workspace = true
 publish.workspace = true
+repository.workspace = true
+version.workspace = true
 
 [dependencies]
 sauropod-config = { path = "../config" }
