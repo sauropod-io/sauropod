@@ -1,6 +1,5 @@
 //! Code generation to support the config file and CLI options.
 
-use crate::json_schema;
 use std::{fmt::Write as _, io::Write as _};
 
 /// Get the environment variable for a given config key.
@@ -48,8 +47,8 @@ pub fn generate_code_for_config() -> anyhow::Result<()> {
 
     let schema = schemars::schema_for!(sauropod_config::Config).to_value();
 
-    for (key, value) in json_schema::iterate_properties(&schema)? {
-        let value_map = value.as_object().unwrap();
+    for property in sauropod_json_schema::iterate_properties(&schema)? {
+        let value_map = property.schema.as_object().unwrap();
         let Some(value_type) = value_map.get("type") else {
             continue;
         };
@@ -57,31 +56,15 @@ pub fn generate_code_for_config() -> anyhow::Result<()> {
             continue;
         }
 
-        let cli_key = key.replace('_', "-");
-        let is_string = value_type == "string"
-            || value_type
-                .as_array()
-                .map(|v| v.contains(&"string".into()))
-                .unwrap_or(false);
-        let is_integer = value_type == "integer"
-            || value_type
-                .as_array()
-                .map(|v| v.contains(&"integer".into()))
-                .unwrap_or(false);
-        let is_boolean = value_type == "boolean"
-            || value_type
-                .as_array()
-                .map(|v| v.contains(&"boolean".into()))
-                .unwrap_or(false);
-
-        let env_var = environment_variable(&key);
+        let cli_key = property.name.replace('_', "-");
+        let env_var = environment_variable(property.name);
 
         write!(
             &mut add_config_flags,
             r#"clap::Arg::new("{cli_key}").long("{cli_key}").env("{env_var}")"#
         )?;
 
-        if let Some(description) = value["description"].as_str() {
+        if let Some(description) = property.schema["description"].as_str() {
             write!(&mut add_config_flags, ".help(r#\"",)?;
 
             for (i, line) in description.lines().enumerate() {
@@ -104,12 +87,12 @@ pub fn generate_code_for_config() -> anyhow::Result<()> {
         };
 
         write!(&mut clap_to_config_source, "if let Some(value) = ")?;
-        if is_string {
+        if sauropod_json_schema::is_string(property.schema) {
             write!(
                 &mut clap_to_config_source,
                 "matches.get_one::<String>(\"{cli_key}\").cloned().map(|x| config::Value::new(None, x))"
             )?;
-        } else if is_integer {
+        } else if sauropod_json_schema::is_integer(property.schema) {
             write!(
                 &mut add_config_flags,
                 ".value_parser(clap::value_parser!(i64))"
@@ -118,18 +101,23 @@ pub fn generate_code_for_config() -> anyhow::Result<()> {
                 &mut clap_to_config_source,
                 "matches.get_one::<i64>(\"{cli_key}\").cloned().map(|x| config::Value::new(None, x))"
             )?;
-        } else if is_boolean {
+        } else if sauropod_json_schema::is_boolean(property.schema) {
             writeln!(&mut add_config_flags, ".action(clap::ArgAction::SetTrue)")?;
             write!(
                 &mut clap_to_config_source,
                 "matches.get_one::<bool>(\"{cli_key}\").cloned().map(|x| config::Value::new(None, x))"
             )?;
         } else {
-            todo!("Unsupported type: {} for field {}", value_type, key);
+            todo!(
+                "Unsupported type: {} for field {}",
+                value_type,
+                property.name
+            );
         }
         writeln!(
             &mut clap_to_config_source,
-            "{{ values.insert(\"{key}\".to_string(), value); }}"
+            "{{ values.insert(\"{}\".to_string(), value); }}",
+            property.name
         )?;
 
         writeln!(&mut add_config_flags, ",")?

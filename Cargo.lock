@@ -527,6 +527,7 @@ version = "0.0.0"
 dependencies = [
  "anyhow",
  "sauropod-config",
+ "sauropod-json-schema",
  "sauropod-schemas",
  "schemars",
  "serde",
@@ -1595,6 +1596,14 @@ dependencies = [
  "serde",
  "serde_json",
  "tracing",
+]
+
+[[package]]
+name = "sauropod-json-schema"
+version = "0.0.0"
+dependencies = [
+ "anyhow",
+ "serde_json",
 ]
 
 [[package]]

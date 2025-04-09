@@ -28,7 +28,6 @@ FROM base AS rust-builder
 # Install dependencies
 RUN export DEBIAN_FRONTEND=noninteractive && \
     apt-get update && apt-get install -y \
-    clang \
     gnupg \
     libclang1 \
     libssl-dev \
@@ -49,6 +48,7 @@ COPY crates/config/Cargo.toml crates/config/Cargo.toml
 COPY crates/core-tools/Cargo.toml crates/core-tools/Cargo.toml
 COPY crates/database/Cargo.toml crates/database/Cargo.toml
 COPY crates/http/Cargo.toml crates/http/Cargo.toml
+COPY crates/json-schema/Cargo.toml crates/json-schema/Cargo.toml
 COPY crates/llm-inference/Cargo.toml crates/llm-inference/Cargo.toml
 COPY crates/logging/Cargo.toml crates/logging/Cargo.toml
 COPY crates/prompt-templates/Cargo.toml crates/prompt-templates/Cargo.toml
@@ -64,6 +64,7 @@ RUN mkdir crates/config/src && touch crates/config/src/lib.rs && \
     mkdir crates/core-tools/src && touch crates/core-tools/src/lib.rs && \
     mkdir crates/database/src && touch crates/database/src/lib.rs && \
     mkdir crates/http/src && touch crates/http/src/lib.rs && \
+    mkdir crates/json-schema/src && touch crates/json-schema/src/lib.rs && \
     mkdir crates/llm-inference/src && touch crates/llm-inference/src/lib.rs && \
     mkdir crates/logging/src && touch crates/logging/src/lib.rs && \
     mkdir crates/prompt-templates/src && touch crates/prompt-templates/src/lib.rs && \

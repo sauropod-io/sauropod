@@ -11,6 +11,7 @@ homepage.workspace = true
 [dependencies]
 sauropod-schemas = { path = "../../crates/schemas", features = ["json_schema"] }
 sauropod-config = { path = "../../crates/config", features = ["json_schema"] }
+sauropod-json-schema = { path = "../../crates/json-schema" }
 
 anyhow.workspace = true
 schemars.workspace = true

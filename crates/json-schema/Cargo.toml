@@ -1,0 +1,13 @@
+[package]
+name = "sauropod-json-schema"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+publish.workspace = true
+repository.workspace = true
+homepage.workspace = true
+
+[dependencies]
+serde_json.workspace = true
+anyhow.workspace = true

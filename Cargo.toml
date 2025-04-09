@@ -15,7 +15,7 @@ members = [
     "crates/tool-spec",
     "crates/workflows",
     "tools/generate-code",
-    "tools/create-release-tag",
+    "tools/create-release-tag", "crates/json-schema",
 ]
 
 [workspace.package]
@@ -40,7 +40,7 @@ reqwest = { version = "0.12.14", features = ["json"] }
 rmcp = { version = "0.1.5", default-features = true, features = ["client", "transport-io", "transport-sse", "transport-child-process"]}
 rusqlite = { version = "0.34.0", features = ["bundled", "serde_json"]}
 schemars = "1.0.0-alpha.17"
-serde = "1.0.219"
+serde = {version = "1.0.219", features = ["serde_derive"]}
 serde_json = "1.0.140"
 thiserror = "2.0.12"
 tokio = { version = "1.44", features = ["full"] }
