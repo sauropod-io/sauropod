@@ -17,14 +17,32 @@ pub struct Engine {
 
 impl Engine {
     /// Create a new engine.
-    pub(crate) fn new(url: String, backend: crate::Backend) -> Self {
+    pub(crate) fn new(
+        url: String,
+        backend: crate::Backend,
+        api_key: Option<String>,
+    ) -> anyhow::Result<Self> {
         let openai = format!("{}/v1", url.trim_end_matches('/'));
-        Self {
+        let client_builder =
+            reqwest::Client::builder().user_agent(concat!("sauropod/", env!("CARGO_PKG_VERSION")));
+        let client_builder = if let Some(api_key) = &api_key {
+            let mut headers = reqwest::header::HeaderMap::with_capacity(1);
+            let mut auth_value =
+                reqwest::header::HeaderValue::from_str(&format!("Bearer {api_key}"))?;
+            auth_value.set_sensitive(true);
+            headers.insert(reqwest::header::AUTHORIZATION, auth_value);
+            client_builder.default_headers(headers)
+        } else {
+            client_builder
+        };
+
+        let client = client_builder.build()?;
+        Ok(Self {
             backend,
             backend_url: url,
-            client: reqwest::Client::new(),
-            openai: crate::openai_api::OpenAiInterface::new(openai),
-        }
+            client: client.clone(),
+            openai: crate::openai_api::OpenAiInterface::new(client, openai),
+        })
     }
 }
 

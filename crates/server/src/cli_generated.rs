@@ -1,22 +1,12 @@
 pub fn add_config_flags(parser: clap::Command) -> clap::Command {
     parser.args([
-        clap::Arg::new("backend")
-            .long("backend")
-            .env("SAUROPOD_BACKEND")
-            .help(r#"The backend to use"#),
-        clap::Arg::new("database-path")
-            .long("database-path")
-            .env("SAUROPOD_DATABASE_PATH")
-            .help(r#"The path to the SQLite database"#),
-        clap::Arg::new("host")
-            .long("host")
-            .env("SAUROPOD_HOST")
-            .help(r#"The host address to listen on"#),
-        clap::Arg::new("port")
-            .long("port")
-            .env("SAUROPOD_PORT")
-            .help(r#"The port to listen on"#)
-            .value_parser(clap::value_parser!(i64)),
+clap::Arg::new("backend").long("backend").env("SAUROPOD_BACKEND").help(r#"The backend to use
+
+This is expected to be a URL that points to an OpenAPI-compatible backend like Ollama or llama-cpp."#),
+clap::Arg::new("backend-api-key").long("backend-api-key").env("SAUROPOD_BACKEND_API_KEY").help(r#"The API key to use to access the backend"#),
+clap::Arg::new("database-path").long("database-path").env("SAUROPOD_DATABASE_PATH").help(r#"The path to the SQLite database"#),
+clap::Arg::new("host").long("host").env("SAUROPOD_HOST").help(r#"The host address to listen on"#),
+clap::Arg::new("port").long("port").env("SAUROPOD_PORT").help(r#"The port to listen on"#).value_parser(clap::value_parser!(i64)),
     ])
 }
 
@@ -44,6 +34,13 @@ pub fn clap_to_config_source(matches: clap::ArgMatches) -> Box<ClapConfigSource>
         .map(|x| config::Value::new(None, x))
     {
         values.insert("backend".to_string(), value);
+    }
+    if let Some(value) = matches
+        .get_one::<String>("backend-api-key")
+        .cloned()
+        .map(|x| config::Value::new(None, x))
+    {
+        values.insert("backend_api_key".to_string(), value);
     }
     if let Some(value) = matches
         .get_one::<String>("database-path")

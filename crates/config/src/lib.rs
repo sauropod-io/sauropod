@@ -93,8 +93,13 @@ pub struct Config {
     #[cfg_attr(feature = "json_schema", schemars(example = 80))]
     pub port: Option<u16>,
     /// The backend to use.
+    ///
+    /// This is expected to be a URL that points to an OpenAPI-compatible backend like Ollama or llama-cpp.
     #[serde(default = "default_backend")]
     pub backend: String,
+    /// The API key to use to access the backend.
+    #[serde(default)]
+    pub backend_api_key: Option<String>,
     /// The model configuration.
     #[serde(default)]
     pub models: Models,
@@ -110,9 +115,6 @@ impl Config {
         cli_overrides: Box<dyn config::Source + Send + Sync>,
     ) -> anyhow::Result<Self> {
         let dirs = directories::ProjectDirs::from("io", "sauropod", "sauropod");
-        let cache_dir = dirs
-            .as_ref()
-            .map(|dirs| dirs.cache_dir().to_string_lossy().to_string());
         let data_dir = dirs.as_ref().map(|dirs| dirs.data_dir());
         let default_database_path = data_dir.map(|path: &std::path::Path| {
             path.join("database.sqlite").to_string_lossy().to_string()
@@ -123,11 +125,6 @@ impl Config {
             .add_source(config::Environment::with_prefix(ENV_VAR_PREFIX))
             .add_source(vec![cli_overrides]);
 
-        let settings_builder = if let Some(default_cache_directory) = cache_dir {
-            settings_builder.set_default("cache_directory", default_cache_directory)?
-        } else {
-            settings_builder
-        };
         let settings_builder = if let Some(default_database_path) = default_database_path {
             settings_builder.set_default("database_path", default_database_path)?
         } else {
@@ -171,6 +168,7 @@ impl Default for Config {
             host: None,
             port: None,
             backend: default_backend(),
+            backend_api_key: None,
             models: Models::default(),
             mcp_servers: vec![],
         }

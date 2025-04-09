@@ -20,6 +20,8 @@ pub(crate) enum Backend {
     LlamaCpp,
     /// Ollama.
     Ollama,
+    /// An unknown backend.
+    Unknown,
 }
 
 /// Detect the backend type from the URL.
@@ -48,7 +50,8 @@ async fn detect_backend(url: &str) -> anyhow::Result<Backend> {
         return Ok(Backend::Ollama);
     }
 
-    anyhow::bail!("Could not detect backend from {url}");
+    tracing::warn!("Could not detect backend type from {url}");
+    Ok(Backend::Unknown)
 }
 
 /// Create an inference engine.
@@ -61,9 +64,13 @@ pub async fn create_engine(config: &sauropod_config::Config) -> anyhow::Result<E
         Backend::Ollama => {
             tracing::info!("Backend is Ollama");
         }
+        Backend::Unknown => {
+            tracing::info!("Backend is Ollama");
+        }
     }
     Ok(std::sync::Arc::new(engine::Engine::new(
         config.backend.clone(),
         backend,
-    )))
+        config.backend_api_key.clone(),
+    )?))
 }

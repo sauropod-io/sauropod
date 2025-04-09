@@ -1,3 +1,5 @@
+//! Code generation to support the config file and CLI options.
+
 use crate::json_schema;
 use std::{fmt::Write as _, io::Write as _};
 
@@ -80,11 +82,25 @@ pub fn generate_code_for_config() -> anyhow::Result<()> {
         )?;
 
         if let Some(description) = value["description"].as_str() {
-            write!(
-                &mut add_config_flags,
-                ".help(r#\"{}\"#)",
-                description.trim_matches('.')
-            )?;
+            write!(&mut add_config_flags, ".help(r#\"",)?;
+
+            for (i, line) in description.lines().enumerate() {
+                if i != 0 {
+                    write!(
+                        &mut add_config_flags,
+                        "\n{}",
+                        if let Some(trimmed_line) = line.strip_prefix(" ") {
+                            trimmed_line
+                        } else {
+                            line
+                        }
+                    )?;
+                } else {
+                    write!(&mut add_config_flags, "{}", line.trim_matches('.'))?;
+                }
+            }
+
+            write!(&mut add_config_flags, "\"#)")?;
         };
 
         write!(&mut clap_to_config_source, "if let Some(value) = ")?;

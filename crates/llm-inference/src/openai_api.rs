@@ -165,12 +165,12 @@ pub struct ModelsResponse {
 
 impl OpenAiInterface {
     /// Create a new OpenAI interface.
-    pub fn new(url: String) -> Self {
+    pub fn new(client: reqwest::Client, url: String) -> Self {
         let completions_url = format!("{}/chat/completions", &url);
         Self {
             completions_url,
             models_url: format!("{}/models", &url),
-            client: reqwest::Client::new(),
+            client,
         }
     }
 
