@@ -36,6 +36,14 @@ updates:
         update-types:
           - "minor"
           - "patch"
+      radix-ui:
+        applies-to: version-updates
+        patterns:
+          - "radix-ui"
+          - "@radix-ui*"
+        update-types:
+          - "minor"
+          - "patch"
       react:
         applies-to: version-updates
         patterns:
