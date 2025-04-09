@@ -14,11 +14,9 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
     gnupg \
     libclang1 \
     libssl-dev \
-    lld \
     nodejs \
     npm \
     pkg-config \
-    sccache \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Download Rust toolchain
