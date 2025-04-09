@@ -52,7 +52,6 @@ export default function Settings() {
   }>({
     Strong: "",
     Weak: "",
-    Vision: "",
   });
 
   const handleSave = () => {
