@@ -64,6 +64,7 @@ fn main() -> anyhow::Result<()> {
     write_schema::<Task>()?;
 
     generate_code::generate_code_for_config()?;
+    generate_code::generate_code_for_docker()?;
 
     Ok(())
 }

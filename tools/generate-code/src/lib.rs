@@ -9,6 +9,8 @@ pub mod openapi;
 pub mod openapi_schema;
 pub mod paths;
 pub use config_file::generate_code_for_config;
+mod docker;
+pub use docker::generate_code_for_docker;
 
 pub type Object = serde_json::Map<String, serde_json::Value>;
 
