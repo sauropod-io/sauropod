@@ -2,6 +2,7 @@ import { GitHubLogoIcon } from "@radix-ui/react-icons";
 import { Logs, Settings } from "lucide-react";
 import { Link, useLocation } from "react-router";
 
+import api from "@/api";
 import SauropodIcon from "@/assets/icon.svg?url";
 import Sauropod from "@/assets/sauropod.svg?url";
 import SidebarTaskGroup from "@/components/sidebar/SidebarTaskGroup";
@@ -26,6 +27,7 @@ import { LOGS, SETTINGS } from "@/routes";
 export default function AppSidebar() {
   const location = useLocation().pathname;
   const { open: sidebarOpen } = useSidebar();
+  const { data: version } = api.useQuery("get", `/api/version`);
 
   return (
     <ShadcnSidebar collapsible="icon">
@@ -81,6 +83,18 @@ export default function AppSidebar() {
                   >
                     <GitHubLogoIcon className="h-6 w-6" />
                     <span>Source Code</span>
+                  </a>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem className="text-muted-foreground">
+                <SidebarMenuButton isActive={false} asChild>
+                  <a
+                    href="https://sauropod.io/"
+                    target="_blank"
+                    rel="noopener"
+                    className="hover:text-primary"
+                  >
+                    <span>Sauropod v{version || ""}</span>
                   </a>
                 </SidebarMenuButton>
               </SidebarMenuItem>
