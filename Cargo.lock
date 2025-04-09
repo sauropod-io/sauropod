@@ -522,7 +522,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "generate-code-from-structs"
+name = "generate-code"
 version = "0.0.0"
 dependencies = [
  "anyhow",

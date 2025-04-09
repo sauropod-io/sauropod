@@ -1,5 +1,5 @@
 [package]
-name = "generate-code-from-structs"
+name = "generate-code"
 version.workspace = true
 edition.workspace = true
 license.workspace = true

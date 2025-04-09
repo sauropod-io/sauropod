@@ -81,10 +81,6 @@ fn default_backend() -> String {
 #[cfg_attr(feature = "json_schema", derive(schemars::JsonSchema))]
 #[serde(deny_unknown_fields)]
 pub struct Config {
-    /// The cache directory.
-    #[serde(default)]
-    #[cfg_attr(feature = "json_schema", schemars(example = "/data/cache"))]
-    pub cache_directory: Option<String>,
     /// The path to the SQLite database.
     #[serde(default)]
     #[cfg_attr(feature = "json_schema", schemars(example = "/data/database.sqlite"))]
@@ -171,7 +167,6 @@ impl Config {
 impl Default for Config {
     fn default() -> Self {
         Self {
-            cache_directory: None,
             database_path: None,
             host: None,
             port: None,

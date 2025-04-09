@@ -8,9 +8,9 @@ SCHEMA_FILE = $(SCHEMA_DIR)/openapi.json
 default: release
 
 # Internal targets
-.PHONY: _generate-code-from-structs _generate-ts-clients _prettier
-_generate-code-from-structs:
-	cargo run --bin generate-code-from-structs -- "$(SCHEMA_FILE)"
+.PHONY: _generate-code _generate-ts-clients _prettier
+_generate-code:
+	cargo run --bin generate-code -- "$(SCHEMA_FILE)"
 
 _generate-ts-clients:
 	npx openapi-typescript
@@ -20,7 +20,7 @@ _prettier:
 
 # Public targets
 .PHONY: generate format-rust lint-all lint test release ui
-generate: _generate-code-from-structs _generate-ts-clients _prettier format-rust
+generate: _generate-code _generate-ts-clients _prettier format-rust
 
 format-rust:
 	cargo fmt

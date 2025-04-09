@@ -89,6 +89,8 @@ pub trait ServerInterface {
     async fn get_models(
         &self,
     ) -> anyhow::Result<crate::HttpResponse<std::vec::Vec<sauropod_schemas::ModelDefinition>>>;
+    /// Get the version of the server
+    async fn get_version(&self) -> anyhow::Result<crate::HttpResponse<std::string::String>>;
 }
 
 pub fn register_routes<T: ServerInterface + Sync + Send + 'static>(
@@ -463,6 +465,27 @@ pub fn register_routes<T: ServerInterface + Sync + Send + 'static>(
                             "Request",
                             method = "GET",
                             path = "/models"
+                        ))
+                        .await;
+                    if let Err(error) = &response {
+                        tracing::error!("Error responding to request: {:?}", error);
+                    }
+                    crate::create_response_from_result(response)
+                }
+            }),
+        )
+        .route(
+            "/version",
+            axum::routing::get({
+                let server_clone = server.clone();
+                async move || {
+                    tracing::debug!("GET /version");
+                    let response = server_clone
+                        .get_version()
+                        .instrument(tracing::info_span!(
+                            "Request",
+                            method = "GET",
+                            path = "/version"
                         ))
                         .await;
                     if let Err(error) = &response {

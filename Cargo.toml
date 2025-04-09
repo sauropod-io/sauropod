@@ -14,7 +14,7 @@ members = [
     "crates/task",
     "crates/tool-spec",
     "crates/workflows",
-    "tools/generate-code-from-structs",
+    "tools/generate-code",
     "tools/create-release-tag",
 ]
 

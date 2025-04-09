@@ -4,10 +4,6 @@ pub fn add_config_flags(parser: clap::Command) -> clap::Command {
             .long("backend")
             .env("SAUROPOD_BACKEND")
             .help(r#"The backend to use"#),
-        clap::Arg::new("cache-directory")
-            .long("cache-directory")
-            .env("SAUROPOD_CACHE_DIRECTORY")
-            .help(r#"The cache directory"#),
         clap::Arg::new("database-path")
             .long("database-path")
             .env("SAUROPOD_DATABASE_PATH")
@@ -48,13 +44,6 @@ pub fn clap_to_config_source(matches: clap::ArgMatches) -> Box<ClapConfigSource>
         .map(|x| config::Value::new(None, x))
     {
         values.insert("backend".to_string(), value);
-    }
-    if let Some(value) = matches
-        .get_one::<String>("cache-directory")
-        .cloned()
-        .map(|x| config::Value::new(None, x))
-    {
-        values.insert("cache_directory".to_string(), value);
     }
     if let Some(value) = matches
         .get_one::<String>("database-path")

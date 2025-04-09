@@ -1,7 +1,7 @@
 {
   "openapi": "3.0.3",
   "info": {
-    "title": "Sauropod Scales",
+    "title": "Sauropod",
     "license": {
       "name": "Apache 2.0",
       "url": "https://www.apache.org/licenses/LICENSE-2.0.html"
@@ -466,6 +466,43 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Array_of_ToolDefinition"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/version": {
+      "get": {
+        "summary": "Get the version of the server",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/string"
                 }
               }
             }
@@ -1181,6 +1218,9 @@
       "int64": {
         "type": "integer",
         "format": "int64"
+      },
+      "string": {
+        "type": "string"
       }
     }
   }

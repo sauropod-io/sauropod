@@ -4,7 +4,7 @@ use sauropod_schemas::{
     workflow::{ObjectInfo, Workflow},
 };
 
-use generate_code_from_structs::{Object, database_types, json_schema::write_schema, openapi};
+use generate_code::{Object, database_types, json_schema::write_schema, openapi};
 
 fn main() -> anyhow::Result<()> {
     openapi! {
@@ -50,6 +50,9 @@ fn main() -> anyhow::Result<()> {
         route "/models" (
             GET (()) -> Vec<ModelDefinition> : "Get the list of available models"
         )
+        route "/version" (
+            GET (()) -> String : "Get the version of the server"
+        )
     };
 
     database_types! {
@@ -60,7 +63,7 @@ fn main() -> anyhow::Result<()> {
     write_schema::<Workflow>()?;
     write_schema::<Task>()?;
 
-    generate_code_from_structs::generate_code_for_config()?;
+    generate_code::generate_code_for_config()?;
 
     Ok(())
 }

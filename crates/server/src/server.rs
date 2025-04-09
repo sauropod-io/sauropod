@@ -1,6 +1,7 @@
 //! HTTP server code.
 
 use std::collections::{BTreeMap, HashMap};
+use std::env;
 use std::sync::Arc;
 
 use sauropod_config::ModelConfig;
@@ -381,5 +382,9 @@ impl sauropod_http::ServerInterface for Server {
         &self,
     ) -> anyhow::Result<HttpResponse<std::vec::Vec<sauropod_schemas::ModelDefinition>>> {
         Ok(HttpResponse::Ok(self.llm_engine.list_models().await?))
+    }
+
+    async fn get_version(&self) -> anyhow::Result<HttpResponse<String>> {
+        Ok(HttpResponse::Ok(env!("CARGO_PKG_VERSION").to_string()))
     }
 }

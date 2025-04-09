@@ -56,7 +56,7 @@ pub fn generate_openapi_schema(
     let spec = OpenApiSpec {
         openapi: "3.0.3".to_string(),
         info: Info {
-            title: "Sauropod Scales".to_string(),
+            title: "Sauropod".to_string(),
             description: None,
             terms_of_service: None,
             contact: None,

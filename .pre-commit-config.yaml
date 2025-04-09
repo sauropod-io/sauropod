@@ -1,6 +1,5 @@
 exclude: |
   (?x)^(
-      .*_pb.ts|
       .*\.vale/.*|
       packages/client/.*\.ts
   )$
