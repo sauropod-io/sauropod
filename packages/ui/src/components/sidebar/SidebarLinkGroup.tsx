@@ -15,7 +15,6 @@ import {
   SidebarMenuItem,
   SidebarMenuSkeleton,
 } from "@/components/ui/sidebar";
-import { cn } from "@/lib/utils";
 
 interface SidebarLinkGroupProps {
   items?: { id: number; name: string }[];
@@ -91,18 +90,14 @@ export default function SidebarLinkGroup({
     <SidebarGroup className="group-data-[collapsible=icon]:!py-0">
       <SidebarGroupLabel
         hideWhenClosed={false}
-        className="group-data-[collapsible=icon]:-p-0"
+        className="group-data-[collapsible=icon]:-p-0 text-foreground"
+        asChild
       >
         <Link
           to={linkRoute("")}
           className="flex shrink-0 items-center text-xs [&>svg]:size-4 [&>svg]:shrink-0"
         >
-          <Icon
-            className={cn(
-              "h-6 w-6 text-muted-foreground transition-colors hover:text-primary",
-              location.startsWith(linkPrefix) ? "text-primary" : "",
-            )}
-          />
+          <Icon className="h-6 w-6 text-muted-foreground" />
           <span className="mx-1 group-data-[collapsible=icon]:hidden">
             {label}
           </span>
@@ -110,12 +105,17 @@ export default function SidebarLinkGroup({
       </SidebarGroupLabel>
       <SidebarGroupAction
         title={addActionTitle}
+        className="hover:bg-ring"
         onClick={() => navigate(linkRoute("new"))}
       >
-        <PlusCircle /> <span className="sr-only">{addActionTitle}</span>
+        <PlusCircle className="cursor-pointer" />{" "}
+        <span className="sr-only">{addActionTitle}</span>
       </SidebarGroupAction>
       <SidebarGroupContent>
-        <SidebarMenu>{menuItems}</SidebarMenu>
+        <SidebarMenu>
+          <hr className="mx-1 group-data-[collapsible=icon]:hidden" />
+          {menuItems}
+        </SidebarMenu>
       </SidebarGroupContent>
     </SidebarGroup>
   );

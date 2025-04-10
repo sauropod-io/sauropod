@@ -1,4 +1,4 @@
-import { Logs, Play, Trash2 } from "lucide-react";
+import { Logs, Play, Plus, Trash2 } from "lucide-react";
 import { Link, useNavigate } from "react-router";
 
 import type { Schemas } from "@sauropod-io/client";
@@ -112,11 +112,18 @@ function WorkflowCard({ item }: { item: Schemas["ObjectInfo"] }) {
 
 export default function WorkflowList() {
   const { data, isLoading } = api.useQuery("get", "/api/workflow");
+  const navigate = useNavigate();
 
   if (isLoading || data === undefined) {
     return (
       <main className="container mx-auto p-6">
-        <h1 className="text-2xl font-bold mb-6">Workflows</h1>
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-2xl font-bold">Workflows</h1>
+          <Button onClick={() => navigate(workflowRoute("new"))} size="sm">
+            <Plus className="h-4 w-4 mr-1" />
+            Create Workflow
+          </Button>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {[1, 2, 3].map((i) => (
             <SkeletonCard key={i} />
@@ -127,7 +134,13 @@ export default function WorkflowList() {
   }
   return (
     <main className="container mx-auto p-6">
-      <h1 className="text-2xl font-bold mb-6">Workflows</h1>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-bold">Workflows</h1>
+        <Button onClick={() => navigate(workflowRoute("new"))} size="sm">
+          <Plus className="h-4 w-4 mr-1" />
+          Create Workflow
+        </Button>
+      </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {data.map((item) => (
           <WorkflowCard key={item.id} item={item} />

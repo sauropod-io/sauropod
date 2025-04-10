@@ -1,0 +1,5 @@
+.react-flow__node .lucide {
+  /* Make the icons a little more subtle */
+  stroke-width: 1px;
+  color: var(--color-4);
+}

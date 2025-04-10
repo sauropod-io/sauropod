@@ -1,5 +1,5 @@
 // Import X icon for delete button
-import { X } from "lucide-react";
+import { Plus, X } from "lucide-react";
 import { useNavigate } from "react-router";
 
 import { Schemas } from "@sauropod-io/client";
@@ -85,11 +85,18 @@ function TaskCard({ item }: { item: Schemas["ObjectInfo"] }) {
 
 export default function TaskList() {
   const { data, isLoading } = api.useQuery("get", "/api/task");
+  const navigate = useNavigate();
 
   if (isLoading || data === undefined) {
     return (
       <main className="container mx-auto p-6">
-        <h1 className="text-2xl font-bold mb-6">Tasks</h1>
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-2xl font-bold">Tasks</h1>
+          <Button onClick={() => navigate(taskRoute("new"))} size="sm">
+            <Plus className="h-4 w-4 mr-1" />
+            Create Task
+          </Button>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {[1, 2, 3].map((i) => (
             <SkeletonCard key={i} />
@@ -100,7 +107,13 @@ export default function TaskList() {
   }
   return (
     <main className="container mx-auto p-6">
-      <h1 className="text-2xl font-bold mb-6">Tasks</h1>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-bold">Tasks</h1>
+        <Button onClick={() => navigate(taskRoute("new"))} size="sm">
+          <Plus className="h-4 w-4 mr-1" />
+          Create Task
+        </Button>
+      </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {data.map((item) => (
           <TaskCard key={item.id} item={item} />

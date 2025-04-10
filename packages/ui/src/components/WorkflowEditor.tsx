@@ -345,7 +345,7 @@ function Flow({
         onNodesChange={onNodesChange}
         fitView
       >
-        <Controls />
+        <Controls showInteractive={false} />
         <Background gap={12} size={1} />
       </ReactFlow>
 
