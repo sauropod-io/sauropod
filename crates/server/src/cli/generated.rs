@@ -24,22 +24,7 @@ pub fn add_config_flags(parser: clap::Command) -> clap::Command {
     ])
 }
 
-#[derive(Debug, Clone)]
-pub struct ClapConfigSource {
-    values: config::Map<String, config::Value>,
-}
-
-impl config::Source for ClapConfigSource {
-    fn clone_into_box(&self) -> Box<dyn config::Source + Send + Sync> {
-        Box::new(self.clone())
-    }
-
-    fn collect(&self) -> Result<config::Map<String, config::Value>, config::ConfigError> {
-        Ok(self.values.clone())
-    }
-}
-
-pub fn clap_to_config_source(matches: clap::ArgMatches) -> Box<ClapConfigSource> {
+pub fn clap_to_config_source(matches: &clap::ArgMatches) -> Box<super::ClapConfigSource> {
     let mut values = config::Map::new();
 
     if let Some(value) = matches
@@ -77,5 +62,5 @@ pub fn clap_to_config_source(matches: clap::ArgMatches) -> Box<ClapConfigSource>
     {
         values.insert("port".to_string(), value);
     }
-    Box::new(ClapConfigSource { values })
+    Box::new(super::ClapConfigSource { values })
 }

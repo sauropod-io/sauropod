@@ -46,7 +46,11 @@ The host address to listen on.
 
 Spawn a process and communicate with the MCP server over stdio.
 
-#### `command`
+#### `[[command]]`
+
+- **Type**: `array`
+
+##### `command`
 
 - **Type**: `string`
 

@@ -1,9 +1,10 @@
-//! The Sauropod Scales server.
+//! The Sauropod server.
 
-mod cli_generated;
+mod cli;
 mod observability;
 mod server;
-pub use cli_generated::{add_config_flags, clap_to_config_source};
+pub use cli::ClapConfigSource;
+pub use cli::generated::{add_config_flags, clap_to_config_source};
 pub use server::Server;
 
 use tower_http::cors::{Any, CorsLayer};

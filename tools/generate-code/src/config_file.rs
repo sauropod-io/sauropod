@@ -23,37 +23,20 @@ pub fn generate_code_for_config() -> anyhow::Result<()> {
 
     generate_config_documentation(&schema)?;
 
-    let mut rust_output_path = crate::paths::get_crate_path("server");
-    rust_output_path.push("src");
-    rust_output_path.push("cli_generated.rs");
-
-    let mut output = std::fs::File::create(rust_output_path)?;
+    let rust_output_path = crate::paths::get_crate_path("server")
+        .join("src")
+        .join("cli")
+        .join("generated.rs");
     let mut add_config_flags = String::with_capacity(1024);
     let mut clap_to_config_source = String::with_capacity(1024);
 
     writeln!(
         &mut clap_to_config_source,
         r#"
-        #[derive(Debug, Clone)]
-        pub struct ClapConfigSource {{
-            values: config::Map<String, config::Value>,
-        }}
-
-        impl config::Source for ClapConfigSource {{
-            fn clone_into_box(&self) -> Box<dyn config::Source + Send + Sync> {{
-                Box::new(self.clone())
-            }}
-
-            fn collect(&self) -> Result<config::Map<String, config::Value>, config::ConfigError> {{
-                Ok(self.values.clone())
-            }}
-        }}
-
-        pub fn clap_to_config_source(matches: clap::ArgMatches) -> Box<ClapConfigSource> {{
+        pub fn clap_to_config_source(matches: &clap::ArgMatches) -> Box<super::ClapConfigSource> {{
             let mut values = config::Map::new();
         "#
     )?;
-
     writeln!(
         &mut add_config_flags,
         "pub fn add_config_flags(parser: clap::Command) -> clap::Command {{"
@@ -134,11 +117,12 @@ pub fn generate_code_for_config() -> anyhow::Result<()> {
 
     writeln!(
         &mut clap_to_config_source,
-        "Box::new(ClapConfigSource {{ values }})"
+        "Box::new(super::ClapConfigSource {{ values }})"
     )?;
     writeln!(&mut clap_to_config_source, "}}")?;
 
     // Write out to the file
+    let mut output = std::fs::File::create(rust_output_path)?;
     writeln!(&mut output, "{add_config_flags}\n\n{clap_to_config_source}")?;
     Ok(())
 }

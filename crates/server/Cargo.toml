@@ -15,6 +15,7 @@ sauropod-database = { path = "../database" }
 sauropod-http = { path = "../http" }
 sauropod-llm-inference = { path = "../llm-inference" }
 sauropod-logging = { path = "../logging" }
+sauropod-mcp = { path = "../mcp" }
 sauropod-schemas = { path = "../schemas", features = ["json_schema"] }
 sauropod-task = { path = "../task" }
 sauropod-task-context = { path = "../task-context" }

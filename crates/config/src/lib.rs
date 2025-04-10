@@ -1,6 +1,9 @@
 //! Sauropod configuration.
 
-use std::{collections::BTreeMap, path::PathBuf};
+use std::{
+    collections::{BTreeMap, HashMap},
+    path::PathBuf,
+};
 
 pub const ENV_VAR_PREFIX: &str = "SAUROPOD";
 
@@ -23,7 +26,7 @@ pub enum ModelType {
 #[serde(untagged)]
 pub enum McpServer {
     /// Spawn a process and communicate with the MCP server over stdio.
-    Process { command: String },
+    Process { command: Vec<String> },
     /// Communicate with the MCP server over HTTP.
     Http { url: String },
 }
@@ -120,9 +123,17 @@ impl Config {
             path.join("database.sqlite").to_string_lossy().to_string()
         });
 
+        let environment_source = config::Environment::with_prefix(ENV_VAR_PREFIX)
+            .list_separator(",")
+            .source({
+                let mut source: HashMap<String, String> = std::env::vars().collect();
+                // Remove the MCP servers from the environment variables - we handle this in `clap`.
+                source.remove(&format!("{}_MCP_SERVERS", ENV_VAR_PREFIX));
+                Some(source)
+            });
         let settings_builder = config::Config::builder()
             .add_source(config::File::from(file_path))
-            .add_source(config::Environment::with_prefix(ENV_VAR_PREFIX))
+            .add_source(environment_source)
             .add_source(vec![cli_overrides]);
 
         let settings_builder = if let Some(default_database_path) = default_database_path {

@@ -51,6 +51,7 @@ COPY crates/http/Cargo.toml crates/http/Cargo.toml
 COPY crates/json-schema/Cargo.toml crates/json-schema/Cargo.toml
 COPY crates/llm-inference/Cargo.toml crates/llm-inference/Cargo.toml
 COPY crates/logging/Cargo.toml crates/logging/Cargo.toml
+COPY crates/mcp/Cargo.toml crates/mcp/Cargo.toml
 COPY crates/prompt-templates/Cargo.toml crates/prompt-templates/Cargo.toml
 COPY crates/schemas/Cargo.toml crates/schemas/Cargo.toml
 COPY crates/server/Cargo.toml crates/server/Cargo.toml
@@ -67,6 +68,7 @@ RUN mkdir crates/config/src && touch crates/config/src/lib.rs && \
     mkdir crates/json-schema/src && touch crates/json-schema/src/lib.rs && \
     mkdir crates/llm-inference/src && touch crates/llm-inference/src/lib.rs && \
     mkdir crates/logging/src && touch crates/logging/src/lib.rs && \
+    mkdir crates/mcp/src && touch crates/mcp/src/lib.rs && \
     mkdir crates/prompt-templates/src && touch crates/prompt-templates/src/lib.rs && \
     mkdir crates/schemas/src && touch crates/schemas/src/lib.rs && \
     mkdir crates/server/src && touch crates/server/src/lib.rs && \

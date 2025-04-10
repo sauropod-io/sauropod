@@ -5,8 +5,10 @@ members = [
     "crates/core-tools",
     "crates/database",
     "crates/http",
+    "crates/json-schema",
     "crates/llm-inference",
     "crates/logging",
+    "crates/mcp",
     "crates/prompt-templates",
     "crates/schemas",
     "crates/server",
@@ -14,8 +16,8 @@ members = [
     "crates/task",
     "crates/tool-spec",
     "crates/workflows",
+    "tools/create-release-tag",
     "tools/generate-code",
-    "tools/create-release-tag", "crates/json-schema",
 ]
 
 [workspace.package]
@@ -34,6 +36,7 @@ axum = { version = "0.8", features = ["json", "http1", "http2"] }
 clap = { version = "4.5.35", features = ["env"]}
 config = {version = "0.15.11", default-features = false, features = ["toml"]}
 directories = "6.0.0"
+futures = "0.3.31"
 jsonschema = { version = "0.29.1", default-features = false }
 minijinja = { version = "2.9.0", default-features = false, features = ["loader", "serde"]}
 reqwest = { version = "0.12.14", features = ["json"] }
