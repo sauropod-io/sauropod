@@ -1,8 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { type Schemas } from "@sauropod-io/client";
+
+import { JsonSchemaBase, jsonSchemaObjectProperties } from "./jsonSchema";
 
 /** Make a comment describing an output object. */
 function makeOutput(commentPrefix: string, output: any) {
-  return JSON.stringify(output, null, 4)
+  return JSON.stringify(output, null, 2)
     .split("\n")
     .map((line: string) => {
       return `${commentPrefix} ${line}`;
@@ -10,7 +13,15 @@ function makeOutput(commentPrefix: string, output: any) {
     .join("\n");
 }
 
-/** Make a Python sample. */
+/** Add a prefix to each line of a string. */
+function prefixWith(prefix: string, str: string): string {
+  return str
+    .split("\n")
+    .map((line) => `${prefix}${line}`)
+    .join("\n");
+}
+
+/** Make a basic Python sample. */
 export function makePythonSample(endpoint: string, input: any, output: any) {
   return `
 import json
@@ -18,12 +29,87 @@ import json
 import requests
 
 result = requests.post(
-  "${endpoint}",
-  json=${JSON.stringify(input, null, 4)},
+    "${endpoint}",
+    json=${prefixWith("    ", JSON.stringify(input, null, 4)).trim()},
 )
-print(json.dumps(result.json(), indent=4))
+print(json.dumps(result.json(), indent=2))
 # Example output:
 ${makeOutput("#", output)}
+`.trim();
+}
+
+/** Get the Pydantic fields for a schema. */
+function schemaToPydanticFields(
+  schema:
+    | Schemas["InputAndOutputSchema"]["inputSchema"]
+    | Schemas["InputAndOutputSchema"]["outputSchema"],
+): string {
+  return jsonSchemaObjectProperties(schema as JsonSchemaBase)
+    .map(([key, value]) => {
+      let type;
+      switch (value.type) {
+        case "string":
+          type = "str";
+          break;
+        case "integer":
+          type = "int";
+          break;
+        case "number":
+          type = "float";
+          break;
+        case "boolean":
+          type = "bool";
+          break;
+        case "array":
+          type = "list";
+          break;
+        default:
+          type = value.type;
+      }
+
+      const description = value.description ? `  #: ${value.description}` : "";
+      return `${description}  ${key}: ${type}`;
+    })
+    .join("\n");
+}
+
+/** Get arguments to construct Pydantic object. */
+function schemaToPydanticArguments(example: any, prefix: string = ""): string {
+  return Object.entries(example)
+    .map(
+      ([key, value]) =>
+        `\n${prefix}  ${key}=${JSON.stringify(value, null, 4)},`,
+    )
+    .join("");
+}
+
+/** Make a Python sample that uses Pydantic. */
+export function makePythonPydanticSample(
+  endpoint: string,
+  schemas: Schemas["InputAndOutputSchema"],
+  input: any,
+  output: any,
+) {
+  return `
+import pydantic
+import requests
+
+class Input(pydantic.BaseModel):
+  """Input to the API."""
+${schemaToPydanticFields(schemas.inputSchema)}
+
+class Output(pydantic.BaseModel):
+  """Output of the API."""
+${schemaToPydanticFields(schemas.outputSchema)}
+
+result = requests.post(
+  "${endpoint}",
+  json=Input(${schemaToPydanticArguments(input, "  ")}
+  ).model_dump(),
+)
+output = Output.model_validate(result.json())
+print(output)
+# Example output:${schemaToPydanticArguments(output, "# ")}
 `.trim();
 }
 
@@ -39,13 +125,41 @@ ${makeOutput("#", output)}
 `.trim();
 }
 
+/** Get the Pydantic fields for a schema. */
+function schemaToTypeScriptFields(
+  schema:
+    | Schemas["InputAndOutputSchema"]["inputSchema"]
+    | Schemas["InputAndOutputSchema"]["outputSchema"],
+): string {
+  return jsonSchemaObjectProperties(schema as JsonSchemaBase)
+    .map(([key, value]) => {
+      const description = value.description
+        ? `  /** ${value.description} */`
+        : "";
+      return `${description}  ${key}: ${value.type};`;
+    })
+    .join("\n");
+}
+
 /** Make a TypeScript sample using fetch. */
 export function makeTypeScriptSample(
   endpoint: string,
+  schema: Schemas["InputAndOutputSchema"],
   input: any,
   output: any,
 ) {
   return `
+/** Input to the API. */
+interface Input {
+${schemaToTypeScriptFields(schema.inputSchema)}
+}
+
+/** Output of the API. */
+interface Output {
+${schemaToTypeScriptFields(schema.outputSchema)}
+}
+
+const input: Input = ${JSON.stringify(input, null, 2)};
 const response = await fetch(
   "${endpoint}",
   {
@@ -53,12 +167,12 @@ const response = await fetch(
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify(${JSON.stringify(input, null, 4)})
+    body: JSON.stringify(input)
   },
 );
 
-const data = await response.json();
-console.log(JSON.stringify(data, null, 4));
+const data = await response.json() as Output;
+console.log(JSON.stringify(data, null, 2));
 // Example output:
 ${makeOutput("//", output)}
 `.trim();

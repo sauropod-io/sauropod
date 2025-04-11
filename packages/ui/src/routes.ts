@@ -1,6 +1,5 @@
 export const INDEX = "/";
 export const LOGS = "/logs";
-export const SETTINGS = "/settings";
 
 export const TASK_PREFIX = "/task/";
 export const WORKFLOW_PREFIX = "/workflow/";

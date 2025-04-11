@@ -1,5 +1,5 @@
 import { GitHubLogoIcon } from "@radix-ui/react-icons";
-import { Logs, Settings } from "lucide-react";
+import { Logs } from "lucide-react";
 import { Link, useLocation } from "react-router";
 
 import api from "@/api";
@@ -22,7 +22,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
-import { LOGS, SETTINGS } from "@/routes";
+import { LOGS } from "@/routes";
 
 export default function AppSidebar() {
   const location = useLocation().pathname;
@@ -56,20 +56,6 @@ export default function AppSidebar() {
                   >
                     <Logs className="h-6 w-6" />
                     <span>Logs</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton isActive={location === SETTINGS} asChild>
-                  <Link
-                    to={SETTINGS}
-                    className={cn(
-                      "text-sm font-medium text-muted-foreground transition-colors hover:text-primary",
-                      location === SETTINGS ? "text-primary" : "",
-                    )}
-                  >
-                    <Settings className="h-6 w-6" />
-                    <span>Settings</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>

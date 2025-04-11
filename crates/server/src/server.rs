@@ -277,14 +277,13 @@ impl sauropod_http::ServerInterface for Server {
             .await?;
 
         let context = self.make_task_context().await?;
-        let mut result = serde_json::Map::<String, serde_json::Value>::with_capacity(1);
-        result.insert(
-            "result".to_string(),
-            workflow
-                .execute(serde_json::to_value(input)?, context)
-                .await?,
-        );
-        Ok(HttpResponse::Ok(result))
+        let result = workflow
+            .execute(serde_json::to_value(input)?, context)
+            .await?;
+        let Some(result_map) = result.as_object() else {
+            anyhow::bail!("Workflow result wasn't an object, was {:#?}", result);
+        };
+        Ok(HttpResponse::Ok(result_map.clone()))
     }
 
     async fn get_workflow_id_schema(
@@ -335,12 +334,11 @@ impl sauropod_http::ServerInterface for Server {
         };
 
         let context = self.make_task_context().await?;
-        let mut result = serde_json::Map::<String, serde_json::Value>::with_capacity(1);
-        result.insert(
-            "result".to_string(),
-            task.execute(serde_json::to_value(input)?, context).await?,
-        );
-        Ok(HttpResponse::Ok(result))
+        let result = task.execute(serde_json::to_value(input)?, context).await?;
+        let Some(result_map) = result.as_object() else {
+            anyhow::bail!("Task result wasn't an object, was {:#?}", result);
+        };
+        Ok(HttpResponse::Ok(result_map.clone()))
     }
 
     async fn get_task_id_schema(

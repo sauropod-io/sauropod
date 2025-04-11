@@ -1,4 +1,10 @@
-export type FieldType = "string" | "number" | "boolean" | "object" | "array";
+export type FieldType =
+  | "string"
+  | "number"
+  | "integer"
+  | "boolean"
+  | "object"
+  | "array";
 export type FieldValue =
   | string
   | number
@@ -79,7 +85,7 @@ export function makeExampleObject(schema: JsonSchemaBase): FieldValue {
     return schema.examples[0];
   } else if (schema.type === "string") {
     return "text";
-  } else if (schema.type === "number") {
+  } else if (schema.type === "number" || schema.type === "integer") {
     return 123;
   } else if (schema.type === "boolean") {
     return true;

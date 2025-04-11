@@ -7,7 +7,7 @@ use axum::response::IntoResponse as _;
 include!(concat!(env!("OUT_DIR"), "/generated_ui_routes.rs"));
 
 /// The prefixes to direct to UI files.
-const UI_PREFIXES: &[&str] = &["/task/", "/workflow/", "/logs", "/settings"];
+const UI_PREFIXES: &[&str] = &["/task/", "/workflow/", "/logs"];
 
 /// Routes handled in the UI need to be served to `index.html`
 fn is_ui_path(path: &str) -> bool {

@@ -2,6 +2,8 @@
 import { Play } from "lucide-react";
 import { JSX, useEffect, useState } from "react";
 
+import { Schemas } from "@sauropod-io/client";
+
 import api, { apiClient } from "@/api";
 import ExampleCodeBlock from "@/components/ExampleCodeBlock";
 import { Button } from "@/components/ui/button";
@@ -19,7 +21,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   makeCurlSample,
-  makePythonSample,
+  makePythonPydanticSample,
+  makePythonSample as makePythonRequestSample,
   makeRustSample,
   makeTypeScriptSample,
 } from "@/lib/codeSamples";
@@ -88,47 +91,51 @@ function ModalInputs({
   );
 }
 
-/** Get the URL to make the API call to invoke a run. */
-function getRunUrl(workflowId: string) {
-  return `${window.location.origin}/api/workflow/${workflowId}/run`;
-}
-
-interface InvocationModalProps {
-  workflowId?: string;
-  workflowName: string;
+interface RunModalBaseProps {
+  name: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
+interface RunWorkflowModalProps extends RunModalBaseProps {
+  workflowId: string;
+}
+
+interface RunTaskModalProps extends RunModalBaseProps {
+  taskId: string;
+}
+
+interface RunModalProps extends RunModalBaseProps {
+  schema?: Schemas["InputAndOutputSchema"];
+  schemaLoading?: boolean;
+  schemaError?: any;
+  runUrl: string;
+  onOpenChange: (open: boolean) => void;
+  callRun: (parameters: Record<string, any>) => Promise<any>;
+}
+
 /** Modal used to fill out parameters when invoking tasks and workflows. */
 export function RunModal({
-  workflowId,
-  workflowName,
+  name,
   open,
+  schema,
+  schemaLoading,
+  schemaError,
+  runUrl,
+  callRun,
   onOpenChange,
-}: InvocationModalProps) {
-  const {
-    data: schema,
-    isLoading: schemaLoading,
-    error: schemaError,
-  } = api.useQuery("get", `/api/workflow/{id}/schema`, {
-    params: { path: { id: `${workflowId}` } },
-  });
-  const [workflowResult, setWorkflowResult] = useState<Record<
-    string,
-    any
-  > | null>(null);
+}: RunModalProps) {
+  const [result, setResult] = useState<Record<string, any> | null>(null);
   const [isRunning, setIsRunning] = useState(false);
-  const [workflowError, setError] = useState<string | null>(null);
+  const [runError, setRunError] = useState<string | null>(null);
 
   // Reset state when modal closes
   useEffect(() => {
     if (!open) {
-      setWorkflowResult(null);
+      setResult(null);
     }
   }, [open]);
 
-  const runUrl = getRunUrl(workflowId!);
   const exampleInput = schema?.inputSchema
     ? makeExampleObject(schema.inputSchema as JsonSchemaBase)
     : {};
@@ -137,23 +144,18 @@ export function RunModal({
     : {};
 
   const runWorkflow = async (parameters: Record<string, any>) => {
-    if (!workflowId) return;
-
     setIsRunning(true);
-    setError(null);
+    setRunError(null);
 
     try {
-      const response = await apiClient.POST("/api/workflow/{id}/run", {
-        params: { path: { id: workflowId } },
-        body: parameters,
-      });
+      const response = await callRun(parameters);
       if (response.error) {
-        setError(`Error: ${response.error.error}`);
+        setRunError(`Error: ${response.error.error}`);
       } else {
-        setWorkflowResult(response.data!.result as any);
+        setResult(response.data!.result as any);
       }
     } catch (err: any) {
-      setError(`Error invoking workflow: ${err.message}`);
+      setRunError(`Error: ${err.message}`);
     } finally {
       setIsRunning(false);
     }
@@ -163,7 +165,7 @@ export function RunModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Run {workflowName}</DialogTitle>
+          <DialogTitle>Run {name}</DialogTitle>
           <DialogDescription></DialogDescription>
         </DialogHeader>
 
@@ -187,27 +189,58 @@ export function RunModal({
             </TabsContent>
 
             <TabsContent value="curl">
-              <ExampleCodeBlock language="bash">
-                {makeCurlSample(runUrl, exampleInput, exampleOutput)}
-              </ExampleCodeBlock>
+              <ExampleCodeBlock
+                language="bash"
+                examples={{
+                  curl: makeCurlSample(runUrl, exampleInput, exampleOutput),
+                }}
+              />
             </TabsContent>
 
             <TabsContent value="python">
-              <ExampleCodeBlock language="python">
-                {makePythonSample(runUrl, exampleInput, exampleOutput)}
-              </ExampleCodeBlock>
+              <ExampleCodeBlock
+                language="python"
+                examples={{
+                  request: makePythonRequestSample(
+                    runUrl,
+                    exampleInput,
+                    exampleOutput,
+                  ),
+                  pydantic: schema
+                    ? makePythonPydanticSample(
+                        runUrl,
+                        schema,
+                        exampleInput,
+                        exampleOutput,
+                      )
+                    : "",
+                }}
+              />
             </TabsContent>
 
             <TabsContent value="typescript">
-              <ExampleCodeBlock language="typescript">
-                {makeTypeScriptSample(runUrl, exampleInput, exampleOutput)}
-              </ExampleCodeBlock>
+              <ExampleCodeBlock
+                language="typescript"
+                examples={{
+                  fetch: schema
+                    ? makeTypeScriptSample(
+                        runUrl,
+                        schema,
+                        exampleInput,
+                        exampleOutput,
+                      )
+                    : "",
+                }}
+              />
             </TabsContent>
 
             <TabsContent value="rust">
-              <ExampleCodeBlock language="rust">
-                {makeRustSample(runUrl, exampleInput, exampleOutput)}
-              </ExampleCodeBlock>
+              <ExampleCodeBlock
+                language="typescript"
+                examples={{
+                  reqwest: makeRustSample(runUrl, exampleInput, exampleOutput),
+                }}
+              />
             </TabsContent>
           </Tabs>
         ) : (
@@ -216,18 +249,87 @@ export function RunModal({
           </div>
         )}
 
-        {workflowError && (
+        {runError && (
           <div className="p-4 my-2 bg-red-50 text-red-600 rounded-md">
-            {workflowError}
+            {runError}
           </div>
         )}
 
-        {workflowResult !== null && (
+        {result !== null && (
           <p className="rounded-md bg-gray-100 p-4">
-            {JSON.stringify(workflowResult, null, 4)}
+            {JSON.stringify(result, null, 4)}
           </p>
         )}
       </DialogContent>
     </Dialog>
+  );
+}
+
+/** Modal used to fill out parameters when invoking workflows. */
+export function WorkflowRunModal({
+  workflowId,
+  name,
+  open,
+  onOpenChange,
+}: RunWorkflowModalProps) {
+  const {
+    data: schema,
+    isLoading: schemaLoading,
+    error: schemaError,
+  } = api.useQuery("get", `/api/workflow/{id}/schema`, {
+    params: { path: { id: `${workflowId}` } },
+  });
+  const runUrl = `${window.location.origin}/api/workflow/${workflowId}/run`;
+  const callRun = (parameters: Record<string, any>) =>
+    apiClient.POST("/api/workflow/{id}/run", {
+      params: { path: { id: workflowId } },
+      body: parameters,
+    });
+  return (
+    <RunModal
+      name={name}
+      open={open}
+      onOpenChange={onOpenChange}
+      runUrl={runUrl}
+      schema={schema}
+      schemaLoading={schemaLoading}
+      schemaError={schemaError}
+      callRun={callRun}
+    />
+  );
+}
+
+/** Modal used to fill out parameters when invoking tasks. */
+export function TaskRunModal({
+  taskId,
+  name,
+  open,
+  onOpenChange,
+}: RunTaskModalProps) {
+  const {
+    data: schema,
+    isLoading: schemaLoading,
+    error: schemaError,
+  } = api.useQuery("get", `/api/task/{id}/schema`, {
+    params: { path: { id: `${taskId}` } },
+  });
+  const runUrl = `${window.location.origin}/api/task/${taskId}/run`;
+  const callRun = (parameters: Record<string, any>) =>
+    apiClient.POST("/api/task/{id}/run", {
+      params: { path: { id: taskId } },
+      body: parameters,
+    });
+
+  return (
+    <RunModal
+      name={name}
+      open={open}
+      onOpenChange={onOpenChange}
+      runUrl={runUrl}
+      schema={schema}
+      schemaLoading={schemaLoading}
+      schemaError={schemaError}
+      callRun={callRun}
+    />
   );
 }

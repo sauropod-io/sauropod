@@ -1,10 +1,12 @@
-import { Logs, Play, Plus, Trash2 } from "lucide-react";
+import { Logs, Plus } from "lucide-react";
 import { Link, useNavigate } from "react-router";
 
 import type { Schemas } from "@sauropod-io/client";
 
 import api from "@/api";
 import WorkflowPreview from "@/components/WorkflowPreview";
+import DeleteButton from "@/components/buttons/DeleteButton";
+import RunButton from "@/components/buttons/RunButton";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -57,10 +59,7 @@ function WorkflowCard({ item }: { item: Schemas["ObjectInfo"] }) {
   }
 
   const deleteButton = (
-    <Button variant="destructive" size="sm" onClick={handleDelete}>
-      <Trash2 className="h-4 w-4 mr-1" />
-      Delete
-    </Button>
+    <DeleteButton variant="destructive" size="sm" onClick={handleDelete} />
   );
 
   if (error != null) {
@@ -100,10 +99,7 @@ function WorkflowCard({ item }: { item: Schemas["ObjectInfo"] }) {
         <WorkflowPreview workflow={data} />
       </CardContent>
       <CardFooter className="flex justify-end gap-2 pt-0">
-        <Button variant="default" size="sm" onClick={handleRun}>
-          <Play className="h-4 w-4 mr-1" />
-          Run
-        </Button>
+        <RunButton variant="default" size="sm" onClick={handleRun} />
         {deleteButton}
       </CardFooter>
     </Card>
@@ -119,7 +115,11 @@ export default function WorkflowList() {
       <main className="container mx-auto p-6">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-2xl font-bold">Workflows</h1>
-          <Button onClick={() => navigate(workflowRoute("new"))} size="sm">
+          <Button
+            variant="outline"
+            onClick={() => navigate(workflowRoute("new"))}
+            size="sm"
+          >
             <Plus className="h-4 w-4 mr-1" />
             Create Workflow
           </Button>
@@ -136,7 +136,11 @@ export default function WorkflowList() {
     <main className="container mx-auto p-6">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">Workflows</h1>
-        <Button onClick={() => navigate(workflowRoute("new"))} size="sm">
+        <Button
+          variant="outline"
+          onClick={() => navigate(workflowRoute("new"))}
+          size="sm"
+        >
           <Plus className="h-4 w-4 mr-1" />
           Create Workflow
         </Button>

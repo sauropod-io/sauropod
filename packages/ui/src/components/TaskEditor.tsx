@@ -1,13 +1,17 @@
 import { useQuery } from "@tanstack/react-query";
-import { Play, Plus, Save, Trash2 } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import { JSX, useEffect, useState } from "react";
-import { useNavigate } from "react-router";
+import { useNavigate, useSearchParams } from "react-router";
 
 import { type Schemas } from "@sauropod-io/client";
 
 import { apiClient } from "@/api";
 import ErrorCard from "@/components/ErrorCard";
 import PromptEditor from "@/components/PromptEditor";
+import { TaskRunModal } from "@/components/RunModal";
+import DeleteButton from "@/components/buttons/DeleteButton";
+import RunButton from "@/components/buttons/RunButton";
+import SaveButton from "@/components/buttons/SaveButton";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -198,6 +202,7 @@ export default function TaskEditor({ taskId }: { taskId?: string }) {
   const deleteTask = useDeleteTask();
   const createTask = useCreateTask();
   const updateTask = useUpdateTask();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const [formState, setFormState] = useState<{
     name: string;
@@ -213,6 +218,7 @@ export default function TaskEditor({ taskId }: { taskId?: string }) {
     null,
   );
   const [outputAll, setOutputAll] = useState(true);
+  const [isRunModalOpen, setIsRunModalOpen] = useState(false);
 
   // Fetch task data when editing an existing task
   const {
@@ -270,6 +276,16 @@ export default function TaskEditor({ taskId }: { taskId?: string }) {
     }
   }, [taskData]);
 
+  // Open the run modal automatically if the URL contains the "run" parameter
+  useEffect(() => {
+    if (searchParams.has("run") && taskId !== undefined) {
+      setIsRunModalOpen(true);
+      // Remove the parameter from the URL to prevent reopening on refresh
+      searchParams.delete("run");
+      setSearchParams(searchParams);
+    }
+  }, [searchParams, setSearchParams, taskId]);
+
   const handleDelete = async () => {
     // Delete the task
     deleteTask.mutate({
@@ -325,10 +341,15 @@ export default function TaskEditor({ taskId }: { taskId?: string }) {
   };
 
   const handleRun = async () => {
-    // First save the task
+    if (taskId === undefined) {
+      alert("Please save the task first");
+      return;
+    }
+
+    // Make sure the task definition is up to date on the server
     await saveTask();
 
-    console.log("TODO");
+    setIsRunModalOpen(true);
   };
 
   if (taskDataError) {
@@ -437,17 +458,11 @@ export default function TaskEditor({ taskId }: { taskId?: string }) {
           </div>
         </CardContent>
         <CardFooter className="flex justify-end space-x-2">
-          <Button onClick={handleRun} variant="outline">
-            <Play className="h-4 w-4" />
-            Run
-          </Button>
+          <RunButton onClick={handleRun} disabled={taskId === undefined} />
           {taskId && (
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button variant="destructive">
-                  <Trash2 className="h-4 w-4" />
-                  Delete
-                </Button>
+                <DeleteButton />
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
@@ -466,12 +481,17 @@ export default function TaskEditor({ taskId }: { taskId?: string }) {
               </AlertDialogContent>
             </AlertDialog>
           )}
-          <Button onClick={saveTask}>
-            <Save />
-            Save
-          </Button>
+          <SaveButton onClick={saveTask} />
         </CardFooter>
       </Card>
+      {taskId !== undefined && (
+        <TaskRunModal
+          taskId={taskId}
+          name={formState.name}
+          open={isRunModalOpen}
+          onOpenChange={setIsRunModalOpen}
+        />
+      )}
     </div>
   );
 }

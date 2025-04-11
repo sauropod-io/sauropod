@@ -7,10 +7,9 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
-import { INDEX, LOGS, SETTINGS, taskRoute, workflowRoute } from "@/routes";
+import { INDEX, LOGS, taskRoute, workflowRoute } from "@/routes";
 
 const Logs = lazy(() => import("@/pages/Logs"));
-const Settings = lazy(() => import("@/pages/Settings"));
 const Task = lazy(() => import("@/pages/Task"));
 const TaskList = lazy(() => import("@/pages/TaskList"));
 const Workflow = lazy(() => import("@/pages/Workflow"));
@@ -79,14 +78,6 @@ function PageContent() {
         element={
           <SupportLoading>
             <Logs />
-          </SupportLoading>
-        }
-      />
-      <Route
-        path={SETTINGS}
-        element={
-          <SupportLoading>
-            <Settings />
           </SupportLoading>
         }
       />

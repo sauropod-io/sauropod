@@ -12,16 +12,19 @@ import {
   useNodesState,
 } from "@xyflow/react";
 import "@xyflow/react/dist/base.css";
-import { Play, Plus, Save, Trash2 } from "lucide-react";
+import { Plus } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 
 import { Schemas } from "@sauropod-io/client";
 
 import { apiClient } from "@/api";
-import { RunModal } from "@/components/RunModal";
+import { WorkflowRunModal } from "@/components/RunModal";
 import TaskSelector from "@/components/TaskSelector";
 import { WorkflowConfigSheet } from "@/components/WorkflowConfigSheet";
+import DeleteButton from "@/components/buttons/DeleteButton";
+import RunButton from "@/components/buttons/RunButton";
+import SaveButton from "@/components/buttons/SaveButton";
 import { EDGE_TYPES, NODE_TYPES } from "@/components/nodes/CustomNodes";
 import { IONodeData } from "@/components/nodes/IONode";
 import { type TaskNodeData } from "@/components/nodes/TaskNode";
@@ -36,7 +39,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -255,15 +258,11 @@ function Flow({
           className="text-xl font-bold h-10 w-full md:w-auto flex-grow mb-2 md:mb-0"
         />
         <div className="flex flex-wrap gap-2 w-full pl-0 md:pl-4 md:w-auto justify-end">
-          <Button
+          <RunButton
             onClick={handleRunClick}
             size="sm"
-            variant="default"
             disabled={workflowId === undefined}
-          >
-            <Play className="h-4 w-4" />
-            <span className="hidden md:inline">Run</span>
-          </Button>
+          />
 
           <DropdownMenu>
             <DropdownMenuTrigger
@@ -277,23 +276,18 @@ function Flow({
             </DropdownMenuContent>
           </DropdownMenu>
 
-          <Button onClick={handleSave} size="sm" variant="outline">
-            <Save className="h-4 w-4" />
-          </Button>
+          <SaveButton onClick={handleSave} />
 
           <AlertDialog
             open={isDeleteAlertOpen}
             onOpenChange={setIsDeleteAlertOpen}
           >
             <AlertDialogTrigger asChild>
-              <Button
+              <DeleteButton
                 size="sm"
-                variant={workflowId !== undefined ? "destructive" : "ghost"}
                 disabled={workflowId === undefined}
                 onClick={() => setIsDeleteAlertOpen(true)}
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
+              />
             </AlertDialogTrigger>
             <AlertDialogContent>
               <AlertDialogHeader>
@@ -350,9 +344,9 @@ function Flow({
       </ReactFlow>
 
       {workflowId !== undefined && (
-        <RunModal
+        <WorkflowRunModal
           workflowId={workflowId}
-          workflowName={name}
+          name={name}
           open={isRunModalOpen}
           onOpenChange={setIsRunModalOpen}
         />
