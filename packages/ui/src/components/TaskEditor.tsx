@@ -9,6 +9,7 @@ import { apiClient } from "@/api";
 import ErrorCard from "@/components/ErrorCard";
 import PromptEditor from "@/components/PromptEditor";
 import { TaskRunModal } from "@/components/RunModal";
+import ToolSelector from "@/components/ToolSelector";
 import DeleteButton from "@/components/buttons/DeleteButton";
 import RunButton from "@/components/buttons/RunButton";
 import SaveButton from "@/components/buttons/SaveButton";
@@ -56,7 +57,6 @@ import {
   useDeleteTask,
   useUpdateTask,
 } from "@/mutations/taskMutations";
-import { ToolConsumer } from "@/providers/ToolsProvider";
 import { TASK_PREFIX, taskRoute } from "@/routes";
 
 type ModelSize = "weak" | "strong";
@@ -258,7 +258,7 @@ export default function TaskEditor({ taskId }: { taskId?: string }) {
         name: taskData.name,
         model:
           (taskData.action?.invokeLLM?.modelStrength as ModelSize) || "strong",
-        tools: [],
+        tools: taskData.action?.invokeLLM?.availableToolIds || [],
       });
 
       if (taskData.action?.invokeLLM?.template) {
@@ -307,6 +307,7 @@ export default function TaskEditor({ taskId }: { taskId?: string }) {
             outputAll || Object.keys(outputSchema?.properties ?? {}).length == 0
               ? null
               : outputSchema,
+          availableToolIds: formState.tools,
         },
       },
     };
@@ -350,6 +351,15 @@ export default function TaskEditor({ taskId }: { taskId?: string }) {
     await saveTask();
 
     setIsRunModalOpen(true);
+  };
+
+  const handleToolToggle = (toolId: string) => {
+    setFormState((prevFormState) => ({
+      ...prevFormState,
+      tools: prevFormState.tools.includes(toolId)
+        ? prevFormState.tools.filter((id) => id !== toolId)
+        : [...prevFormState.tools, toolId],
+    }));
   };
 
   if (taskDataError) {
@@ -401,7 +411,7 @@ export default function TaskEditor({ taskId }: { taskId?: string }) {
             value={promptText}
           />
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
             {/* Output Configuration Section */}
             <div>
               <Label className="text-base">Output Configuration</Label>
@@ -434,26 +444,12 @@ export default function TaskEditor({ taskId }: { taskId?: string }) {
               />
             </div>
 
-            <div className="mt-4">
+            <div>
               <Label className="text-base">Available Tools</Label>
-              <div className="grid grid-cols-2 gap-4 mt-2">
-                <ToolConsumer>
-                  {(tools) =>
-                    tools.map((tool) => (
-                      <div
-                        key={tool.name}
-                        className="flex items-center space-x-2"
-                      >
-                        <Switch
-                          id={`tool-${tool.name}`}
-                          checked={formState.tools?.includes(tool.name)}
-                        />
-                        <Label htmlFor={`tool-${tool.name}`}>{tool.name}</Label>
-                      </div>
-                    ))
-                  }
-                </ToolConsumer>
-              </div>
+              <ToolSelector
+                selectedTools={formState.tools}
+                onToolSelected={handleToolToggle}
+              />
             </div>
           </div>
         </CardContent>

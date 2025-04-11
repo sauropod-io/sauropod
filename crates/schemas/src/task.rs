@@ -38,6 +38,9 @@ pub struct InvokeLLM {
     ///
     /// If unspecified the task will return an object with a single "output" string.
     pub output_schema: Option<serde_json::Map<String, serde_json::Value>>,
+    /// The IDs of tools to make available to the LLM.
+    #[serde(default)]
+    pub available_tool_ids: Vec<String>,
 }
 
 /// A description of the action associated with a task.

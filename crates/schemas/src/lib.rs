@@ -27,6 +27,8 @@ pub struct Model {
 #[cfg_attr(feature = "json_schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ToolDefinition {
+    /// A unique ID for the tool..
+    pub id: String,
     /// The name of the tool.
     ///
     /// Must match `^[a-zA-Z0-9_-]{1,64}$`.

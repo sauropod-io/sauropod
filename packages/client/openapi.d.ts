@@ -1017,6 +1017,11 @@ export interface components {
     };
     /** @description Run an LLM. */
     InvokeLLM: {
+      /**
+       * @description The IDs of tools to make available to the LLM.
+       * @default []
+       */
+      availableToolIds: string[];
       modelStrength: components["schemas"]["ModelStrength"];
       /** @description The output schema.
        *
@@ -1098,6 +1103,8 @@ export interface components {
     ToolDefinition: {
       /** @description A detailed description of what the tool does. */
       description: string;
+      /** @description A unique ID for the tool.. */
+      id: string;
       /** @description A JSON Schema describing the parameters for the tool.
        *
        *      See <https://json-schema.org/>. */

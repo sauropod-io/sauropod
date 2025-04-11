@@ -1,15 +1,17 @@
-// Import X icon for delete button
-import { Plus, X } from "lucide-react";
+import { Plus } from "lucide-react";
 import { useNavigate } from "react-router";
 
 import { Schemas } from "@sauropod-io/client";
 
 import api from "@/api";
 import ErrorCard from "@/components/ErrorCard";
+import DeleteButton from "@/components/buttons/DeleteButton";
+import RunButton from "@/components/buttons/RunButton";
 import { Button } from "@/components/ui/button";
 import {
   Card,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -46,6 +48,11 @@ function TaskCard({ item }: { item: Schemas["ObjectInfo"] }) {
     });
   };
 
+  const handleRun = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent default card navigation
+    navigate(`${taskRoute(item.id)}?run=true`);
+  };
+
   if (isLoading) {
     return <SkeletonCard />;
   }
@@ -65,20 +72,16 @@ function TaskCard({ item }: { item: Schemas["ObjectInfo"] }) {
       onClick={() => navigate(taskRoute(item.id))}
       className="relative group"
     >
-      <Button
-        variant="destructive"
-        size="icon"
-        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
-        onClick={handleDelete}
-      >
-        <X className="h-4 w-4" />
-      </Button>
       <CardHeader>
         <CardTitle>{data?.name}</CardTitle>
         <CardDescription>
           {data?.action.invokeLLM.template.substring(0, 64)}
         </CardDescription>
       </CardHeader>
+      <CardFooter className="flex justify-end gap-2 pt-0">
+        <RunButton variant="default" size="sm" onClick={handleRun} />
+        <DeleteButton variant="destructive" size="sm" onClick={handleDelete} />
+      </CardFooter>
     </Card>
   );
 }

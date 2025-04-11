@@ -959,6 +959,14 @@
         "description": "Run an LLM.",
         "type": "object",
         "properties": {
+          "availableToolIds": {
+            "description": "The IDs of tools to make available to the LLM.",
+            "type": "array",
+            "default": [],
+            "items": {
+              "type": "string"
+            }
+          },
           "modelStrength": {
             "$ref": "#/components/schemas/ModelStrength"
           },
@@ -1142,6 +1150,10 @@
             "description": "A detailed description of what the tool does.",
             "type": "string"
           },
+          "id": {
+            "description": "A unique ID for the tool..",
+            "type": "string"
+          },
           "inputSchema": {
             "description": "A JSON Schema describing the parameters for the tool.\n\n See <https://json-schema.org/>."
           },
@@ -1154,7 +1166,7 @@
             "type": "string"
           }
         },
-        "required": ["name", "provider", "description", "inputSchema"],
+        "required": ["id", "name", "provider", "description", "inputSchema"],
         "additionalProperties": false
       },
       "Workflow": {

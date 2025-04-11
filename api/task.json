@@ -21,6 +21,14 @@
       "description": "Run an LLM.",
       "type": "object",
       "properties": {
+        "availableToolIds": {
+          "description": "The IDs of tools to make available to the LLM.",
+          "type": "array",
+          "default": [],
+          "items": {
+            "type": "string"
+          }
+        },
         "modelStrength": {
           "description": "The model strength to use.",
           "$ref": "#/$defs/ModelStrength"

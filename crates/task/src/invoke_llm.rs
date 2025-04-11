@@ -1,3 +1,4 @@
+use std::collections::HashSet;
 use std::sync::Arc;
 
 use sauropod_llm_inference::LlmContext;
@@ -18,6 +19,8 @@ pub(crate) struct InvokeLlmTask {
     output_schema: serde_json::Value,
     /// Whether to use structured output.
     use_structured_output: bool,
+    /// The tools available to the task.
+    tools: HashSet<String>,
 }
 
 /// Parse a JSON value from a string.
@@ -62,6 +65,7 @@ impl InvokeLlmTask {
             input_schema,
             output_schema,
             use_structured_output,
+            tools: invoke_llm.available_tool_ids.into_iter().collect(),
         })
     }
 
@@ -108,9 +112,21 @@ impl Task for InvokeLlmTask {
 
         let template = self.template_env.get_template(TEMPLATE_NAME)?;
         let model = context.get_model(self.model_strength)?;
+        let tools = context
+            .tools
+            .values()
+            .flat_map(|x| {
+                let definition = x.get_definition();
+                if self.tools.contains(&definition.id) {
+                    Some(definition)
+                } else {
+                    None
+                }
+            })
+            .collect();
         let llm_context = LlmContext {
             user_prompt: template.render(serde_json::json!(input))?,
-            tools: context.tools.values().map(|x| x.get_definition()).collect(),
+            tools,
             system_prompt: context.system_prompt.clone(),
             output_schema: if self.use_structured_output {
                 Some(&self.output_schema)
@@ -155,6 +171,12 @@ impl Task for InvokeLlmTask {
                                 &function_call
                             );
                         };
+                        if !self.tools.contains(function_call) {
+                            anyhow::bail!(
+                                "The LLM tried to call {} which it isn't allowed to use",
+                                &function_call
+                            );
+                        }
 
                         let content = tool.run(parameters).await?;
                         request.messages.push(Message {
@@ -189,6 +211,13 @@ impl Task for InvokeLlmTask {
                                 &function_call.name
                             );
                         };
+
+                        if !self.tools.contains(&function_call.name) {
+                            anyhow::bail!(
+                                "The LLM tried to call {} which it isn't allowed to use",
+                                &function_call.name
+                            );
+                        }
 
                         let arguments = serde_json::from_str(&function_call.arguments)
                             .map_err(|e| {

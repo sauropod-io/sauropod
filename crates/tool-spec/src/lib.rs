@@ -7,6 +7,8 @@ use tracing::Instrument;
 
 pub use sauropod_schemas::ToolDefinition;
 
+const BUILTIN_PROVIDER: &str = "builtin";
+
 /// A tool which can be exposed to LLMs.
 pub trait Tool: Send + Sync {
     /// Get the name of the tool.
@@ -59,9 +61,11 @@ where
             .into_root_schema_for::<<Self as ConcreteTool>::Input>()
             .to_value();
 
+        let name = <Self as ConcreteTool>::get_name(self);
         ToolDefinition {
-            name: <Self as ConcreteTool>::get_name(self).to_string(),
-            provider: "Builtin".to_string(),
+            id: format!("{BUILTIN_PROVIDER}:{name}"),
+            name: name.to_string(),
+            provider: BUILTIN_PROVIDER.to_string(),
             description: self.get_description().to_string(),
             input_schema,
         }

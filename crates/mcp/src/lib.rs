@@ -26,12 +26,14 @@ impl McpTool {
         peer_info: &rmcp::model::InitializeResult,
         tool: rmcp::model::Tool,
     ) -> Self {
+        let provider = format!("mcp:{}", peer_info.server_info.name);
         Self {
             provider_name: peer_info.server_info.name.clone(),
             mcp,
             description: sauropod_tool_spec::ToolDefinition {
+                id: format!("{}:{}", provider, tool.name),
                 name: tool.name.to_string(),
-                provider: format!("mcp:{}", peer_info.server_info.name),
+                provider,
                 description: tool.description.to_string(),
                 input_schema: tool.schema_as_json_value(),
             },
