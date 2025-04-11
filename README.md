@@ -2,6 +2,10 @@
 
 Local AI agents.
 
+## Documentation
+
+See the [`docs/`](./docs/) directory.
+
 ## Running Sauropod
 
 See [docs/config.md](./docs/config.md) for configuration settings.
@@ -17,17 +21,28 @@ port = 8080
 backend = "http://localhost:11434"
 
 [models.strong]
-model = "hf.co/unsloth/gemma-3-27b-it-GGUF:Q6_K"
+model = "gemma3:27b"
 type = "Gemma3"
 
 [[mcp_servers]]
 # Spawn an MCP server as a subprocess controlled by the server
-command = "docker run -it --rm markitdown-mcp:latest"
+command = ["docker", "run", "-it", "--rm", "markitdown-mcp:latest"]
 
 [[mcp_servers]]
 # Connect to a remote MCP server
 url = "http://localhost:1234"
 ```
+
+## Roadmap
+
+- [x] [MCP](https://modelcontextprotocol.io/) tools support
+- [ ] Events
+- [ ] Image processing support
+- [ ] Notifications via Web Push
+- [ ] Multiple accounts
+- [ ] Secrets management
+- [ ] Access policies (possibly using [Cedar](https://www.cedarpolicy.com/))
+- [ ] Automatically generated SDKs for workflows
 
 ## Build from source
 
