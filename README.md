@@ -1,6 +1,6 @@
 # Sauropod
 
-A local AI orchestrator.
+Local AI agents.
 
 ## Running Sauropod
 

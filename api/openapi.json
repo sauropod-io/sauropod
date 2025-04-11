@@ -1148,9 +1148,13 @@
           "name": {
             "description": "The name of the tool.\n\n Must match `^[a-zA-Z0-9_-]{1,64}$`.",
             "type": "string"
+          },
+          "provider": {
+            "description": "The source that provides the tool.",
+            "type": "string"
           }
         },
-        "required": ["name", "description", "inputSchema"],
+        "required": ["name", "provider", "description", "inputSchema"],
         "additionalProperties": false
       },
       "Workflow": {

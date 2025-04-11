@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { Plus, Save, Trash2 } from "lucide-react";
+import { Play, Plus, Save, Trash2 } from "lucide-react";
 import { JSX, useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 
@@ -324,6 +324,13 @@ export default function TaskEditor({ taskId }: { taskId?: string }) {
     }
   };
 
+  const handleRun = async () => {
+    // First save the task
+    await saveTask();
+
+    console.log("TODO");
+  };
+
   if (taskDataError) {
     return (
       <ErrorCard
@@ -430,11 +437,15 @@ export default function TaskEditor({ taskId }: { taskId?: string }) {
           </div>
         </CardContent>
         <CardFooter className="flex justify-end space-x-2">
+          <Button onClick={handleRun} variant="outline">
+            <Play className="h-4 w-4" />
+            Run
+          </Button>
           {taskId && (
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <Button variant="destructive">
-                  <Trash2 className="mr-2 h-4 w-4" />
+                  <Trash2 className="h-4 w-4" />
                   Delete
                 </Button>
               </AlertDialogTrigger>

@@ -1909,6 +1909,8 @@ dependencies = [
  "futures",
  "rmcp",
  "sauropod-config",
+ "sauropod-tool-spec",
+ "serde_json",
  "tokio",
  "tracing",
 ]

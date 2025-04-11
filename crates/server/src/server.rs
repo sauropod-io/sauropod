@@ -25,6 +25,8 @@ pub struct Server {
     observability: Observability,
     /// The database.
     db: sauropod_database::Database,
+    /// MCP interface.
+    _mcp: Arc<sauropod_mcp::ModelContextProtocol>,
     /// All tools available to the server.
     tools: Vec<Arc<dyn sauropod_tool_spec::Tool>>,
     /// The LLM engine.
@@ -43,11 +45,18 @@ impl Server {
             .ok_or_else(|| anyhow::anyhow!("No database path configured"))?;
         let db = sauropod_database::Database::new(db_location.into())?;
         db.init()?;
-        Ok(std::sync::Arc::new(Self {
+        let mcp = sauropod_mcp::ModelContextProtocol::new(config)
+            .instrument(tracing::info_span!("MCP initialization"))
+            .await?;
+        let mut tools = sauropod_task_context::get_default_tools();
+        tools.extend(mcp.clone().list_all_tools().await?);
+
+        Ok(Arc::new(Self {
             _config: config.clone(),
             observability: Observability { log_buffer },
             db,
-            tools: sauropod_task_context::get_default_tools(),
+            _mcp: mcp,
+            tools,
             llm_engine: sauropod_llm_inference::create_engine(config).await?,
         }))
     }
@@ -70,9 +79,10 @@ impl Server {
             }
         }
 
-        Ok(sauropod_task_context::make_default_task_context(
+        Ok(sauropod_task_context::TaskContext::new(
             self.llm_engine.clone(),
             model_names,
+            self.tools.clone(),
         ))
     }
 }

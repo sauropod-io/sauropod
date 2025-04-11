@@ -28,12 +28,12 @@ pub struct FetchRequestToolInput {
 impl ConcreteTool for FetchTool {
     type Input = FetchRequestToolInput;
 
-    fn get_name(&self) -> String {
-        "fetch".to_string()
+    fn get_name(&self) -> &str {
+        "fetch"
     }
 
-    fn get_description(&self) -> String {
-        "Send an HTTP request to the provided URL to upload or download data. This tool will return the response code and the body.".to_string()
+    fn get_description(&self) -> &str {
+        "Send an HTTP request to the provided URL to upload or download data. This tool will return the response code and the body."
     }
 
     async fn run(self: std::sync::Arc<Self>, input: Self::Input) -> anyhow::Result<String> {

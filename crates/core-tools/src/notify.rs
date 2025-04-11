@@ -13,12 +13,12 @@ pub struct NotifyToolInput {
 impl ConcreteTool for NotifyTool {
     type Input = NotifyToolInput;
 
-    fn get_name(&self) -> String {
-        "notify".to_string()
+    fn get_name(&self) -> &str {
+        "notify"
     }
 
-    fn get_description(&self) -> String {
-        "Send a notification to the user.".to_string()
+    fn get_description(&self) -> &str {
+        "Send a notification to the user."
     }
 
     async fn run(self: std::sync::Arc<Self>, _input: Self::Input) -> anyhow::Result<String> {

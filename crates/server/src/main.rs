@@ -62,9 +62,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         in_memory_buffer: Some(log_buffer.clone()),
     });
 
-    let _mcp = sauropod_mcp::ModelContextProtocol::new(&config)
-        .instrument(tracing::info_span!("MCP initialization"))
-        .await?;
     let server = match sauropod_server::Server::new(&config, log_buffer.clone())
         .instrument(tracing::info_span!("Server initialization"))
         .await

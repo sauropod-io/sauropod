@@ -1106,6 +1106,8 @@ export interface components {
        *
        *      Must match `^[a-zA-Z0-9_-]{1,64}$`. */
       name: string;
+      /** @description The source that provides the tool. */
+      provider: string;
     };
     /** @description A workflow. */
     Workflow: {

@@ -1,6 +1,9 @@
 //! Sauropod task context..
 
-use std::{collections::BTreeMap, sync::Arc};
+use std::{
+    collections::{BTreeMap, HashMap},
+    sync::Arc,
+};
 
 use sauropod_config::ModelConfig;
 
@@ -13,7 +16,7 @@ pub struct TaskContext {
     /// The system prompt to use for the task.
     pub system_prompt: String,
     /// The tools available to the task.
-    pub tools: BTreeMap<String, Arc<dyn sauropod_tool_spec::Tool>>,
+    pub tools: HashMap<String, Arc<dyn sauropod_tool_spec::Tool>>,
     /// A mapping from model strength enums to model names.
     pub model_names: BTreeMap<sauropod_schemas::task::ModelStrength, ModelConfig>,
 }
@@ -27,18 +30,22 @@ If you are unable to complete the task, respond with an error message in JSON fo
 
 impl TaskContext {
     /// Create a new task context.
-    pub fn new(llm_engine: sauropod_llm_inference::EnginePointer) -> Self {
-        Self {
+    pub fn new(
+        llm_engine: sauropod_llm_inference::EnginePointer,
+        model_names: BTreeMap<sauropod_schemas::task::ModelStrength, ModelConfig>,
+        tools: Vec<Arc<dyn sauropod_tool_spec::Tool>>,
+    ) -> Arc<Self> {
+        let mut tool_map = HashMap::with_capacity(tools.len());
+        for tool in tools.into_iter() {
+            tool_map.insert(tool.get_name().to_string(), tool);
+        }
+
+        Arc::new(Self {
             llm_engine,
             system_prompt: DEFAULT_SYSTEM_PROMPT.trim().to_string(),
-            tools: BTreeMap::new(),
-            model_names: BTreeMap::new(),
-        }
-    }
-
-    /// Register a tool with the context.
-    pub fn register_tool(&mut self, tool: Arc<dyn sauropod_tool_spec::Tool>) {
-        self.tools.insert(tool.get_definition().name, tool);
+            tools: tool_map,
+            model_names,
+        })
     }
 
     /// Get a model name.
@@ -71,17 +78,4 @@ impl TaskContext {
 /// Get the default list of tools.
 pub fn get_default_tools() -> Vec<Arc<dyn sauropod_tool_spec::Tool>> {
     vec![Arc::new(sauropod_core_tools::fetch::FetchTool)]
-}
-
-/// Construct a task context with the default tools.
-pub fn make_default_task_context(
-    llm_engine: sauropod_llm_inference::EnginePointer,
-    model_names: BTreeMap<sauropod_schemas::task::ModelStrength, ModelConfig>,
-) -> Arc<TaskContext> {
-    let mut context = TaskContext::new(llm_engine);
-    for tool in get_default_tools() {
-        context.register_tool(tool);
-    }
-    context.model_names = model_names;
-    Arc::new(context)
 }

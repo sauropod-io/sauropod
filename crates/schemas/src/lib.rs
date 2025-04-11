@@ -31,6 +31,8 @@ pub struct ToolDefinition {
     ///
     /// Must match `^[a-zA-Z0-9_-]{1,64}$`.
     pub name: String,
+    /// The source that provides the tool.
+    pub provider: String,
     /// A detailed description of what the tool does.
     pub description: String,
     /// A JSON Schema describing the parameters for the tool.
