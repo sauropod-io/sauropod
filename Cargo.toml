@@ -40,7 +40,7 @@ futures = "0.3.31"
 jsonschema = { version = "0.29.1", default-features = false }
 minijinja = { version = "2.9.0", default-features = false, features = ["loader", "serde"]}
 reqwest = { version = "0.12.14", features = ["json"] }
-rmcp = { version = "0.1.5", default-features = true, features = ["client", "transport-io", "transport-sse", "transport-child-process"]}
+rmcp = { version = "0.1.5", default-features = false, features = ["base64", "macros", "client", "transport-io", "transport-sse", "transport-child-process"]}
 rusqlite = { version = "0.34.0", features = ["bundled", "serde_json"]}
 schemars = "1.0.0-alpha.17"
 serde = {version = "1.0.219", features = ["serde_derive"]}
