@@ -1895,6 +1895,7 @@ dependencies = [
 name = "sauropod-logging"
 version = "0.0.0"
 dependencies = [
+ "sauropod-config",
  "serde_json",
  "tracing",
  "tracing-subscriber",

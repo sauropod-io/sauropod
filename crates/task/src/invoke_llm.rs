@@ -9,8 +9,6 @@ use crate::Task;
 
 /// Task to invoke an LLM.
 pub(crate) struct InvokeLlmTask {
-    /// The model strength to use for the task.
-    model_strength: sauropod_schemas::task::ModelStrength,
     /// The template environment for the task.
     template_env: minijinja::Environment<'static>,
     /// The input JSON schema for the task.
@@ -60,7 +58,6 @@ impl InvokeLlmTask {
         );
 
         Ok(Self {
-            model_strength: invoke_llm.model_strength,
             template_env,
             input_schema,
             output_schema,
@@ -111,7 +108,7 @@ impl Task for InvokeLlmTask {
         }
 
         let template = self.template_env.get_template(TEMPLATE_NAME)?;
-        let model = context.get_model(self.model_strength)?;
+        let model = context.get_model();
         let tools = context
             .tools
             .values()
@@ -134,7 +131,8 @@ impl Task for InvokeLlmTask {
                 None
             },
         };
-        let mut request = sauropod_llm_inference::prepare_completion_request(model, llm_context)?;
+        let mut request =
+            sauropod_llm_inference::prepare_completion_request(model.clone(), llm_context)?;
         loop {
             let result = context
                 .llm_engine

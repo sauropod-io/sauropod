@@ -59,9 +59,6 @@ import {
 } from "@/mutations/taskMutations";
 import { TASK_PREFIX, taskRoute } from "@/routes";
 
-type ModelSize = "weak" | "strong";
-const MODEL_SIZES: ModelSize[] = ["weak", "strong"];
-
 // Output type options
 const OUTPUT_TYPES: FieldType[] = ["string", "number", "boolean"];
 
@@ -206,11 +203,9 @@ export default function TaskEditor({ taskId }: { taskId?: string }) {
 
   const [formState, setFormState] = useState<{
     name: string;
-    model: ModelSize;
     tools: string[];
   }>({
     name: "",
-    model: MODEL_SIZES[0],
     tools: [],
   });
   const [promptText, setPromptText] = useState<string>("");
@@ -233,7 +228,6 @@ export default function TaskEditor({ taskId }: { taskId?: string }) {
           name: "",
           action: {
             invokeLLM: {
-              modelStrength: MODEL_SIZES[1],
               template: "",
             },
           },
@@ -256,8 +250,6 @@ export default function TaskEditor({ taskId }: { taskId?: string }) {
     if (taskData) {
       setFormState({
         name: taskData.name,
-        model:
-          (taskData.action?.invokeLLM?.modelStrength as ModelSize) || "strong",
         tools: taskData.action?.invokeLLM?.availableToolIds || [],
       });
 
@@ -301,7 +293,6 @@ export default function TaskEditor({ taskId }: { taskId?: string }) {
       name: formState.name!,
       action: {
         invokeLLM: {
-          modelStrength: formState.model,
           template: promptText,
           outputSchema:
             outputAll || Object.keys(outputSchema?.properties ?? {}).length == 0
@@ -387,23 +378,6 @@ export default function TaskEditor({ taskId }: { taskId?: string }) {
             placeholder="Task name"
             className="text-xl font-bold h-10"
           />
-          <Select
-            value={formState.model}
-            onValueChange={(value) =>
-              setFormState({ ...formState, model: value as ModelSize })
-            }
-          >
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Select model" />
-            </SelectTrigger>
-            <SelectContent>
-              {MODEL_SIZES.map((model) => (
-                <SelectItem key={model} value={model}>
-                  {`${model.substring(0, 1).toUpperCase()}${model.substring(1).toLowerCase()}`}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
         </CardHeader>
         <CardContent>
           <PromptEditor

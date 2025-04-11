@@ -1,13 +1,12 @@
 //! HTTP server code.
 
-use std::collections::{BTreeMap, HashMap};
+use std::collections::HashMap;
 use std::env;
 use std::sync::Arc;
 
-use sauropod_config::ModelConfig;
 use sauropod_database::{DatabaseId, DatabaseTypeWithID, DatabaseTypeWithName};
 use sauropod_schemas::InputAndOutputSchema;
-use sauropod_schemas::task::{ModelStrength, Task, TaskId};
+use sauropod_schemas::task::{Task, TaskId};
 use sauropod_schemas::workflow::{ObjectInfo, Workflow};
 use sauropod_task_context::TaskContext;
 use tracing::Instrument;
@@ -20,7 +19,7 @@ use crate::observability::Observability;
 /// The server contains the main state of the application.
 pub struct Server {
     /// The server configuration.
-    _config: sauropod_config::Config,
+    config: sauropod_config::Config,
     /// Observability state.
     observability: Observability,
     /// The database.
@@ -52,7 +51,7 @@ impl Server {
         tools.extend(mcp.clone().list_all_tools().await?);
 
         Ok(Arc::new(Self {
-            _config: config.clone(),
+            config: config.clone(),
             observability: Observability { log_buffer },
             db,
             _mcp: mcp,
@@ -63,25 +62,32 @@ impl Server {
 
     /// Create a task context.
     pub async fn make_task_context(&self) -> anyhow::Result<Arc<TaskContext>> {
-        let model_names = make_model_selection(&self.llm_engine, &self._config).await?;
+        let model_config = &self.config.default_model;
 
         // Ensure that the models are available
         let available_models = self.llm_engine.list_models().await?;
-        for model in model_names.values() {
-            let has_model = available_models.iter().any(|m| m.name == model.model);
-
-            if !has_model {
-                if self.llm_engine.can_pull_model() {
-                    self.llm_engine.pull_model(&model.model).await?;
-                } else {
-                    tracing::error!("Model {} not available", model.model);
-                }
+        if !available_models
+            .iter()
+            .any(|m| m.name == model_config.model)
+        {
+            if self.llm_engine.can_pull_model() {
+                self.llm_engine.pull_model(&model_config.model).await?;
+            } else {
+                anyhow::bail!(
+                    "Model {} not available, the available models are:\n{}",
+                    model_config.model,
+                    available_models
+                        .iter()
+                        .map(|m| m.name.clone())
+                        .collect::<Vec<_>>()
+                        .join("\n")
+                );
             }
         }
 
         Ok(sauropod_task_context::TaskContext::new(
             self.llm_engine.clone(),
-            model_names,
+            model_config.clone(),
             self.tools.clone(),
         ))
     }
@@ -162,29 +168,6 @@ fn db_list_objects<T: DatabaseTypeWithID + DatabaseTypeWithName>(
     })?;
 
     Ok(HttpResponse::Ok(object_infos))
-}
-
-/// Build a model selection map.
-async fn make_model_selection(
-    llm_engine: &sauropod_llm_inference::EnginePointer,
-    config: &sauropod_config::Config,
-) -> anyhow::Result<BTreeMap<ModelStrength, ModelConfig>> {
-    let mut model_names = config.models.to_map();
-
-    if model_names.is_empty() {
-        let llm_engine_models = llm_engine.list_models().await?;
-        if llm_engine_models.len() == 1 {
-            model_names.insert(
-                ModelStrength::Strong,
-                ModelConfig {
-                    model: llm_engine_models[0].name.clone(),
-                    ..ModelConfig::default()
-                },
-            );
-        }
-    }
-
-    Ok(model_names)
 }
 
 #[async_trait::async_trait]

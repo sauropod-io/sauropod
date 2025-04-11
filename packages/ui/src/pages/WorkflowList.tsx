@@ -1,9 +1,10 @@
-import { Logs, Plus } from "lucide-react";
-import { Link, useNavigate } from "react-router";
+import { Plus } from "lucide-react";
+import { useNavigate } from "react-router";
 
 import type { Schemas } from "@sauropod-io/client";
 
 import api from "@/api";
+import ErrorCard from "@/components/ErrorCard";
 import WorkflowPreview from "@/components/WorkflowPreview";
 import DeleteButton from "@/components/buttons/DeleteButton";
 import RunButton from "@/components/buttons/RunButton";
@@ -18,7 +19,7 @@ import {
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useDeleteWorkflow } from "@/mutations/workflowMutations";
-import { LOGS, workflowRoute } from "@/routes";
+import { workflowRoute } from "@/routes";
 
 function SkeletonCard() {
   return (
@@ -64,23 +65,12 @@ function WorkflowCard({ item }: { item: Schemas["ObjectInfo"] }) {
 
   if (error != null) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Error loading workflow (ID {item.id})</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-red-500">{error.error}</p>
-          See the&nbsp;
-          <Link to={LOGS}>
-            <Logs className="mr-1 inline" />
-            Logs
-          </Link>
-          &nbsp;for more info
-        </CardContent>
-        <CardFooter className="flex justify-end gap-2 pt-0">
-          {deleteButton}
-        </CardFooter>
-      </Card>
+      <ErrorCard
+        className="relative group"
+        message={`${item.name}`}
+        error={error}
+        buttons={[deleteButton]}
+      />
     );
   }
 

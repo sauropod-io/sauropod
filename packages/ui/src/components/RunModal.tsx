@@ -152,7 +152,7 @@ export function RunModal({
       if (response.error) {
         setRunError(`Error: ${response.error.error}`);
       } else {
-        setResult(response.data!.result as any);
+        setResult(response.data! as any);
       }
     } catch (err: any) {
       setRunError(`Error: ${err.message}`);

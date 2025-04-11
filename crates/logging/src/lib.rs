@@ -2,6 +2,7 @@
 
 mod in_memory;
 
+use tracing::level_filters::LevelFilter;
 use tracing_subscriber::prelude::*;
 
 pub use in_memory::{InMemoryLogBuffer, LogMessage};
@@ -10,6 +11,8 @@ pub use in_memory::{InMemoryLogBuffer, LogMessage};
 pub struct LoggingConfig {
     /// Whether to log verbosely.
     pub verbose: bool,
+    /// Whether to use pretty printing.
+    pub pretty_print: bool,
     /// An optional in-memory log buffer.
     pub in_memory_buffer: Option<std::sync::Arc<InMemoryLogBuffer>>,
 }
@@ -77,7 +80,7 @@ where
 
 /// Set up the logging backend.
 pub fn initialize(config: LoggingConfig) {
-    let fmt_layer = if config.verbose {
+    let fmt_layer = if config.pretty_print {
         tracing_subscriber::fmt::Layer::default()
             .pretty()
             .with_writer(std::io::stderr)
@@ -95,6 +98,18 @@ pub fn initialize(config: LoggingConfig) {
                 .in_memory_buffer
                 .map(|buffer| InMemoryLayer { buffer }),
         )
-        .with(tracing_subscriber::filter::EnvFilter::from_default_env())
+        .with(
+            tracing_subscriber::filter::EnvFilter::builder()
+                .with_default_directive(
+                    if config.verbose {
+                        LevelFilter::INFO
+                    } else {
+                        LevelFilter::WARN
+                    }
+                    .into(),
+                )
+                .with_env_var(format!("{}_LOG", sauropod_config::ENV_VAR_PREFIX))
+                .from_env_lossy(),
+        )
         .init();
 }

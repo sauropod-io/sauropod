@@ -57,12 +57,17 @@ function TaskCard({ item }: { item: Schemas["ObjectInfo"] }) {
     return <SkeletonCard />;
   }
 
+  const deleteButton = (
+    <DeleteButton variant="destructive" size="sm" onClick={handleDelete} />
+  );
+
   if (error != null) {
     return (
       <ErrorCard
         className="relative group"
         message={`${item.name}`}
         error={error}
+        buttons={[deleteButton]}
       />
     );
   }
@@ -80,7 +85,7 @@ function TaskCard({ item }: { item: Schemas["ObjectInfo"] }) {
       </CardHeader>
       <CardFooter className="flex justify-end gap-2 pt-0">
         <RunButton variant="default" size="sm" onClick={handleRun} />
-        <DeleteButton variant="destructive" size="sm" onClick={handleDelete} />
+        {deleteButton}
       </CardFooter>
     </Card>
   );

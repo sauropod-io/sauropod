@@ -12,19 +12,6 @@ pub struct Template(
     pub String,
 );
 
-/// Enum for model strength.
-#[derive(
-    Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, serde::Serialize, serde::Deserialize,
-)]
-#[cfg_attr(feature = "json_schema", derive(schemars::JsonSchema))]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub enum ModelStrength {
-    /// Weak model.
-    Weak,
-    /// Strong model.
-    Strong,
-}
-
 /// Run an LLM.
 #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
 #[cfg_attr(feature = "json_schema", derive(schemars::JsonSchema))]
@@ -32,8 +19,6 @@ pub enum ModelStrength {
 pub struct InvokeLLM {
     /// The template to use.
     pub template: Template,
-    /// The model strength to use.
-    pub model_strength: ModelStrength,
     /// The output schema.
     ///
     /// If unspecified the task will return an object with a single "output" string.

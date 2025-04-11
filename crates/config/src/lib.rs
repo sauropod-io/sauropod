@@ -1,9 +1,6 @@
 //! Sauropod configuration.
 
-use std::{
-    collections::{BTreeMap, HashMap},
-    path::PathBuf,
-};
+use std::{collections::HashMap, path::PathBuf};
 
 pub const ENV_VAR_PREFIX: &str = "SAUROPOD";
 
@@ -31,6 +28,7 @@ pub enum McpServer {
     Http { url: String },
 }
 
+/// Configuration for a model.
 #[derive(Clone, Debug, Default, serde::Deserialize, serde::Serialize)]
 #[cfg_attr(feature = "json_schema", derive(schemars::JsonSchema))]
 #[serde(deny_unknown_fields)]
@@ -42,36 +40,10 @@ pub struct ModelConfig {
     )]
     pub model: String,
     /// The type of model.
+    ///
+    /// This is used to configure how prompts are generated.
     #[serde(default, rename = "type")]
     pub model_type: ModelType,
-}
-
-/// Configuration for models.
-#[derive(Clone, Debug, Default, serde::Deserialize, serde::Serialize)]
-#[cfg_attr(feature = "json_schema", derive(schemars::JsonSchema))]
-#[serde(deny_unknown_fields)]
-pub struct Models {
-    /// A model to use for simple tasks.
-    pub weak: Option<ModelConfig>,
-    /// A model to use for more complex tasks.
-    pub strong: Option<ModelConfig>,
-}
-
-impl Models {
-    /// Get a map from model strength to model configuration.
-    pub fn to_map(&self) -> BTreeMap<sauropod_schemas::task::ModelStrength, ModelConfig> {
-        let mut models = BTreeMap::new();
-        if let Some(weak) = &self.weak {
-            models.insert(sauropod_schemas::task::ModelStrength::Weak, weak.clone());
-        }
-        if let Some(strong) = &self.strong {
-            models.insert(
-                sauropod_schemas::task::ModelStrength::Strong,
-                strong.clone(),
-            );
-        }
-        models
-    }
 }
 
 /// The default backend URL.
@@ -84,6 +56,11 @@ fn default_backend() -> String {
 #[cfg_attr(feature = "json_schema", derive(schemars::JsonSchema))]
 #[serde(deny_unknown_fields)]
 pub struct Config {
+    /// Whether to log verbosely.
+    ///
+    /// You can also control the log level using the`SAUROPOD_LOG` environment variable, e.g. `SAUROPOD_LOG=debug`.
+    #[serde(default)]
+    pub verbose: bool,
     /// The path to the SQLite database.
     #[serde(default)]
     #[cfg_attr(feature = "json_schema", schemars(example = "/data/database.sqlite"))]
@@ -105,7 +82,7 @@ pub struct Config {
     pub backend_api_key: Option<String>,
     /// The model configuration.
     #[serde(default)]
-    pub models: Models,
+    pub default_model: ModelConfig,
     /// The MCP servers.
     #[serde(default)]
     pub mcp_servers: Vec<McpServer>,
@@ -125,10 +102,13 @@ impl Config {
 
         let environment_source = config::Environment::with_prefix(ENV_VAR_PREFIX)
             .list_separator(",")
+            .prefix_separator("_")
+            .separator("__")
             .source({
                 let mut source: HashMap<String, String> = std::env::vars().collect();
                 // Remove the MCP servers from the environment variables - we handle this in `clap`.
                 source.remove(&format!("{}_MCP_SERVERS", ENV_VAR_PREFIX));
+                source.remove(&format!("{}_LOG", ENV_VAR_PREFIX));
                 Some(source)
             });
         let settings_builder = config::Config::builder()
@@ -175,12 +155,13 @@ impl Config {
 impl Default for Config {
     fn default() -> Self {
         Self {
+            verbose: false,
             database_path: None,
             host: None,
             port: None,
             backend: default_backend(),
             backend_api_key: None,
-            models: Models::default(),
+            default_model: ModelConfig::default(),
             mcp_servers: vec![],
         }
     }

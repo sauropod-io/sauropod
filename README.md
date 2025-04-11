@@ -20,7 +20,7 @@ port = 8080
 # Point the backend to an OpenAI-compatible server like Ollama.
 backend = "http://localhost:11434"
 
-[models.strong]
+[default_model]
 model = "gemma3:27b"
 type = "Gemma3"
 

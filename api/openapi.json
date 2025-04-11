@@ -967,9 +967,6 @@
               "type": "string"
             }
           },
-          "modelStrength": {
-            "$ref": "#/components/schemas/ModelStrength"
-          },
           "outputSchema": {
             "description": "The output schema.\n\n If unspecified the task will return an object with a single \"output\" string.",
             "type": "object",
@@ -980,7 +977,7 @@
             "$ref": "#/components/schemas/Template"
           }
         },
-        "required": ["template", "modelStrength"],
+        "required": ["template"],
         "additionalProperties": false
       },
       "LogLevel": {
@@ -1063,19 +1060,6 @@
         },
         "required": ["name", "uri"],
         "additionalProperties": false
-      },
-      "ModelStrength": {
-        "description": "Enum for model strength.",
-        "oneOf": [
-          {
-            "description": "Weak model.",
-            "type": "string"
-          },
-          {
-            "description": "Strong model.",
-            "type": "string"
-          }
-        ]
       },
       "ObjectInfo": {
         "description": "Minimal information describing a stored object.",

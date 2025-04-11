@@ -21,6 +21,11 @@ pub fn add_config_flags(parser: clap::Command) -> clap::Command {
             .env("SAUROPOD_PORT")
             .help(r#"The port to listen on"#)
             .value_parser(clap::value_parser!(i64)),
+        clap::Arg::new("verbose")
+            .long("verbose")
+            .env("SAUROPOD_VERBOSE")
+            .help(r#"Whether to log verbosely"#)
+            .action(clap::ArgAction::SetTrue),
     ])
 }
 
@@ -61,6 +66,13 @@ pub fn clap_to_config_source(matches: &clap::ArgMatches) -> Box<super::ClapConfi
         .map(|x| config::Value::new(None, x))
     {
         values.insert("port".to_string(), value);
+    }
+    if let Some(value) = matches
+        .get_one::<bool>("verbose")
+        .cloned()
+        .map(|x| config::Value::new(None, x))
+    {
+        values.insert("verbose".to_string(), value);
     }
     Box::new(super::ClapConfigSource { values })
 }

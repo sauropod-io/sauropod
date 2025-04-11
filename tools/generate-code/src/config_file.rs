@@ -7,7 +7,7 @@ fn environment_variable(key: &str) -> String {
     format!(
         "{}_{}",
         sauropod_config::ENV_VAR_PREFIX,
-        key.to_uppercase().replace('.', "_")
+        key.to_uppercase().replace('.', "__")
     )
 }
 

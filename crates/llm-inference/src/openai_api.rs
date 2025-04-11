@@ -150,9 +150,9 @@ pub struct CompletionResponse {
 #[allow(unused)]
 pub struct ModelData {
     pub id: String,
-    object: String,
-    created: i64,
-    owned_by: String,
+    pub object: String,
+    pub created: i64,
+    pub owned_by: String,
 }
 
 /// Response from the models endpoint.
@@ -211,13 +211,15 @@ impl OpenAiInterface {
 
     /// Get a list of available models.
     pub async fn models(&self) -> anyhow::Result<ModelsResponse> {
-        let response = self
-            .client
-            .get(&self.models_url)
-            .send()
-            .await?
-            .error_for_status()?;
+        let response = self.client.get(&self.models_url).send().await?;
 
-        Ok(response.json().await?)
+        if response.status().is_success() {
+            return Ok(response.json().await?);
+        }
+
+        let status = response.status();
+        let body = response.text().await?;
+        tracing::error!("Error from {} (code {status}): {body}", &self.models_url);
+        anyhow::bail!("Error from {} (code {status}): {body}", &self.models_url);
     }
 }

@@ -1022,7 +1022,6 @@ export interface components {
        * @default []
        */
       availableToolIds: string[];
-      modelStrength: components["schemas"]["ModelStrength"];
       /** @description The output schema.
        *
        *      If unspecified the task will return an object with a single "output" string. */
@@ -1065,8 +1064,6 @@ export interface components {
       /** @description The URI of the model. */
       uri: string;
     };
-    /** @description Enum for model strength. */
-    ModelStrength: string;
     /** @description Minimal information describing a stored object. */
     ObjectInfo: {
       /**

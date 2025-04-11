@@ -35,3 +35,25 @@ services:
 volumes:
   ollama-data:
 ```
+
+## Backend requirements
+
+Sauropod supports any backend that has an OpenAI-compatible API with structured output support, for example:
+
+- [Ollama](https://ollama.com/)
+- [llama.cpp](https://github.com/ggml-org/llama.cpp)
+- [mistral.rs](https://github.com/EricLBuehler/mistral.rs/)
+
+## Using cloud-hosted LLM providers
+
+If you want to use a hosted LLM providers like OpenAI put your API key in the [`backend_api_key`](./config.md#backend_api_key) field, set the `--backend-api-key` flag, or set `SAUROPOD_BACKEND_API_KEY`.
+
+**NOTE**: The provider must support structured outputs - which providers like Groq and Anthropic don't have support in their OpenAI compatibility layers yet.
+
+### OpenAI example
+
+Example:
+
+```bash
+SAUROPOD_DEFAULT_MODEL__MODEL=gpt-4o-mini sauropod --backend=https://api.openai.com --backend-api-key="YOUR_KEY"
+```

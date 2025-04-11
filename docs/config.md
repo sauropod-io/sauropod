@@ -27,6 +27,31 @@ The API key to use to access the backend.
 
 The path to the SQLite database.
 
+## `[default_model]`
+
+- **Type**: `object`
+- **Default**: `{"model":"","type":"Default"}`
+
+The model configuration.
+
+### `model`
+
+- **Environment variable**: `SAUROPOD_DEFAULT_MODEL__MODEL`
+- **Type**: `string`
+- **Example Value**: `"hf.co/unsloth/gemma-3-27b-it-GGUF:Q6_K"`
+
+The name of the model.
+
+### `type`
+
+- **Environment variable**: `SAUROPOD_DEFAULT_MODEL__TYPE`
+- **Type**: `"Default"` | `"Gemma3"` | `"Phi4"`
+- **Default**: `"Default"`
+
+The type of model.
+
+This is used to configure how prompts are generated.
+
 ## `host`
 
 - **Environment variable**: `SAUROPOD_HOST`
@@ -64,53 +89,6 @@ Communicate with the MCP server over HTTP.
 
 - **Type**: `string`
 
-## `[models]`
-
-- **Type**: `object`
-- **Default**: `{"strong":null,"weak":null}`
-
-The model configuration.
-
-### `[strong]`
-
-A model to use for more complex tasks.
-
-#### `model`
-
-- **Environment variable**: `SAUROPOD_MODELS_STRONG_MODEL`
-- **Type**: `string`
-- **Example Value**: `"hf.co/unsloth/gemma-3-27b-it-GGUF:Q6_K"`
-
-The name of the model.
-
-#### `type`
-
-- **Environment variable**: `SAUROPOD_MODELS_STRONG_TYPE`
-- **Type**: `"Default"` | `"Gemma3"` | `"Phi4"`
-- **Default**: `"Default"`
-
-The type of model.
-
-### `[weak]`
-
-A model to use for simple tasks.
-
-#### `model`
-
-- **Environment variable**: `SAUROPOD_MODELS_WEAK_MODEL`
-- **Type**: `string`
-- **Example Value**: `"hf.co/unsloth/gemma-3-27b-it-GGUF:Q6_K"`
-
-The name of the model.
-
-#### `type`
-
-- **Environment variable**: `SAUROPOD_MODELS_WEAK_TYPE`
-- **Type**: `"Default"` | `"Gemma3"` | `"Phi4"`
-- **Default**: `"Default"`
-
-The type of model.
-
 ## `port`
 
 - **Environment variable**: `SAUROPOD_PORT`
@@ -118,3 +96,13 @@ The type of model.
 - **Example Value**: `80`
 
 The port to listen on.
+
+## `verbose`
+
+- **Environment variable**: `SAUROPOD_VERBOSE`
+- **Type**: `boolean`
+- **Default**: `false`
+
+Whether to log verbosely.
+
+You can also control the log level using the`SAUROPOD_LOG` environment variable, e.g. `SAUROPOD_LOG=debug`.
