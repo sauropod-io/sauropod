@@ -16,6 +16,7 @@ on:
 env:
   # We don't need incremental compilation in CI
   CARGO_INCREMENTAL: "0"
+  CARGO_TERM_COLORS: always
 
 jobs:
   pre-commit:

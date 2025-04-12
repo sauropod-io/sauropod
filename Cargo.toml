@@ -6,6 +6,7 @@ members = [
     "crates/database",
     "crates/http",
     "crates/json-schema",
+    "crates/links",
     "crates/llm-inference",
     "crates/logging",
     "crates/mcp",
@@ -17,7 +18,8 @@ members = [
     "crates/tool-spec",
     "crates/workflows",
     "tools/create-release-tag",
-    "tools/generate-code", "crates/links",
+    "tools/generate-code",
+    "tools/update-latest-image",
 ]
 
 [workspace.package]

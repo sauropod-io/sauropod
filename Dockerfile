@@ -62,6 +62,7 @@ COPY crates/tool-spec/Cargo.toml crates/tool-spec/Cargo.toml
 COPY crates/workflows/Cargo.toml crates/workflows/Cargo.toml
 COPY tools/create-release-tag/Cargo.toml tools/create-release-tag/Cargo.toml
 COPY tools/generate-code/Cargo.toml tools/generate-code/Cargo.toml
+COPY tools/update-latest-image/Cargo.toml tools/update-latest-image/Cargo.toml
 RUN mkdir crates/config/src && touch crates/config/src/lib.rs && \
     mkdir crates/core-tools/src && touch crates/core-tools/src/lib.rs && \
     mkdir crates/database/src && touch crates/database/src/lib.rs && \
@@ -79,7 +80,8 @@ RUN mkdir crates/config/src && touch crates/config/src/lib.rs && \
     mkdir crates/tool-spec/src && touch crates/tool-spec/src/lib.rs && \
     mkdir crates/workflows/src && touch crates/workflows/src/lib.rs && \
     mkdir tools/create-release-tag/src && touch tools/create-release-tag/src/lib.rs && \
-    mkdir tools/generate-code/src && touch tools/generate-code/src/lib.rs
+    mkdir tools/generate-code/src && touch tools/generate-code/src/lib.rs && \
+    mkdir tools/update-latest-image/src && touch tools/update-latest-image/src/lib.rs
 
 # Grab the Rust dependencies
 RUN cargo fetch --locked
