@@ -121,11 +121,19 @@ jobs:
     permissions:
       contents: write
     steps:
-      - name: Download all artifacts
+      - name: Download X86 artifacts
         uses: actions/download-artifact@v4
         with:
           path: binaries
-          pattern: sauropod-*
+          # We don't use `sauropod-*` here because it will capture Docker artifacts
+          pattern: |
+            sauropod-x86_64-*
+          merge-multiple: true
+      - name: Download Aarch64 artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: binaries
+          pattern: sauropod-aarch64-*
           merge-multiple: true
 
       - name: Create release

@@ -47,7 +47,7 @@ repos:
         name: generate-json-schemas
         language: system
         types: [rust]
-        files: "crates/(schemas|config)/.*|api/core/.*"
+        files: "Cargo.toml|crates/(schemas|config)/.*|api/core/.*"
         entry: make
         args: ["generate"]
         pass_filenames: false
