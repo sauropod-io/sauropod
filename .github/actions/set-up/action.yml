@@ -13,7 +13,7 @@ runs:
   steps:
     # Rust
     - name: Set up
-      uses: ./.github/actions/set-up
+      uses: ./.github/actions/set-up-rust
     # NPM cache
     - uses: actions/setup-node@v4
       with:

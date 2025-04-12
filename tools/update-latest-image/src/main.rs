@@ -7,13 +7,26 @@ struct ReleaseInfo {
 }
 
 fn main() -> anyhow::Result<()> {
-    let _matches = clap::Command::new("update-latest-image")
+    let matches = clap::Command::new("update-latest-image")
         .about(env!("CARGO_PKG_DESCRIPTION"))
+        .arg(
+            clap::Arg::new("repo")
+                .long("repo")
+                .short('r')
+                .value_name("REPO")
+                .default_value(
+                    env!("CARGO_PKG_REPOSITORY")
+                        .strip_prefix("https://github.com/")
+                        .unwrap_or(""),
+                )
+                .help("The GitHub repository in the format <owner>/<repo>")
+                .required(true),
+        )
         .get_matches();
 
-    let Some(repo_name) = env!("CARGO_PKG_REPOSITORY").strip_prefix("https://github.com/") else {
-        anyhow::bail!("Invalid repository URL");
-    };
+    let repo_name = matches
+        .get_one::<String>("repo")
+        .expect("required argument");
 
     // Get latest release information
     let output = Command::new("gh")

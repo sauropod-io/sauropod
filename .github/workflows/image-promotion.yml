@@ -27,7 +27,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
       - name: Promote the latest release image
         run: |
-          cargo run -p update-latest-image
+          cargo run -p update-latest-image -- --repo=${{ github.repository }}
         env:
           GH_TOKEN: ${{ github.token }}
           RUSTC_WRAPPER: "sccache"

@@ -10,6 +10,19 @@ inputs:
 runs:
   using: "composite"
   steps:
+    # See <https://docs.docker.com/build/ci/github-actions/multi-platform/#build-and-load-multi-platform-images>
+    - name: Set up Docker for multi-platform builds
+      uses: docker/setup-docker-action@v4
+      with:
+        daemon-config: |
+          {
+            "debug": true,
+            "features": {
+              "containerd-snapshotter": true
+            }
+          }
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v3
     - name: Login to GitHub Container Registry
       uses: docker/login-action@v3
       with:

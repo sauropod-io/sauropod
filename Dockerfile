@@ -28,13 +28,16 @@ FROM base AS rust-builder
 # Install dependencies
 RUN export DEBIAN_FRONTEND=noninteractive && \
     apt-get update && apt-get install -y \
+    curl \
     gnupg \
     libclang1 \
     libssl-dev \
     nodejs \
-    npm \
     pkg-config \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Install sccache
+RUN curl -sSfL https://github.com/mozilla/sccache/releases/download/v0.10.0/sccache-v0.10.0-$(uname --machine)-unknown-linux-musl.tar.gz | tar -xz --strip-components=1 -C /usr/local/bin
 
 WORKDIR /sauropod
 
@@ -90,10 +93,13 @@ COPY --from=npm-builder /sauropod/packages/ui/dist /sauropod/packages/ui/dist
 COPY . ./
 
 # Build the release binary
-RUN cargo build --locked --profile=optimized-release --package sauropod-server
+RUN --mount=type=secret,id=actions_cache_url,env=ACTIONS_CACHE_URL \
+    --mount=type=secret,id=actions_runtime_token,env=ACTIONS_RUNTIME_TOKEN \
+    if [ -n "$ACTIONS_CACHE_URL" ]; then export SCCACHE_GHA_ENABLED=true RUSTC_WRAPPER=/usr/local/bin/sccache; fi; \
+    cargo build --locked --profile=optimized-release --package sauropod-server
 
 FROM base
 
-COPY --from=rust-builder /sauropod/target/optimized-release/sauropod-server /usr/local/bin/sauropod-server
+COPY --from=rust-builder /sauropod/target/optimized-release/sauropod-server /usr/bin/sauropod
 
-CMD ["/usr/local/bin/sauropod-server"]
+CMD ["/usr/bin/sauropod"]
