@@ -38,8 +38,9 @@ async fn detect_backend(url_str: &str) -> anyhow::Result<Backend> {
     let client = reqwest::Client::new();
     let response = client.get(url).send().await.with_context(|| {
         format!(
-            "Failed to send request to detect the LLM backend type at {}",
-            url_str
+            "Failed to send request to detect the LLM backend type at {} - see {} for information about backend requirements",
+            url_str,
+            sauropod_links::doc_link("deployment")
         )
     })?;
 

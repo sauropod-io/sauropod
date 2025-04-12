@@ -12,6 +12,9 @@ fn mime_type(path: &Path) -> anyhow::Result<&'static str> {
         Some("png") => Ok("image/png"),
         Some("gif") => Ok("image/gif"),
         Some("ico") => Ok("image/x-icon"),
+        Some("woff") => Ok("font/woff"),
+        Some("woff2") => Ok("font/woff2"),
+        Some("ttf") => Ok("font/ttf"),
         _ => {
             anyhow::bail!("Could not detect file type for path: {}", path.display());
         }
@@ -40,7 +43,7 @@ fn main() -> anyhow::Result<()> {
     // Start writing the array
     writeln!(
         generated_ui_routes,
-        "pub const FILES: &[(&str, &str, &str)] = &["
+        "pub const FILES: &[(&str, &str, &[u8])] = &["
     )?;
 
     // Process all files in the UI dist directory recursively
@@ -73,7 +76,7 @@ fn process_directory(
 
             writeln!(
                 output,
-                r#"    ("/{}", "{}", include_str!("{}")),"#,
+                r#"    ("/{}", "{}", include_bytes!("{}")),"#,
                 // Re-map index.html to /
                 if relative_path == "index.html" {
                     ""

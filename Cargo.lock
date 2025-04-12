@@ -1878,12 +1878,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "sauropod-links"
+version = "0.0.0"
+
+[[package]]
 name = "sauropod-llm-inference"
 version = "0.0.0"
 dependencies = [
  "anyhow",
  "reqwest",
  "sauropod-config",
+ "sauropod-links",
  "sauropod-schemas",
  "sauropod-tool-spec",
  "serde",

@@ -2,6 +2,7 @@ import { ListChecks, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 
 import TaskSelector from "@/components/TaskSelector";
+import IconButton from "@/components/buttons/IconButton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -54,10 +55,7 @@ export function WorkflowConfigSheet({
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetTrigger asChild>
-        <Button size="sm" variant="outline">
-          <ListChecks className="mr-2 h-4 w-4" />
-          Tasks
-        </Button>
+        <IconButton Icon={ListChecks} text="Configuration" variant="outline" />
       </SheetTrigger>
       <SheetContent className="px-4 overflow-y-auto w-[80vw] sm:w-[400px]">
         <SheetHeader>

@@ -24,14 +24,14 @@
   --input: var(--border);
   --ring: oklch(0.704 0.04 256.788);
 
-  --sidebar: var(--primary-foreground);
+  --sidebar: var(--color-2);
   --sidebar-foreground: var(--foreground);
   --sidebar-primary: var(--primary);
   --sidebar-primary-foreground: var(--primary-foreground);
-  --sidebar-accent: var(--secondary);
+  --sidebar-accent: var(--color-1);
   --sidebar-accent-foreground: var(--primary);
-  --sidebar-border: var(--border);
-  --sidebar-ring: var(--ring);
+  --sidebar-border: var(--color-3);
+  --sidebar-ring: var(--color-3);
 }
 
 @theme inline {
@@ -74,4 +74,8 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+body {
+  font-family: "Tomorrow", sans-serif;
 }

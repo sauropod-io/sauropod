@@ -30,6 +30,6 @@ pub async fn run_server(
     let api = sauropod_http::register_routes(server).layer(cors);
     let app = sauropod_http::make_ui_routes().nest(sauropod_http::API_PREFIX, api);
 
-    tracing::info!("listening on {}", listener.local_addr().unwrap());
+    tracing::info!("Listening on {}", listener.local_addr().unwrap());
     Ok(axum::serve(listener, app).await?)
 }

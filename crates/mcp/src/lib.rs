@@ -2,6 +2,7 @@
 use std::sync::Arc;
 use std::{borrow::Cow, pin::Pin};
 
+use anyhow::Context;
 use rmcp::{
     ServiceExt,
     model::CallToolRequestParam,
@@ -76,7 +77,11 @@ impl ModelContextProtocol {
             match server {
                 sauropod_config::McpServer::Http { url } => {
                     let transport = SseTransport::start(url.as_str()).await?;
-                    let service = ().into_dyn().serve(transport).await?;
+                    let service = ()
+                        .into_dyn()
+                        .serve(transport)
+                        .await
+                        .with_context(|| format!("When connecting to MCP server at {url}"))?;
                     mcp_servers.push(service);
                 }
                 sauropod_config::McpServer::Process { command } => {
@@ -87,7 +92,9 @@ impl ModelContextProtocol {
                     let child = TokioChildProcess::new(
                         tokio::process::Command::new(command_executable).args(&command[1..]),
                     )?;
-                    let service = ().into_dyn().serve(child).await?;
+                    let service = ().into_dyn().serve(child).await.with_context(|| {
+                        format!("When spawning MCP server with via command: {command:?}")
+                    })?;
                     mcp_servers.push(service);
                 }
             }

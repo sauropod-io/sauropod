@@ -7,3 +7,11 @@
   --color-6: #c25665;
   --color-7: #3a7695;
 }
+
+.border-green {
+  border-color: var(--color-3);
+}
+
+.bg-dark-green {
+  background-color: var(--color-3);
+}

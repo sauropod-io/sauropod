@@ -6,31 +6,12 @@ import { useNavigate, useSearchParams } from "react-router";
 import { type Schemas } from "@sauropod-io/client";
 
 import { apiClient } from "@/api";
+import { EditorHeader } from "@/components/EditorHeader";
 import ErrorCard from "@/components/ErrorCard";
 import PromptEditor from "@/components/PromptEditor";
 import { TaskRunModal } from "@/components/RunModal";
 import ToolSelector from "@/components/ToolSelector";
-import DeleteButton from "@/components/buttons/DeleteButton";
-import RunButton from "@/components/buttons/RunButton";
-import SaveButton from "@/components/buttons/SaveButton";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -58,6 +39,8 @@ import {
   useUpdateTask,
 } from "@/mutations/taskMutations";
 import { TASK_PREFIX, taskRoute } from "@/routes";
+
+import IconButton from "./buttons/IconButton";
 
 // Output type options
 const OUTPUT_TYPES: FieldType[] = ["string", "number", "boolean"];
@@ -179,16 +162,14 @@ export function OutputConfiguration({
           className="flex-1 max-w-[200px]"
           disabled={disabled}
         />
-        <Button
+        <IconButton
           variant="outline"
-          size="sm"
           disabled={disabled}
           onClick={addOutput}
           className="w-[100px]"
-        >
-          <Plus className="mr-2 h-4 w-4" />
-          Add Field
-        </Button>
+          Icon={Plus}
+          text="Add field"
+        />
       </div>
     </div>
   );
@@ -367,93 +348,68 @@ export default function TaskEditor({ taskId }: { taskId?: string }) {
   }
 
   return (
-    <div className="p-4">
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <Input
-            value={formState.name || ""}
-            onChange={(e) =>
-              setFormState({ ...formState, name: e.target.value })
-            }
-            placeholder="Task name"
-            className="text-xl font-bold h-10"
-          />
-        </CardHeader>
-        <CardContent>
+    <div className="flex flex-col flex-grow">
+      <EditorHeader
+        name={formState.name || ""}
+        onNameChange={(newName) =>
+          setFormState({ ...formState, name: newName })
+        }
+        onRun={handleRun}
+        onSave={saveTask}
+        onDelete={handleDelete}
+        disabled={taskId === undefined}
+      />
+
+      <div className="p-4 bg-white flex flex-col flex-grow">
+        <div className="flex-grow max-h-[50%]">
           <PromptEditor
             onChange={(prompt) => setPromptText(prompt!)}
             value={promptText}
           />
+        </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
-            {/* Output Configuration Section */}
-            <div>
-              <Label className="text-base">Output Configuration</Label>
-              <div className="mt-2 flex items-center space-x-2">
-                <Switch
-                  id="output-all"
-                  checked={outputAll}
-                  onCheckedChange={(checked) => setOutputAll(!!checked)}
-                />
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild className="truncate">
-                      <Label htmlFor="output-all">Output all content</Label>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>
-                        Directly output what the LLM generates as the "output"
-                        key.
-                      </p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </div>
-              <OutputConfiguration
-                onChange={(schema) => {
-                  setOutputSchema(schema);
-                }}
-                disabled={outputAll}
-                outputSchema={outputSchema}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
+          {/* Output Configuration Section */}
+          <div>
+            <Label className="text-base">Output Configuration</Label>
+            <div className="mt-2 flex items-center space-x-2">
+              <Switch
+                id="output-all"
+                checked={outputAll}
+                onCheckedChange={(checked) => setOutputAll(!!checked)}
               />
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild className="truncate">
+                    <Label htmlFor="output-all">Output all content</Label>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>
+                      Directly output what the LLM generates as the "output"
+                      key.
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
-
-            <div>
-              <Label className="text-base">Available Tools</Label>
-              <ToolSelector
-                selectedTools={formState.tools}
-                onToolSelected={handleToolToggle}
-              />
-            </div>
+            <OutputConfiguration
+              onChange={(schema) => {
+                setOutputSchema(schema);
+              }}
+              disabled={outputAll}
+              outputSchema={outputSchema}
+            />
           </div>
-        </CardContent>
-        <CardFooter className="flex justify-end space-x-2">
-          <RunButton onClick={handleRun} disabled={taskId === undefined} />
-          {taskId && (
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <DeleteButton />
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    This action cannot be undone. This will permanently delete
-                    the task.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction onClick={handleDelete}>
-                    Delete
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          )}
-          <SaveButton onClick={saveTask} />
-        </CardFooter>
-      </Card>
+
+          <div>
+            <Label className="text-base">Available Tools</Label>
+            <ToolSelector
+              selectedTools={formState.tools}
+              onToolSelected={handleToolToggle}
+            />
+          </div>
+        </div>
+      </div>
       {taskId !== undefined && (
         <TaskRunModal
           taskId={taskId}

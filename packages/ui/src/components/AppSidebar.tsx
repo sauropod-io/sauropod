@@ -21,7 +21,6 @@ import {
   SidebarRail,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { cn } from "@/lib/utils";
 import { LOGS } from "@/routes";
 
 export default function AppSidebar() {
@@ -30,7 +29,7 @@ export default function AppSidebar() {
   const { data: version } = api.useQuery("get", `/api/version`);
 
   return (
-    <ShadcnSidebar collapsible="icon">
+    <ShadcnSidebar className="border-green" collapsible="icon">
       <SidebarHeader className="items-start">
         <img
           src={sidebarOpen ? Sauropod : SauropodIcon}
@@ -47,39 +46,27 @@ export default function AppSidebar() {
             <SidebarMenu>
               <SidebarMenuItem>
                 <SidebarMenuButton isActive={location === LOGS} asChild>
-                  <Link
-                    to={LOGS}
-                    className={cn(
-                      "text-sm font-medium text-muted-foreground transition-colors hover:text-primary",
-                      location === LOGS ? "text-primary" : "",
-                    )}
-                  >
+                  <Link to={LOGS}>
                     <Logs className="h-6 w-6" />
                     <span>Logs</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
-              <SidebarMenuItem className="text-muted-foreground">
+              <SidebarMenuItem className="">
                 <SidebarMenuButton isActive={false} asChild>
                   <a
                     href="https://github.com/sauropod-io/sauropod"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="hover:text-primary"
                   >
                     <GitHubLogoIcon className="h-6 w-6" />
                     <span>Source Code</span>
                   </a>
                 </SidebarMenuButton>
               </SidebarMenuItem>
-              <SidebarMenuItem className="text-muted-foreground">
+              <SidebarMenuItem>
                 <SidebarMenuButton isActive={false} asChild>
-                  <a
-                    href="https://sauropod.io/"
-                    target="_blank"
-                    rel="noopener"
-                    className="hover:text-primary"
-                  >
+                  <a href="https://sauropod.io/" target="_blank" rel="noopener">
                     <span>Sauropod v{version || ""}</span>
                   </a>
                 </SidebarMenuButton>

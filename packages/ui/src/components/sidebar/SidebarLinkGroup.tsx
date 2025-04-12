@@ -97,7 +97,7 @@ export default function SidebarLinkGroup({
           to={linkRoute("")}
           className="flex shrink-0 items-center text-xs [&>svg]:size-4 [&>svg]:shrink-0"
         >
-          <Icon className="h-6 w-6 text-muted-foreground" />
+          <Icon className="h-6 w-6" />
           <span className="mx-1 group-data-[collapsible=icon]:hidden">
             {label}
           </span>
@@ -113,7 +113,7 @@ export default function SidebarLinkGroup({
       </SidebarGroupAction>
       <SidebarGroupContent>
         <SidebarMenu>
-          <hr className="mx-1 group-data-[collapsible=icon]:hidden" />
+          <hr className="border-green mx-1 group-data-[collapsible=icon]:hidden" />
           {menuItems}
         </SidebarMenu>
       </SidebarGroupContent>

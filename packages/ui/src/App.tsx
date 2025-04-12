@@ -87,10 +87,10 @@ function PageContent() {
 
 function App() {
   return (
-    <div className="flex h-screen w-full bg-background">
+    <div className="flex h-screen w-full">
       <SidebarProvider defaultOpen={true}>
         <AppSidebar />
-        <SidebarInset className="flex-1 overflow-auto">
+        <SidebarInset className="bg-slate-50 flex-1 overflow-auto">
           <div className="p-2 md:hidden">
             <SidebarTrigger className="mb-2" />
           </div>

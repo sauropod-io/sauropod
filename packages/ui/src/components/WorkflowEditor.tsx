@@ -19,33 +19,18 @@ import { useNavigate, useSearchParams } from "react-router";
 import { Schemas } from "@sauropod-io/client";
 
 import { apiClient } from "@/api";
+import { EditorHeader } from "@/components/EditorHeader";
 import { WorkflowRunModal } from "@/components/RunModal";
 import TaskSelector from "@/components/TaskSelector";
 import { WorkflowConfigSheet } from "@/components/WorkflowConfigSheet";
-import DeleteButton from "@/components/buttons/DeleteButton";
-import RunButton from "@/components/buttons/RunButton";
-import SaveButton from "@/components/buttons/SaveButton";
 import { EDGE_TYPES, NODE_TYPES } from "@/components/nodes/CustomNodes";
 import { IONodeData } from "@/components/nodes/IONode";
 import { type TaskNodeData } from "@/components/nodes/TaskNode";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import { buttonVariants } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
 import { useIsMobile } from "@/hooks/use-mobile";
 import {
   type GraphNode,
@@ -64,6 +49,8 @@ import {
   useUpdateWorkflow,
 } from "@/mutations/workflowMutations";
 import { WORKFLOW_PREFIX, workflowRoute } from "@/routes";
+
+import IconButton from "./buttons/IconButton";
 
 interface FlowProps {
   workflowId?: string;
@@ -126,7 +113,6 @@ function Flow({
 
   // UI state
   const [isRunModalOpen, setIsRunModalOpen] = useState(false);
-  const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
   const [isSettingsSheetOpen, setIsSettingsSheetOpen] = useState(false);
 
   // Open the run modal automatically if the URL contains the "run" parameter
@@ -250,74 +236,35 @@ function Flow({
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between p-4">
-        <Input
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="Workflow name"
-          className="text-xl font-bold h-10 w-full md:w-auto flex-grow mb-2 md:mb-0"
+      <EditorHeader
+        onRun={handleRunClick}
+        onDelete={handleDelete}
+        onSave={handleSave}
+        name={name}
+        onNameChange={setName}
+        disabled={workflowId === undefined}
+      >
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <IconButton variant="outline" Icon={Plus} text="Tasks" />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="border-0">
+            <TaskSelector autoFocus={true} onSelect={handleAddTask} />
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        <WorkflowConfigSheet
+          open={isSettingsSheetOpen}
+          onOpenChange={setIsSettingsSheetOpen}
+          inputs={inputs}
+          onAddInput={handleAddInput}
+          onRemoveInput={handleRemoveInput}
+          outputs={outputs}
+          onAddOutput={handleAddOutput}
+          onRemoveOutput={handleRemoveOutput}
+          onAddTask={handleAddTask}
         />
-        <div className="flex flex-wrap gap-2 w-full pl-0 md:pl-4 md:w-auto justify-end">
-          <RunButton
-            onClick={handleRunClick}
-            size="sm"
-            disabled={workflowId === undefined}
-          />
-
-          <DropdownMenu>
-            <DropdownMenuTrigger
-              className={buttonVariants({ size: "sm", variant: "outline" })}
-            >
-              <Plus className="h-4 w-4" />
-              <span className="hidden md:inline">Task</span>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="border-0">
-              <TaskSelector autoFocus={true} onSelect={handleAddTask} />
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          <SaveButton onClick={handleSave} />
-
-          <AlertDialog
-            open={isDeleteAlertOpen}
-            onOpenChange={setIsDeleteAlertOpen}
-          >
-            <AlertDialogTrigger asChild>
-              <DeleteButton
-                size="sm"
-                disabled={workflowId === undefined}
-                onClick={() => setIsDeleteAlertOpen(true)}
-              />
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  Are you sure you want to delete{name ? ` ${name}` : ""}?
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={handleDelete}>
-                  Delete
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-
-          <WorkflowConfigSheet
-            open={isSettingsSheetOpen}
-            onOpenChange={setIsSettingsSheetOpen}
-            inputs={inputs}
-            onAddInput={handleAddInput}
-            onRemoveInput={handleRemoveInput}
-            outputs={outputs}
-            onAddOutput={handleAddOutput}
-            onRemoveOutput={handleRemoveOutput}
-            onAddTask={handleAddTask}
-          />
-        </div>
-      </div>
+      </EditorHeader>
 
       <ReactFlow
         edges={edges}
@@ -328,6 +275,7 @@ function Flow({
           type: "edge",
           animated: true,
         }}
+        style={{ backgroundColor: "var(--background)" }}
         onInit={(reactFlow) => {
           // Fit to view to existing nodes
           reactFlow.fitView({ padding: 0.1 });

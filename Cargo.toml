@@ -17,7 +17,7 @@ members = [
     "crates/tool-spec",
     "crates/workflows",
     "tools/create-release-tag",
-    "tools/generate-code",
+    "tools/generate-code", "crates/links",
 ]
 
 [workspace.package]
