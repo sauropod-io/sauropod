@@ -33,7 +33,7 @@ homepage = "https://sauropod.io"
 anyhow = "1.0.97"
 async-trait = "0.1.88"
 axum = { version = "0.8", features = ["json", "http1", "http2"] }
-clap = { version = "4.5.35", features = ["env"]}
+clap = { version = "4.5.36", features = ["env"]}
 config = {version = "0.15.11", default-features = false, features = ["toml"]}
 directories = "6.0.0"
 futures = "0.3.31"
