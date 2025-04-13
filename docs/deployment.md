@@ -27,12 +27,17 @@ services:
       - SAUROPOD_HOST=0.0.0.0
       - SAUROPOD_PORT=8080
       - SAUROPOD_BACKEND=http://ollama:11434
+      - SAUROPOD_DEFAULT_MODEL__MODEL=mistral-small3.1:24b
+      - SAUROPOD_DATABASE_PATH=/data/sauropod.sqlite
       # You can run MCP servers in your compose file as well
       # - SAUROPOD_MCP_SERVERS="http://container-1:port,http://container-2:port"
     depends_on:
       - ollama
+    volumes:
+      - sauropod-data:/data
 
 volumes:
+  sauropod-data:
   ollama-data:
 ```
 
