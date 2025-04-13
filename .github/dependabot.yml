@@ -36,6 +36,14 @@ updates:
         update-types:
           - "minor"
           - "patch"
+      lexical:
+        applies-to: version-updates
+        patterns:
+          - "@lexical/*"
+          - "lexical"
+        update-types:
+          - "minor"
+          - "patch"
       radix-ui:
         applies-to: version-updates
         patterns:

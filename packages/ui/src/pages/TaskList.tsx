@@ -5,6 +5,7 @@ import { Schemas } from "@sauropod-io/client";
 
 import api from "@/api";
 import ErrorCard from "@/components/ErrorCard";
+import PageHeader from "@/components/PageHeader";
 import DeleteButton from "@/components/buttons/DeleteButton";
 import RunButton from "@/components/buttons/RunButton";
 import { Button } from "@/components/ui/button";
@@ -15,6 +16,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useDeleteTask } from "@/mutations/taskMutations";
 import { taskRoute } from "@/routes";
@@ -99,6 +101,7 @@ export default function TaskList() {
     return (
       <main className="container mx-auto p-6">
         <div className="flex items-center justify-between mb-6">
+          <SidebarTrigger />
           <h1 className="text-2xl font-bold">Tasks</h1>
           <Button
             variant="outline"
@@ -119,8 +122,7 @@ export default function TaskList() {
   }
   return (
     <main className="container mx-auto p-6">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">Tasks</h1>
+      <PageHeader pageName="Tasks">
         <Button
           variant="outline"
           onClick={() => navigate(taskRoute("new"))}
@@ -129,7 +131,7 @@ export default function TaskList() {
           <Plus className="h-4 w-4 mr-1" />
           Create Task
         </Button>
-      </div>
+      </PageHeader>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {data.map((item) => (
           <TaskCard key={item.id} item={item} />

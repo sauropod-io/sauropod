@@ -2,9 +2,6 @@ import { useState } from "react";
 
 import RunButton from "@/components/buttons/RunButton";
 import SaveButton from "@/components/buttons/SaveButton";
-import { Input } from "@/components/ui/input";
-
-import DeleteButton from "./buttons/DeleteButton";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -15,7 +12,11 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "./ui/alert-dialog";
+} from "@/components/ui/alert-dialog";
+import { Input } from "@/components/ui/input";
+import { SidebarTrigger } from "@/components/ui/sidebar";
+
+import DeleteButton from "./buttons/DeleteButton";
 
 interface EditorHeaderProps {
   name: string;
@@ -44,11 +45,12 @@ export function EditorHeader({
       className="flex flex-row items-center justify-between space-y-0 px-4 py-2 shadow-sm"
       style={{ boxShadow: "rgba(0, 0, 0, 0.75) 0px 3px 6px -7px" }}
     >
+      <SidebarTrigger className="mr-2" />
       <Input
         value={name}
         onChange={(e) => onNameChange(e.target.value)}
         placeholder="Name"
-        className="bg-background text-xl w-1/2 mr-2"
+        className="bg-background text-xl mr-2"
       />
       <div className="flex space-x-2">
         <RunButton onClick={onRun} disabled={disabled} />

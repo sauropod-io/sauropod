@@ -15,7 +15,8 @@
   },
   "dependencies": {
     "@fontsource/tomorrow": "^5.2.5",
-    "@monaco-editor/react": "^4.7.0",
+    "@lexical/markdown": "^0.30.0",
+    "@lexical/react": "^0.30.0",
     "@radix-ui/react-alert-dialog": "^1.1.7",
     "@radix-ui/react-checkbox": "^1.1.5",
     "@radix-ui/react-dialog": "^1.1.7",
@@ -39,8 +40,8 @@
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
     "date-fns": "^4.1.0",
+    "lexical": "^0.30.0",
     "lucide-react": "^0.487.0",
-    "monaco-editor": "^0.52.2",
     "openapi-react-query": "^0.3.1",
     "radix-ui": "^1.2.0",
     "react": "^19.1.0",
@@ -54,6 +55,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.23.0",
+    "@lexical/eslint-plugin": "^0.30.0",
     "@types/react": "^19.1.1",
     "@types/react-dom": "^19.1.2",
     "@types/react-syntax-highlighter": "^15.5.13",

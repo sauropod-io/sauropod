@@ -3,6 +3,7 @@ import { format } from "date-fns";
 import type { Schemas } from "@sauropod-io/client";
 
 import api from "@/api";
+import PageHeader from "@/components/PageHeader";
 import { ErrorBadge, Level, LevelBadge } from "@/components/badge";
 
 function LogElement({
@@ -66,7 +67,8 @@ function LogMessageRows() {
 
 export default function Logs() {
   return (
-    <main className="container mx-auto border rounded-b-lg overflow-hidden overflow-y-auto">
+    <main className="container mx-auto p-6">
+      <PageHeader pageName="Logs" />
       <div className="bg-muted p-4 font-mono text-sm">
         <LogMessageRows />
       </div>

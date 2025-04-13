@@ -2,11 +2,7 @@ import { Suspense, lazy } from "react";
 import { Navigate, Route, Routes } from "react-router";
 
 import AppSidebar from "@/components/AppSidebar";
-import {
-  SidebarInset,
-  SidebarProvider,
-  SidebarTrigger,
-} from "@/components/ui/sidebar";
+import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { INDEX, LOGS, taskRoute } from "@/routes";
 
 const Logs = lazy(() => import("@/pages/Logs"));
@@ -65,9 +61,6 @@ function App() {
       <SidebarProvider defaultOpen={true}>
         <AppSidebar />
         <SidebarInset className="bg-slate-50 flex-1 overflow-auto">
-          <div className="p-2 md:hidden">
-            <SidebarTrigger className="mb-2" />
-          </div>
           <PageContent />
         </SidebarInset>
       </SidebarProvider>

@@ -189,6 +189,9 @@ export default function TaskEditor({ taskId }: { taskId?: string }) {
     name: "",
     tools: [],
   });
+  const [promptInitialValue, setPromptInitialValue] = useState<string | null>(
+    taskId === undefined ? "" : null,
+  );
   const [promptText, setPromptText] = useState<string>("");
   const [outputSchema, setOutputSchema] = useState<JsonSchemaObject | null>(
     null,
@@ -236,6 +239,7 @@ export default function TaskEditor({ taskId }: { taskId?: string }) {
 
       if (taskData.action?.invokeLLM?.template) {
         setPromptText(taskData.action.invokeLLM.template);
+        setPromptInitialValue(taskData.action.invokeLLM.template);
       }
       if (taskData.action?.invokeLLM?.outputSchema) {
         setOutputSchema(
@@ -274,7 +278,7 @@ export default function TaskEditor({ taskId }: { taskId?: string }) {
       name: formState.name!,
       action: {
         invokeLLM: {
-          template: promptText,
+          template: promptText!,
           outputSchema:
             outputAll || Object.keys(outputSchema?.properties ?? {}).length == 0
               ? null
@@ -362,10 +366,12 @@ export default function TaskEditor({ taskId }: { taskId?: string }) {
 
       <div className="p-4 bg-white flex flex-col flex-grow">
         <div className="flex-grow max-h-[50%]">
-          <PromptEditor
-            onChange={(prompt) => setPromptText(prompt!)}
-            value={promptText}
-          />
+          {promptInitialValue !== null && (
+            <PromptEditor
+              onChange={(prompt) => setPromptText(prompt!)}
+              initialValue={promptInitialValue!}
+            />
+          )}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
