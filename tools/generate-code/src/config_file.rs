@@ -92,7 +92,10 @@ pub fn generate_code_for_config() -> anyhow::Result<()> {
                 "matches.get_one::<i64>(\"{cli_key}\").cloned().map(|x| config::Value::new(None, x))"
             )?;
         } else if interface.is_boolean() {
-            writeln!(&mut add_config_flags, ".action(clap::ArgAction::SetTrue)")?;
+            writeln!(
+                &mut add_config_flags,
+                ".value_parser(clap::value_parser!(bool))"
+            )?;
             write!(
                 &mut clap_to_config_source,
                 "matches.get_one::<bool>(\"{cli_key}\").cloned().map(|x| config::Value::new(None, x))"

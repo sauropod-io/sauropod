@@ -296,4 +296,9 @@ impl<'a> JsonSchemaInterface<'a> {
             anyhow::bail!("Schema is not a oneOf");
         }
     }
+
+    /// Get the default value from the schema.
+    pub fn get_default(&self) -> Option<&serde_json::Value> {
+        self.schema.get("default")
+    }
 }

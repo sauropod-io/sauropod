@@ -56,6 +56,11 @@ fn default_port() -> u16 {
     8080
 }
 
+/// The default verbose value.
+fn default_verbose() -> bool {
+    true
+}
+
 /// Sauropod configuration.
 #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
 #[cfg_attr(feature = "json_schema", derive(schemars::JsonSchema))]
@@ -64,7 +69,7 @@ pub struct Config {
     /// Whether to log verbosely.
     ///
     /// You can also control the log level using the`SAUROPOD_LOG` environment variable, e.g. `SAUROPOD_LOG=debug`.
-    #[serde(default)]
+    #[serde(default = "default_verbose")]
     pub verbose: bool,
     /// The path to the SQLite database.
     #[serde(default)]
@@ -160,7 +165,7 @@ impl Config {
 impl Default for Config {
     fn default() -> Self {
         Self {
-            verbose: false,
+            verbose: default_verbose(),
             database_path: None,
             host: None,
             port: default_port(),

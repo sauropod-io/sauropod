@@ -25,7 +25,7 @@ pub fn add_config_flags(parser: clap::Command) -> clap::Command {
             .long("verbose")
             .env("SAUROPOD_VERBOSE")
             .help(r#"Whether to log verbosely"#)
-            .action(clap::ArgAction::SetTrue),
+            .value_parser(clap::value_parser!(bool)),
     ])
 }
 

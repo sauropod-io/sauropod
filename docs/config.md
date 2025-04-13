@@ -102,7 +102,7 @@ The port to listen on.
 
 - **Environment variable**: `SAUROPOD_VERBOSE`
 - **Type**: `boolean`
-- **Default**: `false`
+- **Default**: `true`
 
 Whether to log verbosely.
 
