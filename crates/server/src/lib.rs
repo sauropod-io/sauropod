@@ -21,11 +21,9 @@ pub async fn run_server(
     config: &sauropod_config::Config,
     server: std::sync::Arc<server::Server>,
 ) -> Result<(), Error> {
-    let listener = tokio::net::TcpListener::bind((
-        config.host.as_deref().unwrap_or("::"),
-        config.port.unwrap_or(3140),
-    ))
-    .await?;
+    let listener =
+        tokio::net::TcpListener::bind((config.host.as_deref().unwrap_or("::"), config.port))
+            .await?;
     let cors = CorsLayer::new().allow_origin(Any);
     let api = sauropod_http::register_routes(server).layer(cors);
     let app = sauropod_http::make_ui_routes().nest(sauropod_http::API_PREFIX, api);

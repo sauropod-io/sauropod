@@ -83,7 +83,7 @@ pub fn generate_openapi_schema(
                     "port".to_string(),
                     ServerVariable {
                         enum_values: None,
-                        default: "3140".to_string(),
+                        default: "8080".to_string(),
                         description: Some("The port number".to_string()),
                     },
                 );

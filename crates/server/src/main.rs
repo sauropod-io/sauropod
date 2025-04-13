@@ -73,7 +73,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             std::process::exit(1);
         }
     };
-    dbg!(&config);
 
     if let Err(err) = sauropod_server::run_server(&config, server).await {
         tracing::error!("error: {:?}", err);

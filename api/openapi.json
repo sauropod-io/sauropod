@@ -18,7 +18,7 @@
           "description": "The host"
         },
         "port": {
-          "default": "3140",
+          "default": "8080",
           "description": "The port number"
         },
         "protocol": {

@@ -92,7 +92,8 @@ Communicate with the MCP server over HTTP.
 ## `port`
 
 - **Environment variable**: `SAUROPOD_PORT`
-- **Default**: `null`
+- **Type**: `integer`
+- **Default**: `8080`
 - **Example Value**: `80`
 
 The port to listen on.

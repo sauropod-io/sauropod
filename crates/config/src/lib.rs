@@ -51,6 +51,11 @@ fn default_backend() -> String {
     "http://localhost:11434".to_string()
 }
 
+/// The default backend port.
+fn default_port() -> u16 {
+    8080
+}
+
 /// Sauropod configuration.
 #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
 #[cfg_attr(feature = "json_schema", derive(schemars::JsonSchema))]
@@ -69,9 +74,9 @@ pub struct Config {
     #[serde(default)]
     pub host: Option<String>,
     /// The port to listen on.
-    #[serde(default)]
+    #[serde(default = "default_port")]
     #[cfg_attr(feature = "json_schema", schemars(example = 80))]
-    pub port: Option<u16>,
+    pub port: u16,
     /// The backend to use.
     ///
     /// This is expected to be a URL that points to an OpenAPI-compatible backend like [Ollama](https://ollama.com/) or [llama-cpp](https://github.com/ggml-org/llama.cpp).
@@ -158,7 +163,7 @@ impl Default for Config {
             verbose: false,
             database_path: None,
             host: None,
-            port: None,
+            port: default_port(),
             backend: default_backend(),
             backend_api_key: None,
             default_model: ModelConfig::default(),
