@@ -101,7 +101,8 @@ impl Engine {
         match self.backend {
             crate::Backend::Ollama => {
                 tracing::info!("Pulling model {}", model);
-                self.client
+                let pull_response = self
+                    .client
                     .post(format!("{}/api/pull", self.backend_url))
                     .header("Accept", "application/json")
                     .json(&serde_json::json!({
@@ -111,6 +112,14 @@ impl Engine {
                     .send()
                     .instrument(tracing::info_span!("pull_model", model = model))
                     .await?;
+                if pull_response.status() != reqwest::StatusCode::OK {
+                    anyhow::bail!(
+                        "Failed to pull model {} - {}: {}",
+                        model,
+                        pull_response.status(),
+                        pull_response.text().await.unwrap_or_default()
+                    );
+                }
                 Ok(())
             }
             _ => {
