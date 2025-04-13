@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import RunButton from "@/components/buttons/RunButton";
 import SaveButton from "@/components/buttons/SaveButton";
@@ -39,6 +39,24 @@ export function EditorHeader({
   disabled,
 }: EditorHeaderProps) {
   const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (saveSuccess) {
+      timer = setTimeout(() => {
+        setSaveSuccess(false);
+      }, 750);
+    }
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
+  }, [saveSuccess]);
+
+  const handleSave = () => {
+    onSave();
+    setSaveSuccess(true);
+  };
 
   return (
     <div
@@ -54,7 +72,7 @@ export function EditorHeader({
       />
       <div className="flex space-x-2">
         <RunButton onClick={onRun} disabled={disabled} />
-        <SaveButton onClick={onSave} />
+        <SaveButton onClick={handleSave} showSuccess={saveSuccess} />
 
         <AlertDialog
           open={isDeleteAlertOpen}
