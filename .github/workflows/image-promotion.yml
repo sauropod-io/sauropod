@@ -15,7 +15,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       id-token: write
-      contents: write
+      contents: read
+      packages: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -31,3 +32,4 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           RUSTC_WRAPPER: "sccache"
+          SCCACHE_GHA_ENABLED: "true"
