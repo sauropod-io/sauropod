@@ -48,7 +48,7 @@ jobs:
             ];
             const containerMatrix = matrix.slice();
 
-            if (github.repository == 'sauropod-io/sauropod') {
+            if (context.repo.repo == 'sauropod' && context.repo.owner == 'sauropod-io') {
               const aarchLinux = matrixEntry('aarch64', 'linux', 'ubuntu-24.04-arm');
               containerMatrix.push(aarchLinux)
               matrix.push(aarchLinux, matrixEntry('aarch64', 'macos', 'macos-latest'));
@@ -66,7 +66,7 @@ jobs:
       contents: read
       attestations: write
     runs-on: ${{ matrix.image }}
-    timeout-minutes: 15
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - name: Set up
@@ -126,6 +126,7 @@ jobs:
         with:
           push: false
           tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          platforms: ${{ matrix.os }}/${{ matrix.goarch }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
           labels: ${{ steps.docker-metadata.outputs.labels }}
@@ -144,7 +145,7 @@ jobs:
       - name: Upload digest
         uses: actions/upload-artifact@v4
         with:
-          name: digests-${{ env.PLATFORM_PAIR }}
+          name: digests-${{ matrix.os }}-${{ matrix.goarch }}
           path: ${{ runner.temp }}/digests/*
           if-no-files-found: error
           retention-days: 1
@@ -156,6 +157,7 @@ jobs:
       contents: write
       id-token: write
       packages: write
+      attestations: write
     env:
       REGISTRY: ghcr.io
       IMAGE_NAME: ${{ github.repository }}
@@ -186,9 +188,8 @@ jobs:
           docker buildx imagetools create $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
             $(printf '${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@sha256:%s ' *)
       - name: Get final merged image digest
-        if: ${{ env.LATEST }}
         run: |
-          echo "IMAGE_DIGEST=$(docker buildx imagetools inspect ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.meta.docker-metadata.version  }} --format '{{ json .Manifest.Digest }}' | jq -r)" >> $GITHUB_ENV
+          echo "IMAGE_DIGEST=$(docker buildx imagetools inspect ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.docker-metadata.outputs.version  }} --format '{{ json .Manifest.Digest }}' | jq -r)" >> $GITHUB_ENV
       - name: Attestation for Docker image
         uses: actions/attest-build-provenance@v2
         id: attest
