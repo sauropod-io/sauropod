@@ -4,7 +4,6 @@ use schemars::JsonSchema;
 
 mod config_file;
 pub mod database;
-pub mod json_schema;
 pub mod openapi;
 pub mod openapi_schema;
 pub mod paths;

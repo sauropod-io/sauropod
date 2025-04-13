@@ -7,13 +7,11 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
-import { INDEX, LOGS, taskRoute, workflowRoute } from "@/routes";
+import { INDEX, LOGS, taskRoute } from "@/routes";
 
 const Logs = lazy(() => import("@/pages/Logs"));
 const Task = lazy(() => import("@/pages/Task"));
 const TaskList = lazy(() => import("@/pages/TaskList"));
-const Workflow = lazy(() => import("@/pages/Workflow"));
-const WorkflowList = lazy(() => import("@/pages/WorkflowList"));
 
 /** Suspense wrapper. */
 function SupportLoading({ children }: { children: React.ReactNode }) {
@@ -24,7 +22,7 @@ function PageContent() {
   return (
     <Routes>
       <Route path="*" element={<div>Not found</div>} />
-      <Route path={INDEX} element={<Navigate to={workflowRoute("")} />} />
+      <Route path={INDEX} element={<Navigate to={taskRoute("")} />} />
       <Route
         path={taskRoute("new")}
         element={
@@ -46,30 +44,6 @@ function PageContent() {
         element={
           <SupportLoading>
             <TaskList />
-          </SupportLoading>
-        }
-      />
-      <Route
-        path={workflowRoute("new")}
-        element={
-          <SupportLoading>
-            <Workflow />
-          </SupportLoading>
-        }
-      />
-      <Route
-        path={workflowRoute(":id")}
-        element={
-          <SupportLoading>
-            <Workflow />
-          </SupportLoading>
-        }
-      />
-      <Route
-        path={workflowRoute("")}
-        element={
-          <SupportLoading>
-            <WorkflowList />
           </SupportLoading>
         }
       />

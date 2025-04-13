@@ -6,7 +6,6 @@ import api from "@/api";
 import SauropodIcon from "@/assets/icon.svg?url";
 import Sauropod from "@/assets/sauropod.svg?url";
 import SidebarTaskGroup from "@/components/sidebar/SidebarTaskGroup";
-import SidebarWorkflowGroup from "@/components/sidebar/SidebarWorkflowGroup";
 import {
   Sidebar as ShadcnSidebar,
   SidebarContent,
@@ -39,7 +38,6 @@ export default function AppSidebar() {
       </SidebarHeader>
       <SidebarContent className="group-data-[collapsible=icon]:!gap-0 group-data-[collapsible=icon]:mt-1">
         <SidebarTaskGroup />
-        <SidebarWorkflowGroup />
         <SidebarGroup className="mt-auto">
           <SidebarGroupLabel>System</SidebarGroupLabel>
           <SidebarGroupContent>

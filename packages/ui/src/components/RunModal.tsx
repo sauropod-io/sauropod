@@ -97,10 +97,6 @@ interface RunModalBaseProps {
   onOpenChange: (open: boolean) => void;
 }
 
-interface RunWorkflowModalProps extends RunModalBaseProps {
-  workflowId: string;
-}
-
 interface RunTaskModalProps extends RunModalBaseProps {
   taskId: string;
 }
@@ -262,40 +258,6 @@ export function RunModal({
         )}
       </DialogContent>
     </Dialog>
-  );
-}
-
-/** Modal used to fill out parameters when invoking workflows. */
-export function WorkflowRunModal({
-  workflowId,
-  name,
-  open,
-  onOpenChange,
-}: RunWorkflowModalProps) {
-  const {
-    data: schema,
-    isLoading: schemaLoading,
-    error: schemaError,
-  } = api.useQuery("get", `/api/workflow/{id}/schema`, {
-    params: { path: { id: `${workflowId}` } },
-  });
-  const runUrl = `${window.location.origin}/api/workflow/${workflowId}/run`;
-  const callRun = (parameters: Record<string, any>) =>
-    apiClient.POST("/api/workflow/{id}/run", {
-      params: { path: { id: workflowId } },
-      body: parameters,
-    });
-  return (
-    <RunModal
-      name={name}
-      open={open}
-      onOpenChange={onOpenChange}
-      runUrl={runUrl}
-      schema={schema}
-      schemaLoading={schemaLoading}
-      schemaError={schemaError}
-      callRun={callRun}
-    />
   );
 }
 

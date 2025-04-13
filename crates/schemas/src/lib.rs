@@ -1,7 +1,6 @@
 pub mod observability;
 
 pub mod task;
-pub mod workflow;
 
 /// Response to a health check request.
 #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
@@ -68,8 +67,8 @@ pub struct Error {
 #[cfg_attr(feature = "json_schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct InputAndOutputSchema {
-    /// The input schema for a task or workflow.
+    /// The input schema for a task.
     pub input_schema: serde_json::Map<String, serde_json::Value>,
-    /// The output schema for a task or workflow.
+    /// The output schema for a task.
     pub output_schema: serde_json::Map<String, serde_json::Value>,
 }

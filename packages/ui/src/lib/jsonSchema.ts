@@ -21,12 +21,14 @@ export type JsonSchemaBase = {
 };
 
 export type JsonSchemaObject = JsonSchemaBase & {
+  type: "object";
   properties: Record<string, JsonSchemaBase>;
   required?: string[];
   additionalProperties?: boolean;
 };
 
 export type JsonSchemaArray = JsonSchemaBase & {
+  type: "array";
   items: JsonSchemaBase;
 };
 

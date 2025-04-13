@@ -80,7 +80,7 @@ pub async fn create_engine(config: &sauropod_config::Config) -> anyhow::Result<E
             );
         }
         Backend::Unknown => {
-            tracing::info!("Backend is Ollama");
+            tracing::info!("Backend is unknown");
         }
     }
     Ok(std::sync::Arc::new(engine::Engine::new(

@@ -20,7 +20,6 @@ sauropod-schemas = { path = "../schemas", features = ["json_schema"] }
 sauropod-task = { path = "../task" }
 sauropod-task-context = { path = "../task-context" }
 sauropod-tool-spec = { path = "../tool-spec" }
-sauropod-workflows = { path = "../workflows" }
 
 anyhow.workspace = true
 async-trait.workspace = true

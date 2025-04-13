@@ -58,3 +58,16 @@ pub struct Task {
     /// The action that the task performs.
     pub action: TaskAction,
 }
+
+/// Minimal information describing a stored object.
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[cfg_attr(feature = "json_schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ObjectInfo {
+    /// The ID of the object.
+    ///
+    /// This ID can be used to retrieve the contents of the object.
+    pub id: i64,
+    /// The name of the object.
+    pub name: String,
+}

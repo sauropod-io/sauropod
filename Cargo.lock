@@ -1958,7 +1958,6 @@ dependencies = [
  "sauropod-task",
  "sauropod-task-context",
  "sauropod-tool-spec",
- "sauropod-workflows",
  "serde",
  "serde_json",
  "thiserror",
@@ -2010,25 +2009,6 @@ dependencies = [
  "schemars",
  "serde",
  "serde_json",
- "tracing",
-]
-
-[[package]]
-name = "sauropod-workflows"
-version = "0.0.1"
-dependencies = [
- "anyhow",
- "async-trait",
- "jsonschema",
- "sauropod-config",
- "sauropod-llm-inference",
- "sauropod-prompt-templates",
- "sauropod-schemas",
- "sauropod-task",
- "sauropod-task-context",
- "serde",
- "serde_json",
- "tokio",
  "tracing",
 ]
 

@@ -1,18 +1,15 @@
 //! HTTP server code.
 
-use std::collections::HashMap;
 use std::env;
 use std::sync::Arc;
 
 use sauropod_database::{DatabaseId, DatabaseTypeWithID, DatabaseTypeWithName};
 use sauropod_schemas::InputAndOutputSchema;
-use sauropod_schemas::task::{Task, TaskId};
-use sauropod_schemas::workflow::{ObjectInfo, Workflow};
+use sauropod_schemas::task::{ObjectInfo, Task};
 use sauropod_task_context::TaskContext;
 use tracing::Instrument;
 
 use sauropod_http::HttpResponse;
-use sauropod_task::Task as _;
 
 use crate::observability::Observability;
 
@@ -102,7 +99,7 @@ where
     for<'de> T: DatabaseTypeWithID + serde::Deserialize<'de>,
 {
     match database.get_by_id::<T>(id)? {
-        Some(workflow) => Ok(workflow.into()),
+        Some(object) => Ok(object.into()),
         None => Ok(HttpResponse::NotFound(None)),
     }
 }
@@ -184,106 +181,6 @@ impl sauropod_http::ServerInterface for Server {
         Ok(HttpResponse::Ok(
             self.observability.get_observability_logs(),
         ))
-    }
-
-    async fn get_workflow_id(&self, id: DatabaseId) -> anyhow::Result<HttpResponse<Workflow>> {
-        db_get_object::<Workflow>(&self.db, id)
-    }
-
-    async fn delete_workflow_id(&self, id: DatabaseId) -> anyhow::Result<HttpResponse<()>> {
-        db_delete_object::<Workflow>(&self.db, id)
-    }
-
-    async fn post_workflow_id(
-        &self,
-        id: DatabaseId,
-        input: Workflow,
-    ) -> anyhow::Result<HttpResponse<()>> {
-        if let Err(e) = sauropod_workflows::validate_workflow(&input) {
-            tracing::error!("Invalid workflow definition: {:#?}", e);
-            return Ok(HttpResponse::BadRequest(e.to_string()));
-        }
-
-        db_update_object::<Workflow>(&self.db, id, input)
-    }
-
-    async fn post_workflow(&self, input: Workflow) -> anyhow::Result<HttpResponse<DatabaseId>> {
-        if let Err(e) = sauropod_workflows::validate_workflow(&input) {
-            tracing::error!("Invalid workflow definition: {:#?}", e);
-            return Ok(HttpResponse::BadRequest(e.to_string()));
-        }
-
-        db_create_object::<Workflow>(&self.db, input)
-    }
-
-    async fn get_workflow(&self) -> anyhow::Result<HttpResponse<Vec<ObjectInfo>>> {
-        db_list_objects::<Workflow>(&self.db, None)
-    }
-
-    async fn post_workflow_id_run(
-        &self,
-        id: DatabaseId,
-        input: serde_json::Map<String, serde_json::Value>,
-    ) -> anyhow::Result<HttpResponse<serde_json::Map<String, serde_json::Value>>> {
-        let workflow = match self.db.get_by_id::<Workflow>(id)? {
-            Some(workflow) => workflow,
-            None => {
-                tracing::error!("Workflow not found: {id}");
-                return Ok(HttpResponse::NotFound(None));
-            }
-        };
-
-        let mut task_schema_map: HashMap<TaskId, sauropod_schemas::task::Task> =
-            HashMap::with_capacity(8);
-        for task in workflow.actions.values() {
-            match task {
-                sauropod_schemas::workflow::WorkflowAction::RunTask(task_id) => {
-                    // Tasks may appear in the action list multiple times
-                    if task_schema_map.contains_key(task_id) {
-                        continue;
-                    }
-
-                    // Get the task from the database and populate the map
-                    if let Some(task) = self.db.get_by_id(task_id.task_id)? {
-                        task_schema_map.insert(*task_id, task);
-                    }
-                }
-                x => {
-                    tracing::error!("Unsupported action: {:#?}", x);
-                    anyhow::bail!("Unsupported action: {:#?}", x);
-                }
-            }
-        }
-
-        let workflow = sauropod_workflows::Workflow::from_schema(workflow, &task_schema_map)
-            .instrument(tracing::info_span!("loading workflow"))
-            .await?;
-
-        let context = self.make_task_context().await?;
-        let result = workflow
-            .execute(serde_json::to_value(input)?, context)
-            .await?;
-        let Some(result_map) = result.as_object() else {
-            anyhow::bail!("Workflow result wasn't an object, was {:#?}", result);
-        };
-        Ok(HttpResponse::Ok(result_map.clone()))
-    }
-
-    async fn get_workflow_id_schema(
-        &self,
-        id: i64,
-    ) -> anyhow::Result<HttpResponse<InputAndOutputSchema>> {
-        let workflow = match self.db.get_by_id::<Workflow>(id)? {
-            Some(workflow) => workflow,
-            None => {
-                return Ok(HttpResponse::NotFound(None));
-            }
-        };
-
-        Ok(HttpResponse::Ok(InputAndOutputSchema {
-            input_schema: sauropod_workflows::input_schema_from_workflow_schema(&workflow),
-            output_schema: sauropod_workflows::output_schema_from_workflow_schema(&workflow),
-        }))
     }
 
     async fn get_task_id(&self, id: DatabaseId) -> anyhow::Result<HttpResponse<Task>> {

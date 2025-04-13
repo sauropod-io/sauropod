@@ -7,7 +7,7 @@ export function useDeleteTask() {
   const queryClient = useQueryClient();
   return api.useMutation("delete", "/api/task/{id}", {
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["get", "/api/task"] });
+      queryClient.refetchQueries({ queryKey: ["get", "/api/task"] });
     },
   });
 }
@@ -17,7 +17,7 @@ export function useCreateTask() {
   const queryClient = useQueryClient();
   return api.useMutation("post", "/api/task", {
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["get", "/api/task"] });
+      queryClient.refetchQueries({ queryKey: ["get", "/api/task"] });
     },
   });
 }
@@ -27,8 +27,8 @@ export function useUpdateTask() {
   const queryClient = useQueryClient();
   return api.useMutation("post", "/api/task/{id}", {
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["get", "/api/task/{id}"] });
-      queryClient.invalidateQueries({
+      queryClient.refetchQueries({ queryKey: ["get", "/api/task/{id}"] });
+      queryClient.refetchQueries({
         queryKey: ["get", "/api/task/{id}/schema"],
       });
     },
