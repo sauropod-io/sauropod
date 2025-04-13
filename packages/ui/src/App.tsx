@@ -58,7 +58,7 @@ function PageContent() {
 function App() {
   return (
     <div className="flex h-screen w-full">
-      <SidebarProvider defaultOpen={true}>
+      <SidebarProvider defaultOpen={false}>
         <AppSidebar />
         <SidebarInset className="bg-slate-50 flex-1 overflow-auto">
           <PageContent />

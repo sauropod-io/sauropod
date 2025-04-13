@@ -1,5 +1,5 @@
 import { GitHubLogoIcon } from "@radix-ui/react-icons";
-import { Logs } from "lucide-react";
+import { Globe, Logs } from "lucide-react";
 import { Link, useLocation } from "react-router";
 
 import api from "@/api";
@@ -46,7 +46,9 @@ export default function AppSidebar() {
                 <SidebarMenuButton isActive={location === LOGS} asChild>
                   <Link to={LOGS}>
                     <Logs className="h-6 w-6" />
-                    <span>Logs</span>
+                    <span className="group-data-[collapsible=icon]:hidden">
+                      Logs
+                    </span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -58,14 +60,19 @@ export default function AppSidebar() {
                     rel="noopener noreferrer"
                   >
                     <GitHubLogoIcon className="h-6 w-6" />
-                    <span>Source Code</span>
+                    <span className="group-data-[collapsible=icon]:hidden">
+                      Source Code
+                    </span>
                   </a>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton isActive={false} asChild>
                   <a href="https://sauropod.io/" target="_blank" rel="noopener">
-                    <span>Sauropod v{version || ""}</span>
+                    <Globe className="h-6 w-6" />
+                    <span className="group-data-[collapsible=icon]:hidden">
+                      Sauropod v{version || ""}
+                    </span>
                   </a>
                 </SidebarMenuButton>
               </SidebarMenuItem>
