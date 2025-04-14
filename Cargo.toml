@@ -31,7 +31,7 @@ repository = "https://github.com/sauropod-io/sauropod"
 homepage = "https://sauropod.io"
 
 [workspace.dependencies]
-anyhow = "1.0.97"
+anyhow = "1.0.98"
 async-trait = "0.1.88"
 axum = { version = "0.8", features = ["json", "http1", "http2"] }
 clap = { version = "4.5.36", features = ["env"]}
