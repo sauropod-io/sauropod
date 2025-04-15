@@ -5,3 +5,7 @@
 .rtl {
   text-align: right;
 }
+
+.prompt-editor .variable {
+  background-color: var(--color-1);
+}

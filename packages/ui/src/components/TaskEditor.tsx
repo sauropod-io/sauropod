@@ -30,6 +30,7 @@ import {
 } from "@/components/ui/tooltip";
 import {
   FieldType,
+  JsonSchemaBase,
   JsonSchemaObject,
   jsonSchemaObjectProperties,
 } from "@/lib/jsonSchema";
@@ -38,15 +39,13 @@ import {
   useDeleteTask,
   useUpdateTask,
 } from "@/mutations/taskMutations";
+import InputVariablesProvider from "@/providers/InputsProvider";
 import { TASK_PREFIX, taskRoute } from "@/routes";
 
 import IconButton from "./buttons/IconButton";
 
 // Output type options
-const OUTPUT_TYPES: FieldType[] = ["string", "number", "boolean"];
-
-// Output field interface
-type OutputField = JsonSchemaObject["properties"][string];
+const VARIABLE_TYPES: FieldType[] = ["string", "number", "boolean"];
 
 interface OutputConfigurationProps {
   outputSchema: JsonSchemaObject | null;
@@ -68,7 +67,47 @@ function fieldTypeToFriendly(type: FieldType): string {
   }
 }
 
-export function OutputConfiguration({
+interface VariableProps {
+  name: string;
+  value: FieldType;
+  onChangeType: (type: FieldType) => void;
+  onRemove?: () => void;
+}
+
+function Variable({
+  name,
+  value,
+  onRemove,
+  onChangeType: changeType,
+}: VariableProps) {
+  return (
+    <div className="flex items-center space-x-2">
+      <Label className="w-[200px]">{name}</Label>
+      <Select
+        value={value}
+        onValueChange={(value) => changeType(value as FieldType)}
+      >
+        <SelectTrigger className="w-[100px]">
+          <SelectValue placeholder="Type" />
+        </SelectTrigger>
+        <SelectContent>
+          {VARIABLE_TYPES.map((type) => (
+            <SelectItem key={type} value={type}>
+              {fieldTypeToFriendly(type)}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      {onRemove && (
+        <Button variant="ghost" size="icon" onClick={() => onRemove()}>
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      )}
+    </div>
+  );
+}
+
+function OutputConfiguration({
   disabled,
   outputSchema,
   onChange,
@@ -100,7 +139,7 @@ export function OutputConfiguration({
       return;
     }
 
-    const newField: OutputField = {
+    const newField: JsonSchemaBase = {
       type: "string",
     };
     const newSchema = copyOutputSchema();
@@ -126,27 +165,13 @@ export function OutputConfiguration({
   const outputFields: JSX.Element[] = [];
   for (const [key, value] of schemaProperties) {
     outputFields.push(
-      <div key={key} className="flex items-center space-x-2">
-        <Label className="w-[200px]">{key}</Label>
-        <Select
-          value={value.type}
-          onValueChange={(value) => changeType(key, value as FieldType)}
-        >
-          <SelectTrigger className="w-[100px]">
-            <SelectValue placeholder="Type" />
-          </SelectTrigger>
-          <SelectContent>
-            {OUTPUT_TYPES.map((type) => (
-              <SelectItem key={type} value={type}>
-                {fieldTypeToFriendly(type)}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Button variant="ghost" size="icon" onClick={() => removeOutput(key)}>
-          <Trash2 className="h-4 w-4" />
-        </Button>
-      </div>,
+      <Variable
+        key={key}
+        name={key}
+        value={value.type}
+        onChangeType={(value) => changeType(key, value as FieldType)}
+        onRemove={() => removeOutput(key)}
+      />,
     );
   }
 
@@ -158,7 +183,7 @@ export function OutputConfiguration({
         <Input
           value={newInputName}
           onChange={(e) => setNewInputName(e.target.value)}
-          placeholder="New field name"
+          placeholder="New output name"
           className="flex-1 max-w-[200px]"
           disabled={disabled}
         />
@@ -367,14 +392,53 @@ export default function TaskEditor({ taskId }: { taskId?: string }) {
       <div className="p-4 bg-white flex flex-col flex-grow">
         <div className="flex-grow max-h-[50%]">
           {promptInitialValue !== null && (
-            <PromptEditor
-              onChange={(prompt) => setPromptText(prompt!)}
-              initialValue={promptInitialValue!}
-            />
+            <InputVariablesProvider value={inputSchema.properties}>
+              <PromptEditor
+                onChange={(prompt) => {
+                  setPromptText(prompt.text);
+                  setInputSchema(({ properties, ...rest }) => {
+                    const newProperties: { [name: string]: JsonSchemaBase } =
+                      {};
+                    for (const variable of prompt.variables) {
+                      newProperties[variable] = properties[variable] ?? {
+                        type: "string",
+                      };
+                    }
+                    return { properties: newProperties, ...rest };
+                  });
+                }}
+                initialValue={promptInitialValue!}
+              />
+            </InputVariablesProvider>
           )}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
+          {/* Input Configuration Section */}
+          <div>
+            <Label className="text-base">Input Configuration</Label>
+            <div className="mt-2 flex items-center space-x-2">
+              <Label>
+                Input variables are defined using {"${variableNameHere}"} in the
+                task definition above.
+              </Label>
+            </div>
+            {Object.entries(promptVariables).map(([variable, variableType]) => (
+              <Variable
+                key={variable}
+                name={variable}
+                value={variableType}
+                onChangeType={(value) => {
+                  console.log("Changing variable type", variable, value);
+                  setPromptVariables((prev) => ({
+                    ...prev,
+                    [variable]: value as FieldType,
+                  }));
+                }}
+              />
+            ))}
+          </div>
+
           {/* Output Configuration Section */}
           <div>
             <Label className="text-base">Output Configuration</Label>
