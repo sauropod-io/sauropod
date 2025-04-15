@@ -192,7 +192,7 @@ impl sauropod_http::ServerInterface for Server {
     }
 
     async fn post_task_id(&self, id: DatabaseId, input: Task) -> anyhow::Result<HttpResponse<()>> {
-        if let Err(e) = sauropod_task::validate_task(&input) {
+        if let Err(e) = sauropod_task::validate_task(input.clone()) {
             tracing::error!("Invalid task definition: {:#?}", e);
             return Ok(HttpResponse::BadRequest(e.to_string()));
         }
@@ -229,21 +229,31 @@ impl sauropod_http::ServerInterface for Server {
             return Ok(HttpResponse::NotFound(None));
         };
 
-        let input_schema = match sauropod_task::input_schema_from_task_schema(&task)? {
+        let internal_task = sauropod_task::task_from_schema(task)?;
+
+        let input_schema = match internal_task.input_schema() {
             serde_json::Value::Object(obj) => obj,
             x => {
                 tracing::error!("Generated schema wasn't an object: {:#?}", x);
                 anyhow::bail!("Couldn't generated schema");
             }
         };
+        let output_schema = match internal_task.output_schema() {
+            serde_json::Value::Object(obj) => obj,
+            x => {
+                tracing::error!("Generated schema wasn't an object: {:#?}", x);
+                anyhow::bail!("Couldn't generated schema");
+            }
+        };
+
         Ok(HttpResponse::Ok(InputAndOutputSchema {
-            input_schema,
-            output_schema: sauropod_task::output_schema_from_task_schema(&task)?,
+            input_schema: input_schema.clone(),
+            output_schema: output_schema.clone(),
         }))
     }
 
     async fn post_task(&self, input: Task) -> anyhow::Result<HttpResponse<DatabaseId>> {
-        if let Err(e) = sauropod_task::validate_task(&input) {
+        if let Err(e) = sauropod_task::validate_task(input.clone()) {
             tracing::error!("Invalid task definition: {:#?}", e);
             return Ok(HttpResponse::BadRequest(e.to_string()));
         }

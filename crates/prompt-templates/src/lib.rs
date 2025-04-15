@@ -1,197 +1,270 @@
-static REQUIRED: &str = "required";
-static PROPERTIES: &str = "properties";
+//! Parsing library for prompt templates.
 
-/// Parsed template data.
-#[derive(Debug, serde::Serialize)]
-pub struct ParsedTemplateData {
-    /// The JSON schema for the input variables.
-    #[serde(rename = "inputJsonSchema")]
-    pub input_json_schema: serde_json::Value,
-    /// The unknown variables in the template.
-    #[serde(rename = "unknownVariables")]
-    pub unknown_variables: Vec<String>,
+use nom::{
+    IResult, Parser as _,
+    branch::alt,
+    bytes::complete::{tag, take_until, take_while1},
+    sequence::delimited,
+};
+
+/// A section of a template.
+#[derive(Debug)]
+pub enum Section<'a> {
+    /// Text to include verbatim.
+    Text(&'a str),
+    /// A hole to fill in with a variable.
+    Variable(&'a str),
 }
 
-/// Load a minijinja template, extract the input variables, and return a JSON schema where the leaves of each input variable are strings.
-///
-/// # Example
-/// For the template string `Classify "{{ input.sentence }}" into the categories "{{ input.categories }}"`, the function will return the following JSON schema:
-/// ```json
-/// {
-///   "type": "object",
-///   "properties": {
-///     "sentence": {
-///       "type": "string"
-///     },
-///     "categories": {
-///       "type": "string"
-///     }
-///   },
-///   "required": ["sentence", "categories"]
-/// }
-/// ```
-pub fn template_to_inputs(
-    template: minijinja::Template<'_, '_>,
-) -> anyhow::Result<serde_json::Value> {
-    let variables = template.undeclared_variables(true);
-    let mut input_variables = variables.into_iter().collect::<Vec<_>>();
+/// A template.
+#[derive(Debug)]
+pub struct Template<'a> {
+    pub sections: Vec<Section<'a>>,
+}
 
-    // Sort the input variables such that the longest comes first
-    input_variables.sort_by_key(|b| std::cmp::Reverse(b.len()));
-
-    let mut input_schema = serde_json::json!({
-        "type": "object",
-        PROPERTIES: {},
-        REQUIRED: Vec::<String>::with_capacity(1),
-    });
-    for variable in &input_variables {
-        let path: Vec<&str> = variable.split('.').collect();
-        let last_path_part = path.last().unwrap();
-
-        let mut current = &mut input_schema;
-        for part in path.iter().take(path.len() - 1) {
-            let requirment_array = current
-                .as_object_mut()
-                .unwrap()
-                .entry(REQUIRED)
-                .or_insert(serde_json::json!({}))
-                .as_array_mut()
-                .unwrap();
-
-            if !requirment_array.contains(&serde_json::json!(part)) {
-                requirment_array.push(serde_json::json!(part));
-            }
-
-            current = current
-                .as_object_mut()
-                .unwrap()
-                .entry(PROPERTIES)
-                .or_insert(serde_json::json!({}))
-                .as_object_mut()
-                .unwrap()
-                .entry(part.to_string())
-                .or_insert(serde_json::json!({
-                    "type": "object",
-                    PROPERTIES: {},
-                    REQUIRED: [],
-                }));
+impl<'a> Template<'a> {
+    /// Create a template from a string.
+    pub fn new(template: &'a str) -> Self {
+        match parse_template(template) {
+            Ok((_, sections)) => Self { sections },
+            Err(_) => Self {
+                sections: vec![Section::Text(template)],
+            },
         }
-
-        // Now add the leaf to the properties and the required list
-        let as_object = current.as_object_mut().unwrap();
-        as_object
-            .entry(PROPERTIES)
-            .or_insert(serde_json::json!({}))
-            .as_object_mut()
-            .unwrap()
-            .entry(last_path_part.to_string())
-            .or_insert(serde_json::json!({
-                "type": "string",
-            }));
-        as_object
-            .entry(REQUIRED)
-            .or_insert(serde_json::json!([]))
-            .as_array_mut()
-            .unwrap()
-            .push(serde_json::json!(last_path_part));
     }
 
-    Ok(input_schema)
+    /// Expand the template with the given variables.
+    pub fn expand(
+        &self,
+        values: &serde_json::Map<String, serde_json::Value>,
+    ) -> anyhow::Result<String> {
+        let mut result = String::with_capacity(
+            self.sections
+                .iter()
+                .map(|x| match x {
+                    Section::Text(text) => text.len(),
+                    Section::Variable(_) => 16,
+                })
+                .sum(),
+        );
+
+        for section in &self.sections {
+            match section {
+                Section::Text(text) => result.push_str(text),
+                Section::Variable(var_name) => {
+                    if let Some(value) = values.get(*var_name) {
+                        match value {
+                            serde_json::Value::String(string_value) => {
+                                result.push_str(string_value)
+                            }
+                            serde_json::Value::Number(number_value) => {
+                                if let Some(integer_value) = number_value.as_i64() {
+                                    result.push_str(&integer_value.to_string());
+                                } else {
+                                    result.push_str(&number_value.to_string());
+                                }
+                            }
+                            _ => {
+                                result.push_str(&value.to_string());
+                            }
+                        }
+                    } else {
+                        anyhow::bail!("Missing variable `{var_name}` in template expansion input");
+                    }
+                }
+            }
+        }
+
+        Ok(result)
+    }
+
+    /// Get the list of variable names in the template.
+    pub fn variables(&self) -> impl Iterator<Item = &'a str> {
+        self.sections.iter().filter_map(|section| {
+            if let Section::Variable(var_name) = section {
+                Some(*var_name)
+            } else {
+                None
+            }
+        })
+    }
 }
 
-/// Load a minijinja template from a string, extract the input variables, and return a JSON schema where the leaves of each input variable are strings.
-pub fn template_string_to_inputs(template: &str) -> anyhow::Result<serde_json::Value> {
-    let mut env = minijinja::Environment::new();
-    env.add_template("template", template)?;
-    template_to_inputs(env.get_template("template")?)
+/// Parse a variable of the form ${variableName}
+fn parse_variable(input: &str) -> IResult<&str, Section> {
+    let (remaining, var_name) = delimited(
+        tag("${"),
+        take_while1(|c: char| c.is_alphanumeric() || c == '_'),
+        tag("}"),
+    )
+    .parse(input)?;
+
+    Ok((remaining, Section::Variable(var_name)))
 }
 
-/// Load a minijinja template from a string and extract data about it.
-pub fn template_string_to_parsed_data(template: &str) -> anyhow::Result<ParsedTemplateData> {
-    let mut env = minijinja::Environment::new();
-    env.add_template("template", template)?;
-    Ok(ParsedTemplateData {
-        input_json_schema: template_to_inputs(env.get_template("template")?)?,
-        unknown_variables: env
-            .get_template("template")?
-            .undeclared_variables(true)
-            .iter()
-            .map(|s| s.to_string())
-            .collect(),
-    })
+/// Parse text until we encounter a variable or end of input
+fn parse_text(input: &str) -> IResult<&str, Section> {
+    if input.is_empty() {
+        return Err(nom::Err::Error(nom::error::Error::new(
+            input,
+            nom::error::ErrorKind::TakeUntil,
+        )));
+    }
+
+    // If the string starts with "${", we should use the variable parser instead
+    if input.starts_with("${") {
+        return Err(nom::Err::Error(nom::error::Error::new(
+            input,
+            nom::error::ErrorKind::TakeUntil,
+        )));
+    }
+
+    // If the string doesn't contain "${", consume the whole string
+    if !input.contains("${") {
+        return Ok(("", Section::Text(input)));
+    }
+
+    // Otherwise, take all text until the next variable
+    let (remaining, text) = take_until("${")(input)?;
+    Ok((remaining, Section::Text(text)))
+}
+
+/// Parse a single section (either text or variable)
+fn parse_section(input: &str) -> IResult<&str, Section> {
+    alt((parse_variable, parse_text)).parse(input)
+}
+
+/// Parse the entire template into sections
+fn parse_template(input: &str) -> IResult<&str, Vec<Section>> {
+    let mut sections = Vec::new();
+    let mut remaining = input;
+
+    while !remaining.is_empty() {
+        match parse_section(remaining) {
+            Ok((new_remaining, section)) => {
+                sections.push(section);
+                remaining = new_remaining;
+            }
+            Err(_) => break,
+        }
+    }
+
+    Ok((remaining, sections))
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use minijinja::Environment;
-    use serde_json::json;
 
     #[test]
-    fn test_two_variables() -> anyhow::Result<()> {
-        let tpl_str = r#"Classify "{{ sentence }}" into the categories "{{ categories }}""#;
-        let mut env: Environment<'_> = Environment::new();
-        env.add_template("template", tpl_str)?;
-        let result = template_to_inputs(env.get_template("template")?)?;
-        assert_eq!(
-            result,
-            json!({
-                "type": "object",
-                "properties": {
-                    "categories": {
-                        "type": "string"
-                    },
-                    "sentence": {
-                        "type": "string"
-                    }
-                },
-                "required": ["categories", "sentence"]
-            })
-        );
-        Ok(())
+    fn test_parse_plain_text() {
+        let text = "This is plain text with no variables.";
+        let template = Template::new(text);
+
+        assert_eq!(template.sections.len(), 1);
+        match &template.sections[0] {
+            Section::Text(t) => assert_eq!(t, &text),
+            Section::Variable(_) => panic!("Expected Text section"),
+        }
+
+        assert_eq!(template.expand(&serde_json::Map::new()).unwrap(), text);
     }
 
     #[test]
-    fn test_no_variables() -> anyhow::Result<()> {
-        let tpl_str = "Hello world";
-        let mut env = Environment::new();
-        env.add_template("template", tpl_str)?;
-        let result = template_to_inputs(env.get_template("template")?)?;
+    fn test_parse_single_variable() {
+        let text = "Hello, ${name}!";
+        let template = Template::new(text);
+
+        assert_eq!(template.sections.len(), 3);
+
+        // First section should be "Hello, "
+        match &template.sections[0] {
+            Section::Text(t) => assert_eq!(t, &"Hello, "),
+            Section::Variable(_) => panic!("Expected Text section"),
+        }
+
+        // Second section should be the variable "name"
+        match &template.sections[1] {
+            Section::Variable(v) => assert_eq!(v, &"name"),
+            Section::Text(_) => panic!("Expected Variable section"),
+        }
+
+        // Third section should be "!"
+        match &template.sections[2] {
+            Section::Text(t) => assert_eq!(t, &"!"),
+            Section::Variable(_) => panic!("Expected Text section"),
+        }
+
         assert_eq!(
-            result,
-            json!({
-                "type": "object",
-                "properties": {},
-                "required": []
-            })
+            template
+                .expand(serde_json::json!({"name": "abc"}).as_object().unwrap())
+                .unwrap(),
+            "Hello, abc!"
         );
-        Ok(())
+        match template.expand(serde_json::json!({"nam": "abc"}).as_object().unwrap()) {
+            Ok(_) => panic!("Expected error due to missing variable"),
+            Err(e) => assert_eq!(
+                e.to_string(),
+                "Missing variable `name` in template expansion input"
+            ),
+        };
     }
 
     #[test]
-    fn test_nested_input() -> anyhow::Result<()> {
-        let tpl_str = r#"Hi {{ user.name }} welcome!"#;
-        let mut env = Environment::new();
-        env.add_template("template", tpl_str)?;
-        let result = template_to_inputs(env.get_template("template")?)?;
-        assert_eq!(
-            result,
-            json!({
-                "type": "object",
-                "properties": {
-                    "user": {
-                        "type": "object",
-                        "properties": {
-                            "name": {
-                                "type": "string"
-                            }
-                        },
-                        "required": ["name"]
-                    }
-                },
-                "required": ["user"]
-            })
-        );
-        Ok(())
+    fn test_parse_multiple_variables() {
+        let text = "Hello, ${firstName} ${lastName}! How are you today?";
+        let template = Template::new(text);
+
+        assert_eq!(template.sections.len(), 5);
+
+        match &template.sections[0] {
+            Section::Text(t) => assert_eq!(t, &"Hello, "),
+            _ => panic!("Expected Text section"),
+        }
+
+        match &template.sections[1] {
+            Section::Variable(v) => assert_eq!(v, &"firstName"),
+            _ => panic!("Expected Variable section"),
+        }
+
+        match &template.sections[2] {
+            Section::Text(t) => assert_eq!(t, &" "),
+            _ => panic!("Expected Text section"),
+        }
+
+        match &template.sections[3] {
+            Section::Variable(v) => assert_eq!(v, &"lastName"),
+            _ => panic!("Expected Variable section"),
+        }
+
+        match &template.sections[4] {
+            Section::Text(t) => assert_eq!(t, &"! How are you today?"),
+            _ => panic!("Expected Text section"),
+        }
+    }
+
+    #[test]
+    fn test_parse_consecutive_variables() {
+        let text = "${greeting}${name}";
+        let template = Template::new(text);
+
+        assert_eq!(template.sections.len(), 2);
+
+        match &template.sections[0] {
+            Section::Variable(v) => assert_eq!(v, &"greeting"),
+            _ => panic!("Expected Variable section"),
+        }
+
+        match &template.sections[1] {
+            Section::Variable(v) => assert_eq!(v, &"name"),
+            _ => panic!("Expected Variable section"),
+        }
+    }
+
+    #[test]
+    fn test_parse_empty_string() {
+        let text = "";
+        let template = Template::new(text);
+        assert_eq!(template.sections.len(), 0);
     }
 }

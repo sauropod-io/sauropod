@@ -81,9 +81,7 @@ function TaskCard({ item }: { item: Schemas["ObjectInfo"] }) {
     >
       <CardHeader>
         <CardTitle>{data?.name}</CardTitle>
-        <CardDescription>
-          {data?.action.invokeLLM.template.substring(0, 64)}
-        </CardDescription>
+        <CardDescription>{data?.template.substring(0, 64)}</CardDescription>
       </CardHeader>
       <CardFooter className="flex justify-end gap-2 pt-0">
         <RunButton variant="default" size="sm" onClick={handleRun} />

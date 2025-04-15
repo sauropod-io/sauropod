@@ -586,31 +586,6 @@
         "required": ["inputSchema", "outputSchema"],
         "additionalProperties": false
       },
-      "InvokeLLM": {
-        "description": "Run an LLM.",
-        "type": "object",
-        "properties": {
-          "availableToolIds": {
-            "description": "The IDs of tools to make available to the LLM.",
-            "type": "array",
-            "default": [],
-            "items": {
-              "type": "string"
-            }
-          },
-          "outputSchema": {
-            "description": "The output schema.\n\n If unspecified the task will return an object with a single \"output\" string.",
-            "type": "object",
-            "nullable": true,
-            "additionalProperties": true
-          },
-          "template": {
-            "$ref": "#/components/schemas/Template"
-          }
-        },
-        "required": ["template"],
-        "additionalProperties": false
-      },
       "LogLevel": {
         "description": "The log level.",
         "oneOf": [
@@ -713,35 +688,39 @@
         "description": "A task is the smallest unit of work in a workflow.",
         "type": "object",
         "properties": {
-          "action": {
-            "$ref": "#/components/schemas/TaskAction"
+          "availableToolIds": {
+            "description": "The IDs of tools to make available to the LLM.",
+            "type": "array",
+            "default": [],
+            "items": {
+              "type": "string"
+            }
+          },
+          "inputSchema": {
+            "description": "The input schema of a task.\n\n Each key in this object should be a variable name in `template`.",
+            "type": "object",
+            "default": {},
+            "additionalProperties": true
           },
           "name": {
             "description": "The name of the task.",
             "type": "string"
+          },
+          "outputSchema": {
+            "description": "The output schema.\n\n If unspecified the task will return an object with a single \"output\" string.",
+            "type": "object",
+            "nullable": true,
+            "additionalProperties": true
+          },
+          "template": {
+            "$ref": "#/components/schemas/Template"
           }
         },
-        "required": ["name", "action"],
+        "required": ["name", "template"],
         "additionalProperties": false
       },
-      "TaskAction": {
-        "description": "A description of the action associated with a task.",
-        "oneOf": [
-          {
-            "description": "Invoke an LLM.",
-            "type": "object",
-            "properties": {
-              "invokeLLM": {
-                "$ref": "#/components/schemas/InvokeLLM"
-              }
-            },
-            "required": ["invokeLLM"],
-            "additionalProperties": false
-          }
-        ]
-      },
       "Template": {
-        "description": "A template written with Jinja2 syntax.",
+        "description": "A template.\n\n Variables in templates are defined using `${variableName}` syntax.",
         "type": "string"
       },
       "ToolDefinition": {

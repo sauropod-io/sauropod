@@ -221,6 +221,11 @@ export default function TaskEditor({ taskId }: { taskId?: string }) {
   const [outputSchema, setOutputSchema] = useState<JsonSchemaObject | null>(
     null,
   );
+  const [inputSchema, setInputSchema] = useState<JsonSchemaObject>({
+    type: "object",
+    properties: {},
+    required: [],
+  });
   const [outputAll, setOutputAll] = useState(true);
   const [isRunModalOpen, setIsRunModalOpen] = useState(false);
 
@@ -235,11 +240,12 @@ export default function TaskEditor({ taskId }: { taskId?: string }) {
       if (!taskId)
         return {
           name: "",
-          action: {
-            invokeLLM: {
-              template: "",
-            },
-          },
+          template: "",
+          inputSchema: {
+            type: "object",
+            properties: {},
+            required: [],
+          } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
         } as Schemas["Task"];
 
       const response = await apiClient.GET("/api/task/{id}", {
@@ -259,17 +265,15 @@ export default function TaskEditor({ taskId }: { taskId?: string }) {
     if (taskData) {
       setFormState({
         name: taskData.name,
-        tools: taskData.action?.invokeLLM?.availableToolIds || [],
+        tools: taskData.availableToolIds || [],
       });
 
-      if (taskData.action?.invokeLLM?.template) {
-        setPromptText(taskData.action.invokeLLM.template);
-        setPromptInitialValue(taskData.action.invokeLLM.template);
-      }
-      if (taskData.action?.invokeLLM?.outputSchema) {
-        setOutputSchema(
-          taskData.action.invokeLLM.outputSchema as JsonSchemaObject,
-        );
+      setPromptText(taskData.template);
+      setPromptInitialValue(taskData.template);
+      setInputSchema(taskData.inputSchema as JsonSchemaObject);
+
+      if (taskData.outputSchema) {
+        setOutputSchema(taskData.outputSchema as JsonSchemaObject);
         setOutputAll(false);
       } else {
         setOutputSchema(null);
@@ -301,16 +305,13 @@ export default function TaskEditor({ taskId }: { taskId?: string }) {
   const saveTask = async () => {
     const taskData: Schemas["Task"] = {
       name: formState.name!,
-      action: {
-        invokeLLM: {
-          template: promptText!,
-          outputSchema:
-            outputAll || Object.keys(outputSchema?.properties ?? {}).length == 0
-              ? null
-              : outputSchema,
-          availableToolIds: formState.tools,
-        },
-      },
+      template: promptText!,
+      outputSchema:
+        outputAll || Object.keys(outputSchema?.properties ?? {}).length == 0
+          ? null
+          : outputSchema,
+      availableToolIds: formState.tools,
+      inputSchema: inputSchema,
     };
 
     if (taskId) {

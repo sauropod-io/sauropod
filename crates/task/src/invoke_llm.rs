@@ -3,18 +3,18 @@ use std::sync::Arc;
 
 use sauropod_llm_inference::LlmContext;
 use sauropod_llm_inference::openai_api::{FinishReason, Message, Role};
+use sauropod_prompt_templates::Template;
 use tracing::Instrument;
 
 use crate::Task;
 
 /// Task to invoke an LLM.
 pub(crate) struct InvokeLlmTask {
-    /// The template environment for the task.
-    template_env: minijinja::Environment<'static>,
-    /// The input JSON schema for the task.
-    input_schema: serde_json::Value,
+    schema_representation: sauropod_schemas::task::Task,
     /// The output JSON schema for the task.
     output_schema: serde_json::Value,
+    /// The input JSON schema for the task.
+    input_schema: serde_json::Value,
     /// Whether to use structured output.
     use_structured_output: bool,
     /// The tools available to the task.
@@ -39,30 +39,27 @@ where
     }
 }
 
-static TEMPLATE_NAME: &str = "template";
-
 impl InvokeLlmTask {
-    pub fn new(invoke_llm: sauropod_schemas::task::InvokeLLM) -> anyhow::Result<Self> {
-        // Check the template before loading the model to avoid loading the model if the template is invalid
-        let mut template_env = minijinja::Environment::new();
-        template_env.add_template_owned(TEMPLATE_NAME, invoke_llm.template.0)?;
-
-        let input_schema = sauropod_prompt_templates::template_to_inputs(
-            template_env.get_template(TEMPLATE_NAME)?,
-        )?;
-        let use_structured_output = invoke_llm.output_schema.is_some();
-        let output_schema = serde_json::json!(
-            invoke_llm
-                .output_schema
+    pub fn new(task: sauropod_schemas::task::Task) -> anyhow::Result<Self> {
+        let use_structured_output = task.output_schema.is_some();
+        let output_schema: serde_json::Value = serde_json::json!(
+            task.output_schema
+                .clone()
                 .unwrap_or_else(crate::default_task_output_schema)
         );
+        let input_schema = serde_json::json!(task.input_schema);
+        for variable in Template::new(&task.template.0).variables() {
+            if !task.input_schema.contains_key(variable) {
+                anyhow::bail!("The input schema is missing the variable {}", variable);
+            }
+        }
 
         Ok(Self {
-            template_env,
-            input_schema,
+            schema_representation: task.clone(),
             output_schema,
+            input_schema,
             use_structured_output,
-            tools: invoke_llm.available_tool_ids.into_iter().collect(),
+            tools: task.available_tool_ids.into_iter().collect(),
         })
     }
 
@@ -106,8 +103,12 @@ impl Task for InvokeLlmTask {
             tracing::error!("Error running task: {}", &validation_error);
             anyhow::bail!("Error running task: {}", validation_error)
         }
+        let input = input
+            .as_object()
+            .ok_or_else(|| anyhow::anyhow!("The input to the task was not a JSON object"))?;
 
-        let template = self.template_env.get_template(TEMPLATE_NAME)?;
+        let template =
+            sauropod_prompt_templates::Template::new(&self.schema_representation.template.0);
         let model = context.get_model();
         let tools = context
             .tools
@@ -122,7 +123,7 @@ impl Task for InvokeLlmTask {
             })
             .collect();
         let llm_context = LlmContext {
-            user_prompt: template.render(serde_json::json!(input))?,
+            user_prompt: template.expand(input)?,
             tools,
             system_prompt: context.system_prompt.clone(),
             output_schema: if self.use_structured_output {

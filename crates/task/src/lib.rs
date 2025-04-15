@@ -25,29 +25,14 @@ pub trait Task {
 
 /// Create a task from its schema representation.
 pub fn task_from_schema(task: sauropod_schemas::task::Task) -> anyhow::Result<TaskArc> {
-    match task.action {
-        sauropod_schemas::task::TaskAction::InvokeLLM(invoke_llm) => {
-            Ok(Arc::new(invoke_llm::InvokeLlmTask::new(invoke_llm)?))
-        }
-    }
+    Ok(Arc::new(invoke_llm::InvokeLlmTask::new(task)?))
 }
 
 /// Check whether a task is valid.
-pub fn validate_task(task: &sauropod_schemas::task::Task) -> anyhow::Result<()> {
+pub fn validate_task(task: sauropod_schemas::task::Task) -> anyhow::Result<()> {
     // Check that the template is parseable into an input schema.
-    let _ = input_schema_from_task_schema(task)?;
+    let _ = invoke_llm::InvokeLlmTask::new(task)?;
     Ok(())
-}
-
-/// Get the input JSON Schema from a task's schema representation.
-pub fn input_schema_from_task_schema(
-    task: &sauropod_schemas::task::Task,
-) -> anyhow::Result<serde_json::Value> {
-    Ok(match &task.action {
-        sauropod_schemas::task::TaskAction::InvokeLLM(invoke_llm) => {
-            sauropod_prompt_templates::template_string_to_inputs(&invoke_llm.template.0)?
-        }
-    })
 }
 
 fn default_task_output_schema() -> serde_json::Map<String, serde_json::Value> {
@@ -65,16 +50,4 @@ fn default_task_output_schema() -> serde_json::Map<String, serde_json::Value> {
     .as_object()
     .unwrap()
     .clone()
-}
-
-/// Get the output JSON Schema from a task's schema representation.
-pub fn output_schema_from_task_schema(
-    task: &sauropod_schemas::task::Task,
-) -> anyhow::Result<serde_json::Map<String, serde_json::Value>> {
-    Ok(match &task.action {
-        sauropod_schemas::task::TaskAction::InvokeLLM(invoke_llm) => invoke_llm
-            .output_schema
-            .clone()
-            .unwrap_or_else(default_task_output_schema),
-    })
 }

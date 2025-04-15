@@ -8,6 +8,5 @@ publish.workspace = true
 
 [dependencies]
 anyhow.workspace = true
-minijinja.workspace = true
+nom.workspace = true
 serde_json.workspace = true
-serde.workspace = true

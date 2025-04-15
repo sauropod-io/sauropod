@@ -647,21 +647,6 @@ export interface components {
         [key: string]: unknown;
       };
     };
-    /** @description Run an LLM. */
-    InvokeLLM: {
-      /**
-       * @description The IDs of tools to make available to the LLM.
-       * @default []
-       */
-      availableToolIds: string[];
-      /** @description The output schema.
-       *
-       *      If unspecified the task will return an object with a single "output" string. */
-      outputSchema?: {
-        [key: string]: unknown;
-      } | null;
-      template: components["schemas"]["Template"];
-    };
     /** @description The log level. */
     LogLevel: string;
     /** @description A logged message. */
@@ -710,15 +695,33 @@ export interface components {
     };
     /** @description A task is the smallest unit of work in a workflow. */
     Task: {
-      action: components["schemas"]["TaskAction"];
+      /**
+       * @description The IDs of tools to make available to the LLM.
+       * @default []
+       */
+      availableToolIds: string[];
+      /**
+       * @description The input schema of a task.
+       *
+       *      Each key in this object should be a variable name in `template`.
+       * @default {}
+       */
+      inputSchema: {
+        [key: string]: unknown;
+      };
       /** @description The name of the task. */
       name: string;
+      /** @description The output schema.
+       *
+       *      If unspecified the task will return an object with a single "output" string. */
+      outputSchema?: {
+        [key: string]: unknown;
+      } | null;
+      template: components["schemas"]["Template"];
     };
-    /** @description A description of the action associated with a task. */
-    TaskAction: {
-      invokeLLM: components["schemas"]["InvokeLLM"];
-    };
-    /** @description A template written with Jinja2 syntax. */
+    /** @description A template.
+     *
+     *      Variables in templates are defined using `${variableName}` syntax. */
     Template: string;
     /** @description A tool definition. */
     ToolDefinition: {
