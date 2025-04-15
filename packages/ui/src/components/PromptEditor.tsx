@@ -184,7 +184,7 @@ export default function PromptEditor({
           <ContentEditable
             className={editorClasses}
             aria-placeholder="Enter your task description."
-            placeholder={<div>Enter your task description.</div>}
+            placeholder={<></>}
           />
         }
         ErrorBoundary={LexicalErrorBoundary}

@@ -131,9 +131,22 @@ export default function TaskList() {
         </Button>
       </PageHeader>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {data.map((item) => (
-          <TaskCard key={item.id} item={item} />
-        ))}
+        {data.length === 0 ? (
+          <Card
+            onClick={() => navigate(taskRoute("new"))}
+            className="cursor-pointer border-dashed"
+          >
+            <CardHeader className="text-center">
+              <CardTitle className="flex items-center justify-center gap-2">
+                <Plus className="h-5 w-5" />
+                Create your first task
+              </CardTitle>
+              <CardDescription>Get started by creating a task</CardDescription>
+            </CardHeader>
+          </Card>
+        ) : (
+          data.map((item) => <TaskCard key={item.id} item={item} />)
+        )}
       </div>
     </main>
   );

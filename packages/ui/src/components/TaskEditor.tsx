@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { Plus, Trash2 } from "lucide-react";
+import { Parentheses, Plus, Settings2, Trash2 } from "lucide-react";
 import { JSX, useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 
@@ -12,6 +12,7 @@ import PromptEditor from "@/components/PromptEditor";
 import { TaskRunModal } from "@/components/RunModal";
 import ToolSelector from "@/components/ToolSelector";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -22,12 +23,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import {
   FieldType,
   JsonSchemaBase,
@@ -226,7 +221,7 @@ export default function TaskEditor({ taskId }: { taskId?: string }) {
     properties: {},
     required: [],
   });
-  const [outputAll, setOutputAll] = useState(true);
+  const [structuredOutput, setStructuredOutput] = useState(false);
   const [isRunModalOpen, setIsRunModalOpen] = useState(false);
 
   // Fetch task data when editing an existing task
@@ -274,10 +269,10 @@ export default function TaskEditor({ taskId }: { taskId?: string }) {
 
       if (taskData.outputSchema) {
         setOutputSchema(taskData.outputSchema as JsonSchemaObject);
-        setOutputAll(false);
+        setStructuredOutput(true);
       } else {
         setOutputSchema(null);
-        setOutputAll(true);
+        setStructuredOutput(false);
       }
     }
   }, [taskData]);
@@ -307,7 +302,8 @@ export default function TaskEditor({ taskId }: { taskId?: string }) {
       name: formState.name!,
       template: promptText!,
       outputSchema:
-        outputAll || Object.keys(outputSchema?.properties ?? {}).length == 0
+        !structuredOutput ||
+        Object.keys(outputSchema?.properties ?? {}).length == 0
           ? null
           : outputSchema,
       availableToolIds: formState.tools,
@@ -391,7 +387,7 @@ export default function TaskEditor({ taskId }: { taskId?: string }) {
       />
 
       <div className="p-4 bg-white flex flex-col flex-grow">
-        <div className="flex-grow max-h-[50%]">
+        <div className="flex-grow max-h-[50%] min-h-[200px]">
           {promptInitialValue !== null && (
             <InputVariablesProvider value={inputSchema.properties}>
               <PromptEditor
@@ -414,71 +410,93 @@ export default function TaskEditor({ taskId }: { taskId?: string }) {
           )}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
-          {/* Input Configuration Section */}
-          <div>
-            <Label className="text-base">Input Configuration</Label>
-            <div className="mt-2 flex items-center space-x-2">
-              <Label>
-                Input variables are defined using {"${variableNameHere}"} in the
-                task definition above.
-              </Label>
-            </div>
-            {Object.entries(promptVariables).map(([variable, variableType]) => (
-              <Variable
-                key={variable}
-                name={variable}
-                value={variableType}
-                onChangeType={(value) => {
-                  console.log("Changing variable type", variable, value);
-                  setPromptVariables((prev) => ({
-                    ...prev,
-                    [variable]: value as FieldType,
-                  }));
+        <div className="grid grid-cols-1 xl:grid-cols-3 lg:grid-cols-2 gap-4 mt-4">
+          {/* Inputs Section */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="flex items-center gap-2 text-base font-medium">
+                <Parentheses className="h-4 w-4" />
+                Task Input
+              </CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Inputs into the task.
+              </p>
+            </CardHeader>
+            <CardContent>
+              {Object.entries(inputSchema.properties).length === 0 && (
+                <p className="text-sm text-muted-foreground">
+                  Use <code>{"${variableName}"}</code> in your task description
+                  above to make an input variable.
+                </p>
+              )}
+              {Object.entries(inputSchema?.properties || {}).map(
+                ([variable, variableType]) => (
+                  <Variable
+                    key={variable}
+                    name={variable}
+                    value={variableType.type}
+                    onChangeType={(value) => {
+                      setInputSchema(({ properties, ...rest }) => ({
+                        properties: {
+                          ...properties,
+                          [variable]: { type: value },
+                        },
+                        ...rest,
+                      }));
+                    }}
+                  />
+                ),
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Outputs Section */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="flex items-center justify-between text-base font-medium">
+                <div className="flex items-center gap-2">
+                  <Parentheses className="h-4 w-4" />
+                  Structured Output
+                </div>
+                <Switch
+                  id="structured-output"
+                  checked={structuredOutput}
+                  onCheckedChange={(checked) => setStructuredOutput(!!checked)}
+                />
+              </CardTitle>
+              <p className="text-sm text-muted-foreground">
+                The structure the task should output.
+              </p>
+            </CardHeader>
+            <CardContent>
+              <OutputConfiguration
+                onChange={(schema) => {
+                  setOutputSchema(schema);
                 }}
+                disabled={!structuredOutput}
+                outputSchema={outputSchema}
               />
-            ))}
-          </div>
+            </CardContent>
+          </Card>
 
-          {/* Output Configuration Section */}
-          <div>
-            <Label className="text-base">Output Configuration</Label>
-            <div className="mt-2 flex items-center space-x-2">
-              <Switch
-                id="output-all"
-                checked={outputAll}
-                onCheckedChange={(checked) => setOutputAll(!!checked)}
+          {/* Permissions Section */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="flex items-center gap-2 text-base font-medium">
+                <Settings2 className="h-4 w-4" />
+                Permissions
+              </CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Control which tools this task can access when running.
+              </p>
+            </CardHeader>
+            <CardContent>
+              <ToolSelector
+                selectedTools={formState.tools}
+                onToolSelected={handleToolToggle}
               />
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild className="truncate">
-                    <Label htmlFor="output-all">Output all content</Label>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>
-                      Directly output what the LLM generates as the "output"
-                      key.
-                    </p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </div>
-            <OutputConfiguration
-              onChange={(schema) => {
-                setOutputSchema(schema);
-              }}
-              disabled={outputAll}
-              outputSchema={outputSchema}
-            />
-          </div>
-
-          <div>
-            <Label className="text-base">Available Tools</Label>
-            <ToolSelector
-              selectedTools={formState.tools}
-              onToolSelected={handleToolToggle}
-            />
-          </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
       {taskId !== undefined && (

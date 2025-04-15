@@ -20,12 +20,14 @@ import { ToolConsumer } from "@/providers/ToolsProvider";
 
 interface ToolSelectorProps {
   selectedTools: string[];
+  className?: string;
   onToolSelected: (toolId: string) => void;
 }
 
 /** Selector for tools. */
 export default function ToolSelector({
   selectedTools,
+  className,
   onToolSelected,
 }: ToolSelectorProps) {
   const [open, setOpen] = useState(false);
@@ -49,11 +51,11 @@ export default function ToolSelector({
                 variant="outline"
                 role="combobox"
                 aria-expanded={open}
-                className="w-full justify-between"
+                className={cn(className, "w-full justify-between")}
               >
                 {selectedTools.length === 0
-                  ? "Select tools..."
-                  : `${selectedTools.length} tool${selectedTools.length === 1 ? "" : "s"} selected`}
+                  ? "Allowed tools..."
+                  : `${selectedTools.length} tool${selectedTools.length === 1 ? "" : "s"} allowed`}
                 <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
               </Button>
             </PopoverTrigger>
