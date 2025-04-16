@@ -64,6 +64,14 @@ updates:
         update-types:
           - "minor"
           - "patch"
+      vite:
+        applies-to: version-updates
+        patterns:
+          - "@vitejs/*"
+          - "vite"
+        update-types:
+          - "minor"
+          - "patch"
   - package-ecosystem: github-actions
     directory: "/"
     schedule:
