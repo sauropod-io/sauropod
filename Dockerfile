@@ -89,9 +89,9 @@ COPY --from=npm-builder /sauropod/packages/ui/dist /sauropod/packages/ui/dist
 COPY . ./
 
 # Build the release binary
-RUN --mount=type=secret,id=actions_cache_url,env=ACTIONS_CACHE_URL \
+RUN --mount=type=secret,id=actions_results_url,env=ACTIONS_RESULTS_URL \
     --mount=type=secret,id=actions_runtime_token,env=ACTIONS_RUNTIME_TOKEN \
-    if [ -n "$ACTIONS_CACHE_URL" ]; then export SCCACHE_GHA_ENABLED=true RUSTC_WRAPPER=/usr/local/bin/sccache; fi; \
+    if [ -n "$ACTIONS_RESULTS_URL" ]; then export ACTIONS_CACHE_SERVICE_V2=on SCCACHE_GHA_ENABLED=true RUSTC_WRAPPER=/usr/local/bin/sccache; fi; \
     cargo build --locked --profile=optimized-release --package sauropod-server
 
 FROM base

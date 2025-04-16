@@ -359,7 +359,7 @@ checksum = "773648b94d0e5d620f64f280777445740e61fe701025087ec8b57f45c791888b"
 
 [[package]]
 name = "create-release-tag"
-version = "0.0.1"
+version = "0.0.2"
 dependencies = [
  "anyhow",
  "clap",
@@ -615,7 +615,7 @@ dependencies = [
 
 [[package]]
 name = "generate-code"
-version = "0.0.1"
+version = "0.0.2"
 dependencies = [
  "anyhow",
  "sauropod-config",
@@ -1812,7 +1812,7 @@ checksum = "28d3b2b1366ec20994f1fd18c3c594f05c5dd4bc44d8bb0c1c632c8d6829481f"
 
 [[package]]
 name = "sauropod-config"
-version = "0.0.1"
+version = "0.0.2"
 dependencies = [
  "anyhow",
  "config",
@@ -1824,7 +1824,7 @@ dependencies = [
 
 [[package]]
 name = "sauropod-core-tools"
-version = "0.0.1"
+version = "0.0.2"
 dependencies = [
  "anyhow",
  "reqwest",
@@ -1837,7 +1837,7 @@ dependencies = [
 
 [[package]]
 name = "sauropod-database"
-version = "0.0.1"
+version = "0.0.2"
 dependencies = [
  "anyhow",
  "rusqlite",
@@ -1849,7 +1849,7 @@ dependencies = [
 
 [[package]]
 name = "sauropod-http"
-version = "0.0.1"
+version = "0.0.2"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -1862,7 +1862,7 @@ dependencies = [
 
 [[package]]
 name = "sauropod-json-schema"
-version = "0.0.1"
+version = "0.0.2"
 dependencies = [
  "anyhow",
  "serde_json",
@@ -1870,11 +1870,11 @@ dependencies = [
 
 [[package]]
 name = "sauropod-links"
-version = "0.0.1"
+version = "0.0.2"
 
 [[package]]
 name = "sauropod-llm-inference"
-version = "0.0.1"
+version = "0.0.2"
 dependencies = [
  "anyhow",
  "reqwest",
@@ -1888,7 +1888,7 @@ dependencies = [
 
 [[package]]
 name = "sauropod-logging"
-version = "0.0.1"
+version = "0.0.2"
 dependencies = [
  "sauropod-config",
  "serde_json",
@@ -1898,7 +1898,7 @@ dependencies = [
 
 [[package]]
 name = "sauropod-mcp"
-version = "0.0.1"
+version = "0.0.2"
 dependencies = [
  "anyhow",
  "futures",
@@ -1913,7 +1913,7 @@ dependencies = [
 
 [[package]]
 name = "sauropod-prompt-templates"
-version = "0.0.1"
+version = "0.0.2"
 dependencies = [
  "anyhow",
  "nom",
@@ -1922,7 +1922,7 @@ dependencies = [
 
 [[package]]
 name = "sauropod-schemas"
-version = "0.0.1"
+version = "0.0.2"
 dependencies = [
  "schemars",
  "serde",
@@ -1931,7 +1931,7 @@ dependencies = [
 
 [[package]]
 name = "sauropod-server"
-version = "0.0.1"
+version = "0.0.2"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -1958,7 +1958,7 @@ dependencies = [
 
 [[package]]
 name = "sauropod-task"
-version = "0.0.1"
+version = "0.0.2"
 dependencies = [
  "anyhow",
  "jsonschema",
@@ -1977,7 +1977,7 @@ dependencies = [
 
 [[package]]
 name = "sauropod-task-context"
-version = "0.0.1"
+version = "0.0.2"
 dependencies = [
  "anyhow",
  "sauropod-config",
@@ -2547,7 +2547,7 @@ checksum = "8ecb6da28b8a351d773b68d5825ac39017e680750f980f3a1a85cd8dd28a47c1"
 
 [[package]]
 name = "update-latest-image"
-version = "0.0.1"
+version = "0.0.2"
 dependencies = [
  "anyhow",
  "clap",

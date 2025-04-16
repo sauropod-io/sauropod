@@ -131,7 +131,7 @@ jobs:
           cache-to: type=gha,mode=max
           labels: ${{ steps.docker-metadata.outputs.labels }}
           secret-envs: |
-            actions_cache_url=ACTIONS_CACHE_URL
+            actions_results_url=ACTIONS_RESULTS_URL
             actions_runtime_token=ACTIONS_RUNTIME_TOKEN
           outputs: type=image,push-by-digest=true,name-canonical=true,push=true
         env:
