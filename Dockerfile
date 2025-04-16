@@ -61,7 +61,6 @@ COPY crates/schemas/Cargo.toml crates/schemas/Cargo.toml
 COPY crates/server/Cargo.toml crates/server/Cargo.toml
 COPY crates/task-context/Cargo.toml crates/task-context/Cargo.toml
 COPY crates/task/Cargo.toml crates/task/Cargo.toml
-COPY crates/tool-spec/Cargo.toml crates/tool-spec/Cargo.toml
 COPY tools/create-release-tag/Cargo.toml tools/create-release-tag/Cargo.toml
 COPY tools/generate-code/Cargo.toml tools/generate-code/Cargo.toml
 COPY tools/update-latest-image/Cargo.toml tools/update-latest-image/Cargo.toml
@@ -79,7 +78,6 @@ RUN mkdir crates/config/src && touch crates/config/src/lib.rs && \
     mkdir crates/server/src && touch crates/server/src/lib.rs && \
     mkdir crates/task-context/src && touch crates/task-context/src/lib.rs && \
     mkdir crates/task/src && touch crates/task/src/lib.rs && \
-    mkdir crates/tool-spec/src && touch crates/tool-spec/src/lib.rs && \
     mkdir tools/create-release-tag/src && touch tools/create-release-tag/src/lib.rs && \
     mkdir tools/generate-code/src && touch tools/generate-code/src/lib.rs && \
     mkdir tools/update-latest-image/src && touch tools/update-latest-image/src/lib.rs

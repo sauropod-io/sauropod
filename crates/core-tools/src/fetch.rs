@@ -1,6 +1,8 @@
+use std::sync::Arc;
+
 use anyhow::Context;
 
-use sauropod_tool_spec::ConcreteTool;
+use sauropod_task_context::ConcreteTool;
 
 /// HTTP method.
 #[derive(serde::Deserialize, schemars::JsonSchema, Debug, Default)]
@@ -40,7 +42,11 @@ impl ConcreteTool for FetchTool {
         "Send an HTTP request to the provided URL to upload or download data. This tool will return the response code and the body."
     }
 
-    async fn run(self: std::sync::Arc<Self>, input: Self::Input) -> anyhow::Result<String> {
+    async fn run(
+        self: std::sync::Arc<Self>,
+        input: Self::Input,
+        _task_context: Arc<sauropod_task_context::TaskContext>,
+    ) -> anyhow::Result<String> {
         tracing::debug!("Sending request to {}", &input.url);
 
         let response = match input.method {

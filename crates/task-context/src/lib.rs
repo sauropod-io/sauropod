@@ -3,6 +3,9 @@
 use std::{collections::HashMap, sync::Arc};
 
 use sauropod_config::ModelConfig;
+mod traits;
+use sauropod_schemas::task::Task;
+pub use traits::*;
 
 /// The context in which a task is executed.
 ///
@@ -13,9 +16,11 @@ pub struct TaskContext {
     /// The system prompt to use for the task.
     pub system_prompt: String,
     /// The tools available to the task.
-    pub tools: HashMap<String, Arc<dyn sauropod_tool_spec::Tool>>,
+    pub tools: HashMap<String, Arc<dyn Tool>>,
     /// The model to use to invoke the task.
     pub model_config: ModelConfig,
+    /// The database.
+    pub db: Arc<sauropod_database::Database>,
 }
 
 const DEFAULT_SYSTEM_PROMPT: &str = r#"
@@ -29,7 +34,8 @@ impl TaskContext {
     pub fn new(
         llm_engine: sauropod_llm_inference::EnginePointer,
         model_config: ModelConfig,
-        tools: Vec<Arc<dyn sauropod_tool_spec::Tool>>,
+        tools: Vec<Arc<dyn Tool>>,
+        db: Arc<sauropod_database::Database>,
     ) -> Arc<Self> {
         let mut tool_map = HashMap::with_capacity(tools.len());
         for tool in tools.into_iter() {
@@ -41,6 +47,7 @@ impl TaskContext {
             system_prompt: DEFAULT_SYSTEM_PROMPT.trim().to_string(),
             tools: tool_map,
             model_config,
+            db,
         })
     }
 
@@ -48,9 +55,15 @@ impl TaskContext {
     pub fn get_model(&self) -> &ModelConfig {
         &self.model_config
     }
-}
 
-/// Get the default list of tools.
-pub fn get_default_tools() -> Vec<Arc<dyn sauropod_tool_spec::Tool>> {
-    vec![Arc::new(sauropod_core_tools::fetch::FetchTool)]
+    /// Get a task by ID.
+    pub fn get_task(&self, id: i64) -> anyhow::Result<Option<sauropod_schemas::task::Task>> {
+        match self.db.get_by_id::<Task>(id)? {
+            Some(task) => Ok(Some(task)),
+            None => {
+                tracing::error!("Task with ID {id} not found");
+                Ok(None)
+            }
+        }
+    }
 }

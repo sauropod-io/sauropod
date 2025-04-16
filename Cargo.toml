@@ -15,7 +15,6 @@ members = [
     "crates/server",
     "crates/task-context",
     "crates/task",
-    "crates/tool-spec",
     "tools/create-release-tag",
     "tools/generate-code",
     "tools/update-latest-image",

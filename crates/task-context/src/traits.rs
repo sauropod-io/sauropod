@@ -5,26 +5,30 @@ use std::{future::Future, pin::Pin, sync::Arc};
 use anyhow::Context;
 use tracing::Instrument;
 
-pub use sauropod_schemas::ToolDefinition;
+use sauropod_schemas::ToolDefinition;
 
-const BUILTIN_PROVIDER: &str = "builtin";
+pub const BUILTIN_PROVIDER: &str = "builtin";
 
 /// A tool which can be exposed to LLMs.
-pub trait Tool: Send + Sync {
+pub trait RunnableTool: Send + Sync {
     /// Get the ID of the tool.
     fn get_id(&self) -> &str;
-
-    /// Get the name of the tool.
-    fn get_name(&self) -> &str;
-
-    /// Get the definition of the tool.
-    fn get_definition(&self) -> ToolDefinition;
 
     /// Run the tool.
     fn run(
         self: Arc<Self>,
         input: serde_json::Value,
+        task_context: Arc<crate::TaskContext>,
     ) -> Pin<Box<dyn Future<Output = anyhow::Result<String>> + Send>>;
+}
+
+/// A tool which can be exposed to LLMs.
+pub trait Tool: RunnableTool {
+    /// Get the name of the tool.
+    fn get_name(&self) -> &str;
+
+    /// Get the definition of the tool.
+    fn get_definition(&self) -> ToolDefinition;
 }
 
 /// A tool trait for static dispatch - use `Tool` instead for invocations.
@@ -45,6 +49,7 @@ pub trait ConcreteTool {
     fn run(
         self: Arc<Self>,
         input: Self::Input,
+        task_context: Arc<crate::TaskContext>,
     ) -> impl std::future::Future<Output = anyhow::Result<String>> + Send;
 }
 
@@ -53,10 +58,6 @@ impl<T: ConcreteTool + Send + Sync + 'static> Tool for T
 where
     <Self as ConcreteTool>::Input: for<'a> serde::Deserialize<'a> + schemars::JsonSchema,
 {
-    fn get_id(&self) -> &str {
-        <Self as ConcreteTool>::get_id(self)
-    }
-
     fn get_name(&self) -> &str {
         <Self as ConcreteTool>::get_name(self)
     }
@@ -80,10 +81,21 @@ where
             input_schema,
         }
     }
+}
+
+// Blanket implementation for Rust tools.
+impl<T: ConcreteTool + Send + Sync + 'static> RunnableTool for T
+where
+    <Self as ConcreteTool>::Input: for<'a> serde::Deserialize<'a> + schemars::JsonSchema,
+{
+    fn get_id(&self) -> &str {
+        <Self as ConcreteTool>::get_id(self)
+    }
 
     fn run(
         self: Arc<Self>,
         input: serde_json::Value,
+        task_context: Arc<crate::TaskContext>,
     ) -> Pin<Box<dyn Future<Output = anyhow::Result<String>> + Send>> {
         Box::pin(async {
             let tool_name = self.get_name().to_string();
@@ -93,7 +105,7 @@ where
                 })?;
 
             let result = self
-                .run(input)
+                .run(input, task_context)
                 .instrument(tracing::info_span!("Running tool", tool_name = &tool_name))
                 .await;
             if let Err(err) = &result {

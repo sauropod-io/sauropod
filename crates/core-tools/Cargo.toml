@@ -7,7 +7,7 @@ authors.workspace = true
 publish.workspace = true
 
 [dependencies]
-sauropod-tool-spec = { path = "../tool-spec" }
+sauropod-task-context = { path = "../task-context" }
 
 anyhow.workspace = true
 reqwest.workspace = true

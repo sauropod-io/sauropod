@@ -11,8 +11,6 @@ default = []
 json_schema = ["schemars"]
 
 [dependencies]
-sauropod-schemas = { path = "../schemas" }
-
 anyhow.workspace = true
 config.workspace = true
 directories.workspace = true

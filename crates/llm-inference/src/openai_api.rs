@@ -59,8 +59,8 @@ pub struct Function {
     strict: bool,
 }
 
-impl From<sauropod_tool_spec::ToolDefinition> for Function {
-    fn from(def: sauropod_tool_spec::ToolDefinition) -> Self {
+impl From<sauropod_schemas::ToolDefinition> for Function {
+    fn from(def: sauropod_schemas::ToolDefinition) -> Self {
         Function {
             name: def.id,
             description: def.description,

@@ -8,6 +8,7 @@ export function useDeleteTask() {
   return api.useMutation("delete", "/api/task/{id}", {
     onSuccess: () => {
       queryClient.refetchQueries({ queryKey: ["get", "/api/task"] });
+      queryClient.refetchQueries({ queryKey: ["get", "/api/tools"] });
     },
   });
 }
@@ -18,6 +19,7 @@ export function useCreateTask() {
   return api.useMutation("post", "/api/task", {
     onSuccess: () => {
       queryClient.refetchQueries({ queryKey: ["get", "/api/task"] });
+      queryClient.refetchQueries({ queryKey: ["get", "/api/tools"] });
     },
   });
 }
@@ -31,6 +33,7 @@ export function useUpdateTask() {
       queryClient.refetchQueries({
         queryKey: ["get", "/api/task/{id}/schema"],
       });
+      queryClient.refetchQueries({ queryKey: ["get", "/api/tools"] });
     },
   });
 }

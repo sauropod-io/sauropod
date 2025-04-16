@@ -10,7 +10,6 @@ homepage.workspace = true
 
 [dependencies]
 sauropod-config = { path = "../config" }
-sauropod-tool-spec = { path = "../tool-spec" }
 sauropod-schemas = { path = "../schemas" }
 sauropod-links = { path = "../links" }
 

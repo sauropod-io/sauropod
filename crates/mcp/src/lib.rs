@@ -9,6 +9,7 @@ use rmcp::{
     service::{DynService, RoleClient, RunningService},
     transport::{SseTransport, TokioChildProcess},
 };
+use sauropod_task_context::Tool;
 use tracing::Instrument;
 
 /// A tool provided via Model Context Protocol.
@@ -18,7 +19,7 @@ pub struct McpTool {
     /// The MCP provider.
     mcp: Arc<ModelContextProtocol>,
     /// The tool description.
-    description: sauropod_tool_spec::ToolDefinition,
+    description: sauropod_schemas::ToolDefinition,
 }
 
 impl McpTool {
@@ -31,7 +32,7 @@ impl McpTool {
         Self {
             provider_name: peer_info.server_info.name.clone(),
             mcp,
-            description: sauropod_tool_spec::ToolDefinition {
+            description: sauropod_schemas::ToolDefinition {
                 id: format!("{}:{}", provider, tool.name),
                 name: tool.name.to_string(),
                 provider,
@@ -42,22 +43,25 @@ impl McpTool {
     }
 }
 
-impl sauropod_tool_spec::Tool for McpTool {
-    fn get_id(&self) -> &str {
-        self.description.id.as_str()
-    }
-
+impl Tool for McpTool {
     fn get_name(&self) -> &str {
         self.description.name.as_str()
     }
 
-    fn get_definition(&self) -> sauropod_tool_spec::ToolDefinition {
+    fn get_definition(&self) -> sauropod_schemas::ToolDefinition {
         self.description.clone()
+    }
+}
+
+impl sauropod_task_context::RunnableTool for McpTool {
+    fn get_id(&self) -> &str {
+        self.description.id.as_str()
     }
 
     fn run(
         self: Arc<Self>,
         input: serde_json::Value,
+        _task_context: Arc<sauropod_task_context::TaskContext>,
     ) -> Pin<Box<dyn Future<Output = anyhow::Result<String>> + Send>> {
         let mcp = self.mcp.clone();
         let provider_name = self.provider_name.clone();
@@ -178,9 +182,7 @@ impl ModelContextProtocol {
     }
 
     /// Lists all tools available on the MCP servers.
-    pub async fn list_all_tools(
-        self: Arc<Self>,
-    ) -> anyhow::Result<Vec<Arc<dyn sauropod_tool_spec::Tool>>> {
+    pub async fn list_all_tools(self: Arc<Self>) -> anyhow::Result<Vec<Arc<dyn Tool>>> {
         let futures: Vec<_> = self
             .mcp_servers
             .iter()
@@ -193,8 +195,7 @@ impl ModelContextProtocol {
                     tools_list
                         .into_iter()
                         .map(|x| {
-                            Arc::new(McpTool::new(Arc::clone(&self), peer_info, x))
-                                as Arc<dyn sauropod_tool_spec::Tool>
+                            Arc::new(McpTool::new(Arc::clone(&self), peer_info, x)) as Arc<dyn Tool>
                         })
                         .collect::<Vec<_>>()
                 })
@@ -205,7 +206,7 @@ impl ModelContextProtocol {
             .instrument(tracing::info_span!("MCP list_all_tools"))
             .await;
 
-        let mut tools: Vec<Arc<dyn sauropod_tool_spec::Tool>> = Vec::new();
+        let mut tools: Vec<Arc<dyn Tool>> = Vec::new();
         for result in results {
             match result {
                 Ok(tool) => tools.extend(tool),

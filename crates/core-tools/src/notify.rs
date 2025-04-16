@@ -1,4 +1,6 @@
-use sauropod_tool_spec::ConcreteTool;
+use std::sync::Arc;
+
+use sauropod_task_context::ConcreteTool;
 
 /// Tool to retrieve files and send HTTP requests.
 pub struct NotifyTool;
@@ -25,7 +27,11 @@ impl ConcreteTool for NotifyTool {
         "Send a notification to the user."
     }
 
-    async fn run(self: std::sync::Arc<Self>, _input: Self::Input) -> anyhow::Result<String> {
+    async fn run(
+        self: std::sync::Arc<Self>,
+        _input: Self::Input,
+        _task_context: Arc<sauropod_task_context::TaskContext>,
+    ) -> anyhow::Result<String> {
         tracing::error!("TODO implement notify tool");
         Ok("Notification sent".to_string())
     }

@@ -1817,7 +1817,6 @@ dependencies = [
  "anyhow",
  "config",
  "directories",
- "sauropod-schemas",
  "schemars",
  "serde",
  "toml",
@@ -1829,7 +1828,7 @@ version = "0.0.1"
 dependencies = [
  "anyhow",
  "reqwest",
- "sauropod-tool-spec",
+ "sauropod-task-context",
  "schemars",
  "serde",
  "serde_json",
@@ -1882,7 +1881,6 @@ dependencies = [
  "sauropod-config",
  "sauropod-links",
  "sauropod-schemas",
- "sauropod-tool-spec",
  "serde",
  "serde_json",
  "tracing",
@@ -1906,7 +1904,8 @@ dependencies = [
  "futures",
  "rmcp",
  "sauropod-config",
- "sauropod-tool-spec",
+ "sauropod-schemas",
+ "sauropod-task-context",
  "serde_json",
  "tokio",
  "tracing",
@@ -1940,6 +1939,7 @@ dependencies = [
  "clap",
  "config",
  "sauropod-config",
+ "sauropod-core-tools",
  "sauropod-database",
  "sauropod-http",
  "sauropod-llm-inference",
@@ -1948,7 +1948,6 @@ dependencies = [
  "sauropod-schemas",
  "sauropod-task",
  "sauropod-task-context",
- "sauropod-tool-spec",
  "serde",
  "serde_json",
  "thiserror",
@@ -1962,7 +1961,6 @@ name = "sauropod-task"
 version = "0.0.1"
 dependencies = [
  "anyhow",
- "async-trait",
  "jsonschema",
  "sauropod-config",
  "sauropod-json-schema",
@@ -1970,7 +1968,6 @@ dependencies = [
  "sauropod-prompt-templates",
  "sauropod-schemas",
  "sauropod-task-context",
- "sauropod-tool-spec",
  "schemars",
  "serde",
  "serde_json",
@@ -1984,18 +1981,8 @@ version = "0.0.1"
 dependencies = [
  "anyhow",
  "sauropod-config",
- "sauropod-core-tools",
+ "sauropod-database",
  "sauropod-llm-inference",
- "sauropod-schemas",
- "sauropod-tool-spec",
- "tracing",
-]
-
-[[package]]
-name = "sauropod-tool-spec"
-version = "0.0.1"
-dependencies = [
- "anyhow",
  "sauropod-schemas",
  "schemars",
  "serde",

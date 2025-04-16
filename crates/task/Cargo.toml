@@ -13,10 +13,8 @@ sauropod-llm-inference = { path = "../llm-inference" }
 sauropod-prompt-templates = { path = "../prompt-templates" }
 sauropod-schemas = { path = "../schemas" }
 sauropod-task-context = { path = "../task-context" }
-sauropod-tool-spec = { path = "../tool-spec" }
 
 anyhow.workspace = true
-async-trait.workspace = true
 schemars.workspace = true
 serde_json.workspace = true
 serde.workspace = true

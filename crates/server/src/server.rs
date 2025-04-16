@@ -3,7 +3,7 @@
 use std::env;
 use std::sync::Arc;
 
-use sauropod_database::{DatabaseId, DatabaseTypeWithID, DatabaseTypeWithName};
+use sauropod_database::{DatabaseId, DatabaseType as _, DatabaseTypeWithID, DatabaseTypeWithName};
 use sauropod_schemas::InputAndOutputSchema;
 use sauropod_schemas::task::{ObjectInfo, Task};
 use sauropod_task_context::TaskContext;
@@ -20,11 +20,11 @@ pub struct Server {
     /// Observability state.
     observability: Observability,
     /// The database.
-    db: sauropod_database::Database,
+    db: Arc<sauropod_database::Database>,
     /// MCP interface.
     _mcp: Arc<sauropod_mcp::ModelContextProtocol>,
     /// All tools available to the server.
-    tools: Vec<Arc<dyn sauropod_tool_spec::Tool>>,
+    tools: Vec<Arc<dyn sauropod_task_context::Tool>>,
     /// The LLM engine.
     llm_engine: sauropod_llm_inference::EnginePointer,
 }
@@ -39,12 +39,12 @@ impl Server {
             .database_path
             .clone()
             .ok_or_else(|| anyhow::anyhow!("No database path configured"))?;
-        let db = sauropod_database::Database::new(db_location.into())?;
+        let db = Arc::new(sauropod_database::Database::new(db_location.into())?);
         db.init()?;
         let mcp = sauropod_mcp::ModelContextProtocol::new(config)
             .instrument(tracing::info_span!("MCP initialization"))
             .await?;
-        let mut tools = sauropod_task_context::get_default_tools();
+        let mut tools = sauropod_core_tools::get_default_tools();
         tools.extend(mcp.clone().list_all_tools().await?);
 
         Ok(Arc::new(Self {
@@ -86,6 +86,7 @@ impl Server {
             self.llm_engine.clone(),
             model_config.clone(),
             self.tools.clone(),
+            self.db.clone(),
         ))
     }
 }
@@ -140,7 +141,7 @@ fn db_list_objects<T: DatabaseTypeWithID + DatabaseTypeWithName>(
     database: &sauropod_database::Database,
     limit: Option<i64>,
 ) -> anyhow::Result<HttpResponse<Vec<ObjectInfo>>> {
-    let mut query = format!(
+    let mut query: String = format!(
         "SELECT id, json_extract(content, '$.name') as name FROM {}",
         T::table_name()
     );
@@ -206,7 +207,7 @@ impl sauropod_http::ServerInterface for Server {
         input: serde_json::Map<String, serde_json::Value>,
     ) -> anyhow::Result<HttpResponse<serde_json::Map<String, serde_json::Value>>> {
         let task = match self.db.get_by_id::<Task>(id)? {
-            Some(task) => sauropod_task::task_from_schema(task)?,
+            Some(task) => sauropod_task::Task::new(task)?,
             None => {
                 tracing::error!("Task not found: {id}");
                 return Ok(HttpResponse::NotFound(None));
@@ -229,7 +230,7 @@ impl sauropod_http::ServerInterface for Server {
             return Ok(HttpResponse::NotFound(None));
         };
 
-        let internal_task = sauropod_task::task_from_schema(task)?;
+        let internal_task = sauropod_task::Task::new(task)?;
 
         let input_schema = match internal_task.input_schema() {
             serde_json::Value::Object(obj) => obj,
@@ -268,12 +269,45 @@ impl sauropod_http::ServerInterface for Server {
     async fn get_tools(
         &self,
     ) -> anyhow::Result<HttpResponse<std::vec::Vec<sauropod_schemas::ToolDefinition>>> {
-        Ok(HttpResponse::Ok(
-            self.tools
-                .iter()
-                .map(|tool| tool.get_definition())
-                .collect(),
-        ))
+        let mut tools: Vec<_> = self
+            .tools
+            .iter()
+            .map(|tool| tool.get_definition())
+            .collect();
+
+        let query: String = format!(
+            "SELECT id, content FROM {}",
+            sauropod_schemas::task::Task::table_name()
+        );
+
+        let tools = self
+            .db
+            .with_connection(move |connection| -> anyhow::Result<_> {
+                let mut statement = connection.prepare(&query)?;
+                let rows = statement.query_map([], |row| {
+                    let id = row.get::<_, i64>(0)?;
+                    let content = row.get::<_, String>(1)?;
+                    Ok((id, content))
+                })?;
+                let (lower, upper) = rows.size_hint();
+                tools.reserve(upper.unwrap_or(lower));
+
+                for data in rows.into_iter() {
+                    let (id, content) = data?;
+                    let content: sauropod_schemas::task::Task = serde_json::from_str(&content)?;
+                    let tool = sauropod_schemas::ToolDefinition {
+                        id: format!("{}{id}", sauropod_task::TASK_TOOL_PREFIX),
+                        name: content.name.clone(),
+                        description: content.name,
+                        input_schema: serde_json::json!(content.input_schema),
+                        provider: "Task".to_string(),
+                    };
+                    tools.push(tool);
+                }
+                Ok(tools)
+            })?;
+
+        Ok(HttpResponse::Ok(tools))
     }
 
     async fn get_models(

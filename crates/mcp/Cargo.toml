@@ -10,7 +10,8 @@ homepage.workspace = true
 
 [dependencies]
 sauropod-config = { path = "../config" }
-sauropod-tool-spec = { path = "../tool-spec" }
+sauropod-task-context = { path = "../task-context" }
+sauropod-schemas = { path = "../schemas" }
 
 anyhow.workspace = true
 futures.workspace = true
