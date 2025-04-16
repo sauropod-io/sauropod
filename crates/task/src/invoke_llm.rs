@@ -47,9 +47,18 @@ impl InvokeLlmTask {
                 .clone()
                 .unwrap_or_else(crate::default_task_output_schema)
         );
+
         let input_schema = serde_json::json!(task.input_schema);
+        let input_schema_interface = sauropod_json_schema::JsonSchemaInterface::new(&input_schema)?;
+        if !input_schema_interface.is_object() {
+            anyhow::bail!(
+                "The input schema for tasks must be an object, received: {input_schema:?}"
+            );
+        }
+
+        let input_schema_properties = input_schema_interface.properties_map()?;
         for variable in Template::new(&task.template.0).variables() {
-            if !task.input_schema.contains_key(variable) {
+            if !input_schema_properties.contains_key(variable) {
                 anyhow::bail!("The input schema is missing the variable {}", variable);
             }
         }

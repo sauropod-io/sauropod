@@ -251,6 +251,19 @@ impl<'a> JsonSchemaInterface<'a> {
         }
     }
 
+    /// Get the properties field from the underlying JSON object.
+    pub fn properties_map(&self) -> anyhow::Result<&serde_json::Map<String, serde_json::Value>> {
+        if !self.is_object() {
+            return Err(anyhow::anyhow!("Schema is not an object"));
+        }
+
+        if let Some(properties) = self.schema.get("properties").and_then(|v| v.as_object()) {
+            Ok(properties)
+        } else {
+            Err(anyhow::anyhow!("Properties field is missing or malformed"))
+        }
+    }
+
     /// Get the item type in a JSON schema array.
     pub fn items(&self) -> anyhow::Result<Self> {
         if !self.is_array() {

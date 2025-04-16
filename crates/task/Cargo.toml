@@ -7,12 +7,13 @@ authors.workspace = true
 publish.workspace = true
 
 [dependencies]
-sauropod-schemas = { path = "../schemas" }
+sauropod-config = { path = "../config" }
+sauropod-json-schema = { path = "../json-schema" }
 sauropod-llm-inference = { path = "../llm-inference" }
 sauropod-prompt-templates = { path = "../prompt-templates" }
-sauropod-tool-spec = { path = "../tool-spec" }
+sauropod-schemas = { path = "../schemas" }
 sauropod-task-context = { path = "../task-context" }
-sauropod-config = { path = "../config" }
+sauropod-tool-spec = { path = "../tool-spec" }
 
 anyhow.workspace = true
 async-trait.workspace = true

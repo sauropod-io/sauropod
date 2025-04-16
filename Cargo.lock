@@ -1965,6 +1965,7 @@ dependencies = [
  "async-trait",
  "jsonschema",
  "sauropod-config",
+ "sauropod-json-schema",
  "sauropod-llm-inference",
  "sauropod-prompt-templates",
  "sauropod-schemas",
