@@ -1,0 +1,15 @@
+[package]
+name = "sqlx-wrapper"
+description = "Wrapper around the sqlx CLI"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+publish.workspace = true
+repository.workspace = true
+homepage.workspace = true
+
+[dependencies]
+clap.workspace = true
+sqlx-cli.workspace = true
+tokio.workspace = true

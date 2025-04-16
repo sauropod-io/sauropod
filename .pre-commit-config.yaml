@@ -1,6 +1,7 @@
 exclude: |
   (?x)^(
       .*\.vale/.*|
+      .sqlx/.*|
       packages/client/.*\.ts
   )$
 repos:
@@ -50,6 +51,14 @@ repos:
         files: "Cargo.toml|crates/(schemas|config)/.*|api/core/.*"
         entry: make
         args: ["generate"]
+        pass_filenames: false
+      - id: sqlx-prepare
+        name: sqlx-prepare
+        language: system
+        types: [rust]
+        files: "crates/database/.*"
+        entry: make
+        args: ["sqlx-prepare"]
         pass_filenames: false
       - id: cargo-fmt
         name: cargo fmt

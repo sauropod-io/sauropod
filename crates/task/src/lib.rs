@@ -168,7 +168,8 @@ impl Task {
             if let Some(suffix) = tool_id.strip_prefix(TASK_TOOL_PREFIX) {
                 if let Ok(task_id) = suffix.parse::<i64>() {
                     let task = context
-                        .get_task(task_id)?
+                        .get_task(task_id)
+                        .await?
                         .ok_or_else(|| anyhow::anyhow!("Task with ID {task_id} not found"))?;
                     let tool_definition = sauropod_schemas::ToolDefinition {
                         id: tool_id.clone(),

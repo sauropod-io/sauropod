@@ -40,7 +40,7 @@ pub trait ServerInterface {
     /// Get the list of tasks
     async fn get_task(
         &self,
-    ) -> anyhow::Result<crate::HttpResponse<std::vec::Vec<sauropod_schemas::task::ObjectInfo>>>;
+    ) -> anyhow::Result<crate::HttpResponse<std::vec::Vec<sauropod_schemas::task::TaskInfo>>>;
     /// Create a task
     async fn post_task(
         &self,

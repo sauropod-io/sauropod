@@ -26,7 +26,6 @@ jsonschema = { version = "0.29.1", default-features = false }
 nom = { version = "8.0.0", default-features = false, features = ["std"] }
 reqwest = { version = "0.12.14", features = ["json"] }
 rmcp = { version = "0.1.5", default-features = false, features = ["base64", "macros", "client", "transport-io", "transport-sse", "transport-child-process"]}
-rusqlite = { version = "0.34.0", features = ["bundled", "serde_json"]}
 schemars = "1.0.0-alpha.17"
 serde = {version = "1.0.219", features = ["serde_derive"]}
 serde_json = "1.0.140"
@@ -37,9 +36,15 @@ tower = "0.5.2"
 tower-http = { version = "0.6.2", features = ["cors"] }
 tracing = "0.1.41"
 tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
+sqlx = { version = "0.8.5", default-features = false, features = ["derive", "chrono", "uuid", "runtime-tokio", "migrate", "json", "macros", "sqlite"] }
+sqlx-cli = { version = "0.8.5" }
 
 [profile.optimized-release]
 inherits = "release"
 lto = "fat"
 opt-level = 3
 panic = "abort"
+
+# Speed up sqlx-macros for incremental builds
+[profile.dev.package.sqlx-macros]
+opt-level = 3

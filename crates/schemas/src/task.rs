@@ -14,16 +14,6 @@ pub struct Template(
     pub String,
 );
 
-/// A task ID.
-#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
-#[cfg_attr(feature = "json_schema", derive(schemars::JsonSchema))]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub struct TaskId {
-    /// The ID of the task.
-    #[cfg_attr(feature = "json_schema", schemars(example = 12345))]
-    pub task_id: i64,
-}
-
 /// A task is the smallest unit of work in a workflow.
 #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
 #[cfg_attr(feature = "json_schema", derive(schemars::JsonSchema))]
@@ -48,15 +38,17 @@ pub struct Task {
     pub available_tool_ids: Vec<String>,
 }
 
-/// Minimal information describing a stored object.
+/// Minimal information describing a stored task.
 #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
 #[cfg_attr(feature = "json_schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub struct ObjectInfo {
-    /// The ID of the object.
+pub struct TaskInfo {
+    /// The ID of the task.
     ///
-    /// This ID can be used to retrieve the contents of the object.
+    /// This ID can be used to retrieve the contents of the task.
+    #[cfg_attr(feature = "json_schema", schemars(example = 12345))]
     pub id: i64,
-    /// The name of the object.
+    /// The name of the task.
+    #[cfg_attr(feature = "json_schema", schemars(example = "Classify Email"))]
     pub name: String,
 }

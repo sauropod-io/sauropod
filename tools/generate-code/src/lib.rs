@@ -3,7 +3,6 @@ use std::io::Write;
 use schemars::JsonSchema;
 
 mod config_file;
-pub mod database;
 pub mod openapi;
 pub mod openapi_schema;
 pub mod paths;

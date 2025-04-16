@@ -1,3 +1,5 @@
+//! Schemas used in the Sauropod API.
+
 pub mod observability;
 
 pub mod task;

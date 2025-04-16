@@ -2,7 +2,9 @@
 SCHEMA_DIR = $(CURDIR)/api
 DOCS_DIR = $(CURDIR)/docs
 PACKAGES_DIR = $(CURDIR)/packages
+CRATES_DIR = $(CURDIR)/crates
 SCHEMA_FILE = $(SCHEMA_DIR)/openapi.json
+TMP_DATABASE = $(CURDIR)/tmp.db
 
 # Define default target
 .PHONY: default
@@ -41,3 +43,23 @@ release: generate ui
 
 ui:
 	npm run build
+
+# sqlx-related targets
+.PHONY: sqlx-migrate sqlx-set-up
+
+MIGRATIONS_DIR = $(CURDIR)/crates/database/migrations
+sqlx-migrate:
+	DATABASE_URL=sqlite://$(TMP_DATABASE) cargo --quiet run -p sqlx-wrapper -- migrate run --source "$(MIGRATIONS_DIR)"  --database-url "sqlite://$(TMP_DATABASE)"
+
+sqlx-set-up:
+	cargo --quiet run -p sqlx-wrapper -- database setup --source "$(MIGRATIONS_DIR)" --database-url "sqlite://$(TMP_DATABASE)"
+	@echo "Now run export DATABASE_URL=sqlite://$(TMP_DATABASE)"
+
+sqlx-reset:
+	DATABASE_URL=sqlite://$(TMP_DATABASE) cargo --quiet run -p sqlx-wrapper -- database reset --source "$(MIGRATIONS_DIR)" -y
+
+sqlx-prepare:
+	DATABASE_URL=sqlite://$(TMP_DATABASE) cargo --quiet run -p sqlx-wrapper -- prepare --workspace
+
+show-current-schema:
+	sqlite3 ./tmp.db ".schema"

@@ -1,9 +1,9 @@
 use sauropod_schemas::{
     InputAndOutputSchema, ModelDefinition, ToolDefinition,
-    task::{ObjectInfo, Task},
+    task::{Task, TaskInfo},
 };
 
-use generate_code::{Object, database_types, openapi};
+use generate_code::{Object, openapi};
 
 fn main() -> anyhow::Result<()> {
     openapi! {
@@ -26,7 +26,7 @@ fn main() -> anyhow::Result<()> {
         )
         route "/task" (
             POST (Task) -> i64 : "Create a task"
-            GET (()) -> Vec<ObjectInfo> : "Get the list of tasks"
+            GET (()) -> Vec<TaskInfo> : "Get the list of tasks"
         )
         route "/tools" (
             GET (()) -> Vec<ToolDefinition> : "Get the list of available tools"
@@ -37,10 +37,6 @@ fn main() -> anyhow::Result<()> {
         route "/version" (
             GET (()) -> String : "Get the version of the server"
         )
-    };
-
-    database_types! {
-        Task
     };
 
     generate_code::generate_code_for_config()?;

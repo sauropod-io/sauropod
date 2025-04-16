@@ -1,0 +1,62 @@
+{
+  "db_name": "SQLite",
+  "query": "\n                SELECT\n                    id,\n                    owner,\n                    name,\n                    description,\n                    template,\n                    output_schema as \"output_schema: Json<Option<serde_json::Map<String, serde_json::Value>>>\",\n                    input_schema as \"input_schema: Json<serde_json::Map<String, serde_json::Value>>\",\n                    available_tool_ids as \"available_tool_ids: Json<Vec<String>>\"\n                FROM task\n                WHERE id = ?\n            ",
+  "describe": {
+    "columns": [
+      {
+        "name": "id",
+        "ordinal": 0,
+        "type_info": "Integer"
+      },
+      {
+        "name": "owner",
+        "ordinal": 1,
+        "type_info": "Integer"
+      },
+      {
+        "name": "name",
+        "ordinal": 2,
+        "type_info": "Text"
+      },
+      {
+        "name": "description",
+        "ordinal": 3,
+        "type_info": "Text"
+      },
+      {
+        "name": "template",
+        "ordinal": 4,
+        "type_info": "Text"
+      },
+      {
+        "name": "output_schema: Json<Option<serde_json::Map<String, serde_json::Value>>>",
+        "ordinal": 5,
+        "type_info": "Null"
+      },
+      {
+        "name": "input_schema: Json<serde_json::Map<String, serde_json::Value>>",
+        "ordinal": 6,
+        "type_info": "Null"
+      },
+      {
+        "name": "available_tool_ids: Json<Vec<String>>",
+        "ordinal": 7,
+        "type_info": "Null"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "5ff8a6d072ecafaa7e95681db4e83446adebc0aac09deb24a268b17d1d302683"
+}

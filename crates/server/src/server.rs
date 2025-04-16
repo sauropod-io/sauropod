@@ -3,9 +3,9 @@
 use std::env;
 use std::sync::Arc;
 
-use sauropod_database::{DatabaseId, DatabaseType as _, DatabaseTypeWithID, DatabaseTypeWithName};
+use sauropod_database::{DatabaseId, DatabaseTypeWithId};
 use sauropod_schemas::InputAndOutputSchema;
-use sauropod_schemas::task::{ObjectInfo, Task};
+use sauropod_schemas::task::{Task, TaskInfo};
 use sauropod_task_context::TaskContext;
 use tracing::Instrument;
 
@@ -39,8 +39,7 @@ impl Server {
             .database_path
             .clone()
             .ok_or_else(|| anyhow::anyhow!("No database path configured"))?;
-        let db = Arc::new(sauropod_database::Database::new(db_location.into())?);
-        db.init()?;
+        let db = Arc::new(sauropod_database::create_database(db_location.as_ref()).await?);
         let mcp = sauropod_mcp::ModelContextProtocol::new(config)
             .instrument(tracing::info_span!("MCP initialization"))
             .await?;
@@ -91,83 +90,6 @@ impl Server {
     }
 }
 
-/// HTTP endpoint to get an object from the database by ID.
-fn db_get_object<T>(
-    database: &sauropod_database::Database,
-    id: DatabaseId,
-) -> anyhow::Result<HttpResponse<T>>
-where
-    for<'de> T: DatabaseTypeWithID + serde::Deserialize<'de>,
-{
-    match database.get_by_id::<T>(id)? {
-        Some(object) => Ok(object.into()),
-        None => Ok(HttpResponse::NotFound(None)),
-    }
-}
-
-/// HTTP endpoint to delete an object from the database by ID.
-fn db_delete_object<T: DatabaseTypeWithID>(
-    database: &sauropod_database::Database,
-    id: DatabaseId,
-) -> anyhow::Result<HttpResponse<()>> {
-    match database.delete_by_id::<T>(id)? {
-        true => Ok(HttpResponse::Ok(())),
-        false => Ok(HttpResponse::NotFound(None)),
-    }
-}
-
-/// HTTP endpoint to update an object in the database by ID.
-fn db_update_object<T: DatabaseTypeWithID + serde::Serialize>(
-    database: &sauropod_database::Database,
-    id: DatabaseId,
-    input: T,
-) -> anyhow::Result<HttpResponse<()>> {
-    match database.update_by_id(id, &input)? {
-        true => Ok(HttpResponse::Ok(())),
-        false => Ok(HttpResponse::NotFound(None)),
-    }
-}
-
-/// HTTP endpoint to create an object in the database.
-fn db_create_object<T: DatabaseTypeWithID + serde::Serialize>(
-    database: &sauropod_database::Database,
-    input: T,
-) -> anyhow::Result<HttpResponse<DatabaseId>> {
-    Ok(HttpResponse::Ok(database.insert(&input)?))
-}
-
-/// HTTP endpoint to list the objects in the database.
-fn db_list_objects<T: DatabaseTypeWithID + DatabaseTypeWithName>(
-    database: &sauropod_database::Database,
-    limit: Option<i64>,
-) -> anyhow::Result<HttpResponse<Vec<ObjectInfo>>> {
-    let mut query: String = format!(
-        "SELECT id, json_extract(content, '$.name') as name FROM {}",
-        T::table_name()
-    );
-    if let Some(limit) = limit {
-        query.push_str(&format!(" LIMIT {}", limit));
-    }
-
-    let object_infos = database.with_connection(move |connection| -> anyhow::Result<_> {
-        let mut statement = connection.prepare(&query)?;
-        let mut object_infos = Vec::with_capacity(16);
-        let objects = statement.query_map([], |row| {
-            Ok(ObjectInfo {
-                id: row.get(0)?,
-                name: row.get(1)?,
-            })
-        })?;
-
-        for object in objects {
-            object_infos.push(object?);
-        }
-        Ok(object_infos)
-    })?;
-
-    Ok(HttpResponse::Ok(object_infos))
-}
-
 #[async_trait::async_trait]
 impl sauropod_http::ServerInterface for Server {
     async fn get_health(
@@ -185,11 +107,17 @@ impl sauropod_http::ServerInterface for Server {
     }
 
     async fn get_task_id(&self, id: DatabaseId) -> anyhow::Result<HttpResponse<Task>> {
-        db_get_object::<Task>(&self.db, id)
+        match Task::get_by_id(id, &self.db).await? {
+            Some(object) => Ok(object.into()),
+            None => Ok(HttpResponse::NotFound(None)),
+        }
     }
 
     async fn delete_task_id(&self, id: DatabaseId) -> anyhow::Result<HttpResponse<()>> {
-        db_delete_object::<Task>(&self.db, id)
+        match Task::delete_by_id(id, &self.db).await? {
+            true => Ok(HttpResponse::Ok(())),
+            false => Ok(HttpResponse::NotFound(None)),
+        }
     }
 
     async fn post_task_id(&self, id: DatabaseId, input: Task) -> anyhow::Result<HttpResponse<()>> {
@@ -198,7 +126,10 @@ impl sauropod_http::ServerInterface for Server {
             return Ok(HttpResponse::BadRequest(e.to_string()));
         }
 
-        db_update_object::<Task>(&self.db, id, input)
+        match sauropod_database::Task::update(id, input, &self.db).await? {
+            true => Ok(HttpResponse::Ok(())),
+            false => Ok(HttpResponse::NotFound(None)),
+        }
     }
 
     async fn post_task_id_run(
@@ -206,7 +137,7 @@ impl sauropod_http::ServerInterface for Server {
         id: DatabaseId,
         input: serde_json::Map<String, serde_json::Value>,
     ) -> anyhow::Result<HttpResponse<serde_json::Map<String, serde_json::Value>>> {
-        let task = match self.db.get_by_id::<Task>(id)? {
+        let task = match Task::get_by_id(id, &self.db).await? {
             Some(task) => sauropod_task::Task::new(task)?,
             None => {
                 tracing::error!("Task not found: {id}");
@@ -226,7 +157,7 @@ impl sauropod_http::ServerInterface for Server {
         &self,
         id: i64,
     ) -> anyhow::Result<HttpResponse<InputAndOutputSchema>> {
-        let Some(task) = self.db.get_by_id::<Task>(id)? else {
+        let Some(task) = Task::get_by_id(id, &self.db).await? else {
             return Ok(HttpResponse::NotFound(None));
         };
 
@@ -259,11 +190,24 @@ impl sauropod_http::ServerInterface for Server {
             return Ok(HttpResponse::BadRequest(e.to_string()));
         }
 
-        db_create_object::<Task>(&self.db, input)
+        let id = sauropod_database::Task::from(input)
+            .insert(&self.db)
+            .await?;
+        Ok(HttpResponse::Ok(id))
     }
 
-    async fn get_task(&self) -> anyhow::Result<HttpResponse<Vec<ObjectInfo>>> {
-        db_list_objects::<Task>(&self.db, None)
+    async fn get_task(&self) -> anyhow::Result<HttpResponse<Vec<TaskInfo>>> {
+        Ok(HttpResponse::Ok(
+            sauropod_database::Task::list(&self.db).await.map(|tasks| {
+                tasks
+                    .into_iter()
+                    .map(|task| TaskInfo {
+                        id: task.id,
+                        name: task.name,
+                    })
+                    .collect()
+            })?,
+        ))
     }
 
     async fn get_tools(
@@ -275,37 +219,17 @@ impl sauropod_http::ServerInterface for Server {
             .map(|tool| tool.get_definition())
             .collect();
 
-        let query: String = format!(
-            "SELECT id, content FROM {}",
-            sauropod_schemas::task::Task::table_name()
-        );
-
-        let tools = self
-            .db
-            .with_connection(move |connection| -> anyhow::Result<_> {
-                let mut statement = connection.prepare(&query)?;
-                let rows = statement.query_map([], |row| {
-                    let id = row.get::<_, i64>(0)?;
-                    let content = row.get::<_, String>(1)?;
-                    Ok((id, content))
-                })?;
-                let (lower, upper) = rows.size_hint();
-                tools.reserve(upper.unwrap_or(lower));
-
-                for data in rows.into_iter() {
-                    let (id, content) = data?;
-                    let content: sauropod_schemas::task::Task = serde_json::from_str(&content)?;
-                    let tool = sauropod_schemas::ToolDefinition {
-                        id: format!("{}{id}", sauropod_task::TASK_TOOL_PREFIX),
-                        name: content.name.clone(),
-                        description: content.name,
-                        input_schema: serde_json::json!(content.input_schema),
-                        provider: "Task".to_string(),
-                    };
-                    tools.push(tool);
-                }
-                Ok(tools)
-            })?;
+        let tasks_as_tools = sauropod_database::Task::list(&self.db)
+            .await?
+            .into_iter()
+            .map(|task| sauropod_schemas::ToolDefinition {
+                id: format!("{}{}", sauropod_task::TASK_TOOL_PREFIX, task.id),
+                name: task.name,
+                description: task.description,
+                input_schema: serde_json::json!(task.input_schema.0),
+                provider: "Task".to_string(),
+            });
+        tools.extend(tasks_as_tools);
 
         Ok(HttpResponse::Ok(tools))
     }

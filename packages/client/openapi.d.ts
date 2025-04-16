@@ -189,7 +189,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            "application/json": components["schemas"]["Array_of_ObjectInfo"];
+            "application/json": components["schemas"]["Array_of_TaskInfo"];
           };
         };
         /** @description Bad Request */
@@ -627,7 +627,7 @@ export type webhooks = Record<string, never>;
 export interface components {
   schemas: {
     Array_of_ModelDefinition: components["schemas"]["ModelDefinition"][];
-    Array_of_ObjectInfo: components["schemas"]["ObjectInfo"][];
+    Array_of_TaskInfo: components["schemas"]["TaskInfo"][];
     Array_of_ToolDefinition: components["schemas"]["ToolDefinition"][];
     /** @description An error message. */
     Error: {
@@ -681,18 +681,6 @@ export interface components {
       /** @description The URI of the model. */
       uri: string;
     };
-    /** @description Minimal information describing a stored object. */
-    ObjectInfo: {
-      /**
-       * Format: int64
-       * @description The ID of the object.
-       *
-       *      This ID can be used to retrieve the contents of the object.
-       */
-      id: number;
-      /** @description The name of the object. */
-      name: string;
-    };
     /** @description A task is the smallest unit of work in a workflow. */
     Task: {
       /**
@@ -718,6 +706,18 @@ export interface components {
         [key: string]: unknown;
       } | null;
       template: components["schemas"]["Template"];
+    };
+    /** @description Minimal information describing a stored task. */
+    TaskInfo: {
+      /**
+       * Format: int64
+       * @description The ID of the task.
+       *
+       *      This ID can be used to retrieve the contents of the task.
+       */
+      id: number;
+      /** @description The name of the task. */
+      name: string;
     };
     /** @description A template.
      *
