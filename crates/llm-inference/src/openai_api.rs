@@ -62,7 +62,7 @@ pub struct Function {
 impl From<sauropod_tool_spec::ToolDefinition> for Function {
     fn from(def: sauropod_tool_spec::ToolDefinition) -> Self {
         Function {
-            name: def.name,
+            name: def.id,
             description: def.description,
             parameters: def.input_schema,
             strict: false,

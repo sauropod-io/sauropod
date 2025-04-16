@@ -33,7 +33,7 @@ impl TaskContext {
     ) -> Arc<Self> {
         let mut tool_map = HashMap::with_capacity(tools.len());
         for tool in tools.into_iter() {
-            tool_map.insert(tool.get_name().to_string(), tool);
+            tool_map.insert(tool.get_id().to_string(), tool);
         }
 
         Arc::new(Self {

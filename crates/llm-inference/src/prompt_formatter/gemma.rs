@@ -10,6 +10,34 @@ You have access to functions. If you decide to invoke any of the function(s),
 You SHOULD NOT include any other text in the response if you call a function
 "#;
 
+/// To create a response format that also allows for function calling, we need to
+/// create a oneOf JSON schema allows both tool calling and the user's requested output format.
+pub fn create_response_format(schema: &serde_json::Value) -> serde_json::Value {
+    let mut schema = schema.clone();
+    schema["description"] = "Output format the user requested".into();
+
+    serde_json::json!({
+        "oneOf": [
+            {
+                "type": "object",
+                "description": "function call",
+                "properties": {
+                    "call_function": {
+                        "type": "string",
+                        "description": "function name"
+                    },
+                    "parameters": {
+                        "type": "object",
+                        "description": "dictionary of argument name and its value",
+                    }
+                },
+                "required": ["call_function", "parameters"]
+            },
+            schema
+        ]
+    })
+}
+
 /// Completion request generator for Gemma 3.
 pub(super) fn prepare_completion_request(
     model: sauropod_config::ModelConfig,
@@ -22,7 +50,7 @@ pub(super) fn prepare_completion_request(
         .into_iter()
         .map(|tool_definition| {
             serde_json::json!({
-                "name": tool_definition.name,
+                "name": tool_definition.id,
                 "description": tool_definition.description,
                 "parameters": tool_definition.input_schema
             })
@@ -50,7 +78,7 @@ pub(super) fn prepare_completion_request(
             crate::openai_api::ResponseFormat::JsonSchema {
                 json_schema: crate::openai_api::ResponseJsonSchema {
                     name: "output".to_string(),
-                    schema: schema.clone(),
+                    schema: create_response_format(schema),
                     strict: true,
                 },
             }

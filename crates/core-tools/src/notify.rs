@@ -13,6 +13,10 @@ pub struct NotifyToolInput {
 impl ConcreteTool for NotifyTool {
     type Input = NotifyToolInput;
 
+    fn get_id(&self) -> &str {
+        "builtin:notify"
+    }
+
     fn get_name(&self) -> &str {
         "notify"
     }

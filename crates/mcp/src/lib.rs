@@ -43,6 +43,10 @@ impl McpTool {
 }
 
 impl sauropod_tool_spec::Tool for McpTool {
+    fn get_id(&self) -> &str {
+        self.description.id.as_str()
+    }
+
     fn get_name(&self) -> &str {
         self.description.name.as_str()
     }

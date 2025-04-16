@@ -11,6 +11,9 @@ const BUILTIN_PROVIDER: &str = "builtin";
 
 /// A tool which can be exposed to LLMs.
 pub trait Tool: Send + Sync {
+    /// Get the ID of the tool.
+    fn get_id(&self) -> &str;
+
     /// Get the name of the tool.
     fn get_name(&self) -> &str;
 
@@ -28,6 +31,9 @@ pub trait Tool: Send + Sync {
 pub trait ConcreteTool {
     /// The input to the tool.
     type Input;
+
+    /// Get the ID of the tool.
+    fn get_id(&self) -> &str;
 
     /// The name of the tool. Must match the regex `^[a-zA-Z0-9_-]{1,64}$`.
     fn get_name(&self) -> &str;
@@ -47,6 +53,10 @@ impl<T: ConcreteTool + Send + Sync + 'static> Tool for T
 where
     <Self as ConcreteTool>::Input: for<'a> serde::Deserialize<'a> + schemars::JsonSchema,
 {
+    fn get_id(&self) -> &str {
+        <Self as ConcreteTool>::get_id(self)
+    }
+
     fn get_name(&self) -> &str {
         <Self as ConcreteTool>::get_name(self)
     }

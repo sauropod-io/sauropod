@@ -28,6 +28,10 @@ pub struct FetchRequestToolInput {
 impl ConcreteTool for FetchTool {
     type Input = FetchRequestToolInput;
 
+    fn get_id(&self) -> &str {
+        "builtin:fetch"
+    }
+
     fn get_name(&self) -> &str {
         "fetch"
     }
