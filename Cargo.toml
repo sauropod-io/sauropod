@@ -1,23 +1,8 @@
 [workspace]
 resolver = "2"
 members = [
-    "crates/config",
-    "crates/core-tools",
-    "crates/database",
-    "crates/http",
-    "crates/json-schema",
-    "crates/links",
-    "crates/llm-inference",
-    "crates/logging",
-    "crates/mcp",
-    "crates/prompt-templates",
-    "crates/schemas",
-    "crates/server",
-    "crates/task-context",
-    "crates/task",
-    "tools/create-release-tag",
-    "tools/generate-code",
-    "tools/update-latest-image",
+    "crates/*",
+    "tools/*",
 ]
 
 [workspace.package]
