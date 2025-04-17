@@ -44,7 +44,17 @@ pub(super) fn prepare_completion_request(
     context: crate::LlmContext,
 ) -> anyhow::Result<CompletionRequest> {
     let mut system_prompt = context.system_prompt.trim().to_string();
-    system_prompt.push_str(FUNCTION_CALL_PREAMBLE);
+    if !context.tools.is_empty() {
+        system_prompt.push_str(FUNCTION_CALL_PREAMBLE);
+    }
+
+    if let Some(output_format) = context.output_schema {
+        system_prompt.push_str(&format!(
+            "\n\nGive your response in the format: {}",
+            serde_json::to_string_pretty(&output_format)?
+        ));
+    }
+
     let tools: Vec<_> = context
         .tools
         .into_iter()
