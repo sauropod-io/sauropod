@@ -13,7 +13,7 @@ pub const TASK_TOOL_PREFIX: &str = "task:";
 /// Task to invoke an LLM.
 pub struct Task {
     /// The underlying schema representation of the task.
-    schema_representation: sauropod_schemas::task::Task,
+    schema_representation: sauropod_schemas::Task,
     /// The output JSON schema for the task.
     output_schema: serde_json::Value,
     /// The input JSON schema for the task.
@@ -72,7 +72,7 @@ where
 }
 
 impl Task {
-    pub fn new(task: sauropod_schemas::task::Task) -> anyhow::Result<Self> {
+    pub fn new(task: sauropod_schemas::Task) -> anyhow::Result<Self> {
         let use_structured_output = task.output_schema.is_some();
         let output_schema: serde_json::Value = serde_json::json!(
             task.output_schema
@@ -329,7 +329,7 @@ pub struct TaskAsTool {
     /// The ID of the tool.
     tool_id: String,
     /// The task to call.
-    task_schema: sauropod_schemas::task::Task,
+    task_schema: sauropod_schemas::Task,
     /// The tool definition.
     definition: sauropod_schemas::ToolDefinition,
 }
@@ -370,7 +370,7 @@ impl sauropod_task_context::Tool for TaskAsTool {
 }
 
 /// Check whether a task is valid.
-pub fn validate_task(task: sauropod_schemas::task::Task) -> anyhow::Result<()> {
+pub fn validate_task(task: sauropod_schemas::Task) -> anyhow::Result<()> {
     // Check that the template is parseable into an input schema.
     let _ = Task::new(task)?;
     Ok(())

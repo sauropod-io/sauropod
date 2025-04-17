@@ -1,7 +1,4 @@
-use sauropod_schemas::{
-    InputAndOutputSchema, ModelDefinition, ToolDefinition,
-    task::{Task, TaskInfo},
-};
+use sauropod_schemas::{InputAndOutputSchema, ModelDefinition, Task, TaskInfo, ToolDefinition};
 
 use generate_code::{Object, openapi};
 

@@ -5,7 +5,7 @@ use std::sync::Arc;
 
 use sauropod_database::{DatabaseId, DatabaseTypeWithId, UserId};
 use sauropod_schemas::InputAndOutputSchema;
-use sauropod_schemas::task::{Task, TaskInfo};
+use sauropod_schemas::{Task, TaskInfo};
 use sauropod_task_context::TaskContext;
 use tracing::Instrument;
 

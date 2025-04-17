@@ -162,7 +162,7 @@ impl Task {
     pub async fn update(
         id: DatabaseId,
         owner: UserId,
-        content: sauropod_schemas::task::Task,
+        content: sauropod_schemas::Task,
         connection: &Database,
     ) -> sqlx::Result<bool> {
         let output_schema = Json(content.output_schema);
@@ -184,19 +184,19 @@ impl Task {
     }
 }
 
-impl From<Task> for sauropod_schemas::task::Task {
+impl From<Task> for sauropod_schemas::Task {
     fn from(val: Task) -> Self {
-        sauropod_schemas::task::Task {
+        sauropod_schemas::Task {
             name: val.name,
-            template: sauropod_schemas::task::Template(val.template),
+            template: sauropod_schemas::Template(val.template),
             output_schema: val.output_schema.0,
             input_schema: val.input_schema.0,
             available_tool_ids: val.available_tool_ids.to_vec(),
         }
     }
 }
-impl From<sauropod_schemas::task::Task> for Task {
-    fn from(val: sauropod_schemas::task::Task) -> Task {
+impl From<sauropod_schemas::Task> for Task {
+    fn from(val: sauropod_schemas::Task) -> Task {
         Task {
             id: 0,
             owner_id: 0,
@@ -210,7 +210,7 @@ impl From<sauropod_schemas::task::Task> for Task {
     }
 }
 
-impl DatabaseTypeWithId for sauropod_schemas::task::Task {
+impl DatabaseTypeWithId for sauropod_schemas::Task {
     async fn get_by_id(
         id: DatabaseId,
         owner: UserId,

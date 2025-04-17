@@ -18,13 +18,13 @@ pub trait ServerInterface {
         &self,
         user_id: sauropod_database::UserId,
         id: i64,
-    ) -> anyhow::Result<crate::HttpResponse<sauropod_schemas::task::Task>>;
+    ) -> anyhow::Result<crate::HttpResponse<sauropod_schemas::Task>>;
     /// Update a task
     async fn post_task_id(
         &self,
         user_id: sauropod_database::UserId,
         id: i64,
-        input: sauropod_schemas::task::Task,
+        input: sauropod_schemas::Task,
     ) -> anyhow::Result<crate::HttpResponse<()>>;
     /// Delete a task
     async fn delete_task_id(
@@ -51,12 +51,12 @@ pub trait ServerInterface {
     async fn get_task(
         &self,
         user_id: sauropod_database::UserId,
-    ) -> anyhow::Result<crate::HttpResponse<std::vec::Vec<sauropod_schemas::task::TaskInfo>>>;
+    ) -> anyhow::Result<crate::HttpResponse<std::vec::Vec<sauropod_schemas::TaskInfo>>>;
     /// Create a task
     async fn post_task(
         &self,
         user_id: sauropod_database::UserId,
-        input: sauropod_schemas::task::Task,
+        input: sauropod_schemas::Task,
     ) -> anyhow::Result<crate::HttpResponse<i64>>;
     /// Get the list of available tools
     async fn get_tools(
@@ -145,7 +145,7 @@ pub fn register_routes<T: ServerInterface + Sync + Send + 'static>(
                 async move |Extension(user_id): crate::UserIdExtension,
                             axum::extract::Path(id): axum::extract::Path<i64>,
                             axum::extract::Json(input): axum::extract::Json<
-                    sauropod_schemas::task::Task,
+                    sauropod_schemas::Task,
                 >| {
                     tracing::debug!("POST /task/{{id}}");
                     let response = server_clone
@@ -253,7 +253,7 @@ pub fn register_routes<T: ServerInterface + Sync + Send + 'static>(
                 let server_clone = server.clone();
                 async move |Extension(user_id): crate::UserIdExtension,
                             axum::extract::Json(input): axum::extract::Json<
-                    sauropod_schemas::task::Task,
+                    sauropod_schemas::Task,
                 >| {
                     tracing::debug!("POST /task");
                     let response = server_clone

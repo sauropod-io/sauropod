@@ -4,7 +4,7 @@ use std::{collections::HashMap, sync::Arc};
 
 use sauropod_config::ModelConfig;
 use sauropod_database::{DatabaseTypeWithId as _, UserId};
-use sauropod_schemas::task::Task;
+use sauropod_schemas::Task;
 mod traits;
 pub use traits::*;
 
@@ -62,7 +62,7 @@ impl TaskContext {
     }
 
     /// Get a task by ID.
-    pub async fn get_task(&self, id: i64) -> anyhow::Result<Option<sauropod_schemas::task::Task>> {
+    pub async fn get_task(&self, id: i64) -> anyhow::Result<Option<sauropod_schemas::Task>> {
         match Task::get_by_id(id, self.user_id, &self.db).await? {
             Some(task) => Ok(Some(task)),
             None => {
