@@ -171,7 +171,7 @@ function OutputConfiguration({
   }
 
   return (
-    <div className="mt-4 space-y-4">
+    <div className="space-y-3">
       {disabled || outputFields}
 
       <div className="flex items-center space-x-2">
@@ -429,24 +429,26 @@ export default function TaskEditor({ taskId }: { taskId?: string }) {
                   above to make an input variable.
                 </p>
               )}
-              {Object.entries(inputSchema?.properties || {}).map(
-                ([variable, variableType]) => (
-                  <Variable
-                    key={variable}
-                    name={variable}
-                    value={variableType.type}
-                    onChangeType={(value) => {
-                      setInputSchema(({ properties, ...rest }) => ({
-                        properties: {
-                          ...properties,
-                          [variable]: { type: value },
-                        },
-                        ...rest,
-                      }));
-                    }}
-                  />
-                ),
-              )}
+              <div className="space-y-3">
+                {Object.entries(inputSchema?.properties || {}).map(
+                  ([variable, variableType]) => (
+                    <Variable
+                      key={variable}
+                      name={variable}
+                      value={variableType.type}
+                      onChangeType={(value) => {
+                        setInputSchema(({ properties, ...rest }) => ({
+                          properties: {
+                            ...properties,
+                            [variable]: { type: value },
+                          },
+                          ...rest,
+                        }));
+                      }}
+                    />
+                  ),
+                )}
+              </div>
             </CardContent>
           </Card>
 
