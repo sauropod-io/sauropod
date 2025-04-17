@@ -1,9 +1,14 @@
-use sqlx::types::Json;
+use sqlx::{FromRow, types::Json};
 
 use crate::Database;
 
 /// ID of types stored in the database.
 pub type DatabaseId = i64;
+
+/// ID of a user in the database.
+#[derive(Clone, Copy, sqlx::Type)]
+#[sqlx(transparent)]
+pub struct UserId(pub DatabaseId);
 
 /// Trait for objects that have an ID for use in the database.
 pub trait DatabaseTypeWithId: Sized {
@@ -12,6 +17,7 @@ pub trait DatabaseTypeWithId: Sized {
     /// Returns `None` if the object was not found.
     fn get_by_id(
         id: DatabaseId,
+        owner: UserId,
         connection: &Database,
     ) -> impl Future<Output = sqlx::Result<Option<Self>>>;
 
@@ -20,11 +26,94 @@ pub trait DatabaseTypeWithId: Sized {
     /// Returns `true` if the object was deleted, `false` if it was not found.
     fn delete_by_id(
         id: DatabaseId,
+        owner: UserId,
         connection: &Database,
     ) -> impl Future<Output = sqlx::Result<bool>>;
 
     /// Get a list of objects.
-    fn list(connection: &Database) -> impl Future<Output = sqlx::Result<Vec<Self>>>;
+    fn list(owner: UserId, connection: &Database) -> impl Future<Output = sqlx::Result<Vec<Self>>>;
+}
+
+/// Schema for users in the database.
+#[derive(Debug, Clone, PartialEq, sqlx::FromRow)]
+pub struct User {
+    /// The ID of the user.
+    pub user_id: DatabaseId,
+    /// The name of the user.
+    pub name: String,
+}
+
+impl User {
+    /// Add a user to the database.
+    pub async fn insert(&self, connection: &Database) -> sqlx::Result<DatabaseId> {
+        sqlx::query!(
+            "INSERT INTO user (user_id, name) VALUES (?, ?)",
+            self.user_id,
+            self.name
+        )
+        .execute(connection)
+        .await
+        .map(|result| result.last_insert_rowid())
+    }
+}
+
+impl DatabaseTypeWithId for User {
+    async fn get_by_id(
+        id: DatabaseId,
+        _owner: UserId,
+        connection: &Database,
+    ) -> sqlx::Result<Option<Self>> {
+        let result = sqlx::query_as!(
+            User,
+            r#"
+                SELECT user_id, name
+                FROM user
+                WHERE user_id = ?
+            "#,
+            id
+        )
+        .fetch_one(connection)
+        .await;
+
+        match result {
+            Ok(user) => Ok(Some(user)),
+            Err(sqlx::Error::RowNotFound) => Ok(None),
+            Err(e) => Err(e),
+        }
+    }
+
+    async fn delete_by_id(
+        id: DatabaseId,
+        _owner: UserId,
+        connection: &Database,
+    ) -> sqlx::Result<bool> {
+        let result = sqlx::query!("DELETE FROM user WHERE user_id = ?", id)
+            .execute(connection)
+            .await;
+
+        match result {
+            Ok(result) => Ok(result.rows_affected() > 0),
+            Err(sqlx::Error::RowNotFound) => Ok(false),
+            Err(e) => Err(e),
+        }
+    }
+
+    async fn list(_owner: UserId, connection: &Database) -> sqlx::Result<Vec<Self>> {
+        let result = sqlx::query_as!(
+            User,
+            r#"
+                SELECT user_id, name
+                FROM user
+            "#
+        )
+        .fetch_all(connection)
+        .await;
+
+        match result {
+            Ok(users) => Ok(users),
+            Err(e) => Err(e),
+        }
+    }
 }
 
 /// A task is the smallest unit of work in a workflow.
@@ -33,7 +122,7 @@ pub struct Task {
     /// The ID of the task.
     pub id: DatabaseId,
     /// The ID of user that owns the task.
-    pub owner: DatabaseId,
+    pub owner_id: DatabaseId,
     /// The name of the task.
     pub name: String,
     /// Description of the task.
@@ -54,9 +143,9 @@ impl Task {
     /// Note: Insertions ignore the ID field, as it is auto-incremented.
     pub async fn insert(&self, connection: &Database) -> sqlx::Result<DatabaseId> {
         sqlx::query!(
-            "INSERT INTO task (owner, name, description, template, output_schema, input_schema, available_tool_ids)
+            "INSERT INTO task (owner_id, name, description, template, output_schema, input_schema, available_tool_ids)
              VALUES (?, ?, ?, ?, ?, ?, ?)",
-            self.owner,
+            self.owner_id,
             self.name,
             self.description,
             self.template,
@@ -72,6 +161,7 @@ impl Task {
     /// Update the task in the database.
     pub async fn update(
         id: DatabaseId,
+        owner: UserId,
         content: sauropod_schemas::task::Task,
         connection: &Database,
     ) -> sqlx::Result<bool> {
@@ -79,13 +169,14 @@ impl Task {
         let input_schema = Json(content.input_schema);
         let available_tool_ids = Json(content.available_tool_ids);
         sqlx::query!(
-            "UPDATE task SET name = ?, template = ?, output_schema = ?, input_schema = ?, available_tool_ids = ? WHERE id = ?",
+            "UPDATE task SET name = ?, template = ?, output_schema = ?, input_schema = ?, available_tool_ids = ? WHERE id = ? AND owner_id = ?",
             content.name,
             content.template.0,
             output_schema,
             input_schema,
             available_tool_ids,
-            id
+            id,
+            owner
         )
         .execute(connection)
         .await
@@ -108,7 +199,7 @@ impl From<sauropod_schemas::task::Task> for Task {
     fn from(val: sauropod_schemas::task::Task) -> Task {
         Task {
             id: 0,
-            owner: 0,
+            owner_id: 0,
             name: val.name,
             description: "".to_string(),
             template: val.template.0,
@@ -120,16 +211,26 @@ impl From<sauropod_schemas::task::Task> for Task {
 }
 
 impl DatabaseTypeWithId for sauropod_schemas::task::Task {
-    async fn get_by_id(id: DatabaseId, connection: &Database) -> sqlx::Result<Option<Self>> {
-        Ok(Task::get_by_id(id, connection).await?.map(|x| x.into()))
+    async fn get_by_id(
+        id: DatabaseId,
+        owner: UserId,
+        connection: &Database,
+    ) -> sqlx::Result<Option<Self>> {
+        Ok(Task::get_by_id(id, owner, connection)
+            .await?
+            .map(|x| x.into()))
     }
 
-    async fn delete_by_id(id: DatabaseId, connection: &Database) -> sqlx::Result<bool> {
-        Task::delete_by_id(id, connection).await
+    async fn delete_by_id(
+        id: DatabaseId,
+        owner: UserId,
+        connection: &Database,
+    ) -> sqlx::Result<bool> {
+        Task::delete_by_id(id, owner, connection).await
     }
 
-    async fn list(connection: &Database) -> sqlx::Result<Vec<Self>> {
-        Ok(Task::list(connection)
+    async fn list(owner: UserId, connection: &Database) -> sqlx::Result<Vec<Self>> {
+        Ok(Task::list(owner, connection)
             .await?
             .into_iter()
             .map(|x| x.into())
@@ -138,13 +239,17 @@ impl DatabaseTypeWithId for sauropod_schemas::task::Task {
 }
 
 impl DatabaseTypeWithId for Task {
-    async fn get_by_id(id: DatabaseId, connection: &Database) -> sqlx::Result<Option<Self>> {
+    async fn get_by_id(
+        id: DatabaseId,
+        owner: UserId,
+        connection: &Database,
+    ) -> sqlx::Result<Option<Self>> {
         let result = sqlx::query_as!(
             Task,
             r#"
                 SELECT
                     id,
-                    owner,
+                    owner_id,
                     name,
                     description,
                     template,
@@ -152,9 +257,10 @@ impl DatabaseTypeWithId for Task {
                     input_schema as "input_schema: Json<serde_json::Map<String, serde_json::Value>>",
                     available_tool_ids as "available_tool_ids: Json<Vec<String>>"
                 FROM task
-                WHERE id = ?
+                WHERE id = ? AND owner_id = ?
             "#,
-            id
+            id,
+            owner
         )
         .fetch_one(connection)
         .await;
@@ -166,40 +272,35 @@ impl DatabaseTypeWithId for Task {
         }
     }
 
-    async fn delete_by_id(id: DatabaseId, connection: &Database) -> sqlx::Result<bool> {
-        let reuslt = sqlx::query!("DELETE FROM task WHERE id = ?", id)
+    async fn delete_by_id(
+        id: DatabaseId,
+        owner: UserId,
+        connection: &Database,
+    ) -> sqlx::Result<bool> {
+        let result = sqlx::query!("DELETE FROM task WHERE id = ? AND owner_id = ?", id, owner)
             .execute(connection)
             .await;
-        match reuslt {
+        match result {
             Ok(result) => Ok(result.rows_affected() > 0),
             Err(sqlx::Error::RowNotFound) => Ok(false),
             Err(e) => Err(e),
         }
     }
 
-    async fn list(connection: &Database) -> sqlx::Result<Vec<Self>> {
-        let result = sqlx::query_as!(
-            Task,
-            r#"
-                SELECT
-                    id,
-                    owner,
-                    name,
-                    description,
-                    template,
-                    output_schema as "output_schema: Json<Option<serde_json::Map<String, serde_json::Value>>>",
-                    input_schema as "input_schema: Json<serde_json::Map<String, serde_json::Value>>",
-                    available_tool_ids as "available_tool_ids: Json<Vec<String>>"
-                FROM task
-            "#
-        )
-        .fetch_all(connection)
-        .await;
-
-        match result {
-            Ok(tasks) => Ok(tasks),
-            Err(e) => Err(e),
-        }
+    async fn list(owner: UserId, connection: &Database) -> sqlx::Result<Vec<Self>> {
+        // We use a query builder instead of the query macro because there's a glitch in the macro where it thinks owner_id is nullable
+        let mut builder = sqlx::query_builder::QueryBuilder::new(
+            "SELECT id, owner_id, name, description, template, output_schema, input_schema, available_tool_ids \
+            FROM task WHERE owner_id = ",
+        );
+        builder.push_bind(owner);
+        builder
+            .build()
+            .fetch_all(connection)
+            .await?
+            .iter()
+            .map(Task::from_row)
+            .collect::<sqlx::Result<Vec<Task>>>()
     }
 }
 
@@ -209,9 +310,17 @@ mod test {
 
     #[sqlx::test]
     async fn test_task(connection: Database) -> anyhow::Result<()> {
+        let user = User {
+            user_id: 2,
+            name: "Test User".to_string(),
+        };
+        user.insert(&connection).await?;
+
+        let user_id = UserId(user.user_id);
+
         let task = Task {
             id: 1234,
-            owner: 0,
+            owner_id: user.user_id,
             name: "Test Task".to_string(),
             description: "This is a test task.".to_string(),
             template: "Test Template".to_string(),
@@ -224,20 +333,26 @@ mod test {
         task.insert(&connection).await?;
 
         // Get the task by ID
-        let Some(fetched_task) = Task::get_by_id(1, &connection).await? else {
+        let Some(fetched_task) = Task::get_by_id(1, user_id, &connection).await? else {
             anyhow::bail!("Task not found");
         };
         assert_eq!(fetched_task.id, 1);
 
+        // List tasks
+        let task_list = Task::list(user_id, &connection).await?;
+        assert_eq!(task_list.len(), 1);
+
+        // Try to get the task again as a different user
+        assert!(Task::get_by_id(1, UserId(3), &connection).await?.is_none());
+
         assert_eq!(fetched_task.name, task.name);
 
         // Delete the task
-        assert!(Task::delete_by_id(1, &connection).await?);
+        assert!(Task::delete_by_id(1, user_id, &connection).await?);
         // Try to get the task again
-        let fetched_task = Task::get_by_id(1, &connection).await?;
-        assert!(fetched_task.is_none());
+        assert!(Task::get_by_id(1, user_id, &connection).await?.is_none());
         // Try to delete the task again
-        assert!(!(Task::delete_by_id(1, &connection).await?));
+        assert!(!(Task::delete_by_id(1, user_id, &connection).await?));
 
         Ok(())
     }

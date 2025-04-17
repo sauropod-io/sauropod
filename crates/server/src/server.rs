@@ -3,7 +3,7 @@
 use std::env;
 use std::sync::Arc;
 
-use sauropod_database::{DatabaseId, DatabaseTypeWithId};
+use sauropod_database::{DatabaseId, DatabaseTypeWithId, UserId};
 use sauropod_schemas::InputAndOutputSchema;
 use sauropod_schemas::task::{Task, TaskInfo};
 use sauropod_task_context::TaskContext;
@@ -57,7 +57,7 @@ impl Server {
     }
 
     /// Create a task context.
-    pub async fn make_task_context(&self) -> anyhow::Result<Arc<TaskContext>> {
+    pub async fn make_task_context(&self, user_id: UserId) -> anyhow::Result<Arc<TaskContext>> {
         let model_config = &self.config.default_model;
 
         // Ensure that the models are available
@@ -82,6 +82,7 @@ impl Server {
         }
 
         Ok(sauropod_task_context::TaskContext::new(
+            user_id,
             self.llm_engine.clone(),
             model_config.clone(),
             self.tools.clone(),
@@ -100,33 +101,47 @@ impl sauropod_http::ServerInterface for Server {
 
     async fn get_observability_logs(
         &self,
+        _user_id: UserId,
     ) -> anyhow::Result<HttpResponse<sauropod_schemas::observability::LogResponse>> {
         Ok(HttpResponse::Ok(
             self.observability.get_observability_logs(),
         ))
     }
 
-    async fn get_task_id(&self, id: DatabaseId) -> anyhow::Result<HttpResponse<Task>> {
-        match Task::get_by_id(id, &self.db).await? {
+    async fn get_task_id(
+        &self,
+        user_id: UserId,
+        id: DatabaseId,
+    ) -> anyhow::Result<HttpResponse<Task>> {
+        match Task::get_by_id(id, user_id, &self.db).await? {
             Some(object) => Ok(object.into()),
             None => Ok(HttpResponse::NotFound(None)),
         }
     }
 
-    async fn delete_task_id(&self, id: DatabaseId) -> anyhow::Result<HttpResponse<()>> {
-        match Task::delete_by_id(id, &self.db).await? {
+    async fn delete_task_id(
+        &self,
+        user_id: UserId,
+        id: DatabaseId,
+    ) -> anyhow::Result<HttpResponse<()>> {
+        match Task::delete_by_id(id, user_id, &self.db).await? {
             true => Ok(HttpResponse::Ok(())),
             false => Ok(HttpResponse::NotFound(None)),
         }
     }
 
-    async fn post_task_id(&self, id: DatabaseId, input: Task) -> anyhow::Result<HttpResponse<()>> {
+    async fn post_task_id(
+        &self,
+        user_id: UserId,
+        id: DatabaseId,
+        input: Task,
+    ) -> anyhow::Result<HttpResponse<()>> {
         if let Err(e) = sauropod_task::validate_task(input.clone()) {
             tracing::error!("Invalid task definition: {:#?}", e);
             return Ok(HttpResponse::BadRequest(e.to_string()));
         }
 
-        match sauropod_database::Task::update(id, input, &self.db).await? {
+        match sauropod_database::Task::update(id, user_id, input, &self.db).await? {
             true => Ok(HttpResponse::Ok(())),
             false => Ok(HttpResponse::NotFound(None)),
         }
@@ -134,10 +149,11 @@ impl sauropod_http::ServerInterface for Server {
 
     async fn post_task_id_run(
         &self,
+        user_id: UserId,
         id: DatabaseId,
         input: serde_json::Map<String, serde_json::Value>,
     ) -> anyhow::Result<HttpResponse<serde_json::Map<String, serde_json::Value>>> {
-        let task = match Task::get_by_id(id, &self.db).await? {
+        let task = match Task::get_by_id(id, user_id, &self.db).await? {
             Some(task) => sauropod_task::Task::new(task)?,
             None => {
                 tracing::error!("Task not found: {id}");
@@ -145,7 +161,7 @@ impl sauropod_http::ServerInterface for Server {
             }
         };
 
-        let context = self.make_task_context().await?;
+        let context = self.make_task_context(user_id).await?;
         let result = task.execute(serde_json::to_value(input)?, context).await?;
         let Some(result_map) = result.as_object() else {
             anyhow::bail!("Task result wasn't an object, was {:#?}", result);
@@ -155,9 +171,10 @@ impl sauropod_http::ServerInterface for Server {
 
     async fn get_task_id_schema(
         &self,
+        user_id: UserId,
         id: i64,
     ) -> anyhow::Result<HttpResponse<InputAndOutputSchema>> {
-        let Some(task) = Task::get_by_id(id, &self.db).await? else {
+        let Some(task) = Task::get_by_id(id, user_id, &self.db).await? else {
             return Ok(HttpResponse::NotFound(None));
         };
 
@@ -184,34 +201,44 @@ impl sauropod_http::ServerInterface for Server {
         }))
     }
 
-    async fn post_task(&self, input: Task) -> anyhow::Result<HttpResponse<DatabaseId>> {
+    async fn post_task(
+        &self,
+        user_id: UserId,
+        input: Task,
+    ) -> anyhow::Result<HttpResponse<DatabaseId>> {
         if let Err(e) = sauropod_task::validate_task(input.clone()) {
             tracing::error!("Invalid task definition: {:#?}", e);
             return Ok(HttpResponse::BadRequest(e.to_string()));
         }
 
-        let id = sauropod_database::Task::from(input)
-            .insert(&self.db)
-            .await?;
+        let id = sauropod_database::Task {
+            owner_id: user_id.0,
+            ..sauropod_database::Task::from(input)
+        }
+        .insert(&self.db)
+        .await?;
         Ok(HttpResponse::Ok(id))
     }
 
-    async fn get_task(&self) -> anyhow::Result<HttpResponse<Vec<TaskInfo>>> {
+    async fn get_task(&self, user_id: UserId) -> anyhow::Result<HttpResponse<Vec<TaskInfo>>> {
         Ok(HttpResponse::Ok(
-            sauropod_database::Task::list(&self.db).await.map(|tasks| {
-                tasks
-                    .into_iter()
-                    .map(|task| TaskInfo {
-                        id: task.id,
-                        name: task.name,
-                    })
-                    .collect()
-            })?,
+            sauropod_database::Task::list(user_id, &self.db)
+                .await
+                .map(|tasks| {
+                    tasks
+                        .into_iter()
+                        .map(|task| TaskInfo {
+                            id: task.id,
+                            name: task.name,
+                        })
+                        .collect()
+                })?,
         ))
     }
 
     async fn get_tools(
         &self,
+        user_id: UserId,
     ) -> anyhow::Result<HttpResponse<std::vec::Vec<sauropod_schemas::ToolDefinition>>> {
         let mut tools: Vec<_> = self
             .tools
@@ -219,7 +246,7 @@ impl sauropod_http::ServerInterface for Server {
             .map(|tool| tool.get_definition())
             .collect();
 
-        let tasks_as_tools = sauropod_database::Task::list(&self.db)
+        let tasks_as_tools = sauropod_database::Task::list(user_id, &self.db)
             .await?
             .into_iter()
             .map(|task| sauropod_schemas::ToolDefinition {
@@ -236,6 +263,7 @@ impl sauropod_http::ServerInterface for Server {
 
     async fn get_models(
         &self,
+        _user_id: UserId,
     ) -> anyhow::Result<HttpResponse<std::vec::Vec<sauropod_schemas::ModelDefinition>>> {
         Ok(HttpResponse::Ok(self.llm_engine.list_models().await?))
     }

@@ -1,6 +1,6 @@
 {
   "db_name": "SQLite",
-  "query": "DELETE FROM task WHERE id = ?",
+  "query": "DELETE FROM user WHERE user_id = ?",
   "describe": {
     "columns": [],
     "parameters": {
@@ -8,5 +8,5 @@
     },
     "nullable": []
   },
-  "hash": "e958bfbe8c83f35d17daa2fc3c08fcbd39e644b808ed125c53c6586516ebfa5f"
+  "hash": "43aeeafc5a6fea50cc443a510c63c08f0f6b869b0f5b581f21533c4f7db8c920"
 }

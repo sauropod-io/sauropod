@@ -9,6 +9,9 @@ pub use generated::{API_PREFIX, ServerInterface, register_routes};
 mod ui_routes;
 pub use ui_routes::make_ui_routes;
 
+mod auth;
+pub use auth::{UserId, UserIdExtension, auth_middleware};
+
 /// HTTP response.
 pub enum HttpResponse<T> {
     /// HTTP 200

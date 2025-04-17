@@ -3,7 +3,7 @@
 use std::{collections::HashMap, sync::Arc};
 
 use sauropod_config::ModelConfig;
-use sauropod_database::DatabaseTypeWithId as _;
+use sauropod_database::{DatabaseTypeWithId as _, UserId};
 use sauropod_schemas::task::Task;
 mod traits;
 pub use traits::*;
@@ -12,6 +12,8 @@ pub use traits::*;
 ///
 /// The context provides tools to the task.
 pub struct TaskContext {
+    /// The user running the task.
+    pub user_id: UserId,
     /// The LLM engine to use for the task.
     pub llm_engine: sauropod_llm_inference::EnginePointer,
     /// The system prompt to use for the task.
@@ -33,6 +35,7 @@ Do not ask for clarification or additional information.
 impl TaskContext {
     /// Create a new task context.
     pub fn new(
+        user_id: UserId,
         llm_engine: sauropod_llm_inference::EnginePointer,
         model_config: ModelConfig,
         tools: Vec<Arc<dyn Tool>>,
@@ -44,6 +47,7 @@ impl TaskContext {
         }
 
         Arc::new(Self {
+            user_id,
             llm_engine,
             system_prompt: DEFAULT_SYSTEM_PROMPT.trim().to_string(),
             tools: tool_map,
@@ -59,7 +63,7 @@ impl TaskContext {
 
     /// Get a task by ID.
     pub async fn get_task(&self, id: i64) -> anyhow::Result<Option<sauropod_schemas::task::Task>> {
-        match Task::get_by_id(id, &self.db).await? {
+        match Task::get_by_id(id, self.user_id, &self.db).await? {
             Some(task) => Ok(Some(task)),
             None => {
                 tracing::error!("Task with ID {id} not found");

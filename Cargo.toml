@@ -36,7 +36,7 @@ tower = "0.5.2"
 tower-http = { version = "0.6.2", features = ["cors"] }
 tracing = "0.1.41"
 tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
-sqlx = { version = "0.8.5", default-features = false, features = ["derive", "chrono", "uuid", "runtime-tokio", "migrate", "json", "macros", "sqlite"] }
+sqlx = { version = "0.8.5", default-features = false, features = ["derive", "chrono", "runtime-tokio", "migrate", "json", "macros", "sqlite"] }
 sqlx-cli = { version = "0.8.5" }
 
 [profile.optimized-release]

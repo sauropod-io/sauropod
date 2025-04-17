@@ -8,6 +8,7 @@ publish.workspace = true
 
 [dependencies]
 sauropod-schemas = { path = "../schemas" }
+sauropod-database = { path = "../database" }
 
 anyhow.workspace = true
 async-trait.workspace = true

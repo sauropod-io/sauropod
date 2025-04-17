@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO task (owner_id, name, description, template, output_schema, input_schema, available_tool_ids)\n             VALUES (?, ?, ?, ?, ?, ?, ?)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 7
+    },
+    "nullable": []
+  },
+  "hash": "2152b96a4c91d0c16c3ef38315a0b80dfab44d696a9a8450d3e3175337af34d2"
+}

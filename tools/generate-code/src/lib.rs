@@ -118,6 +118,7 @@ impl RoutePath {
 /// Data for a method of a route.
 pub struct RouteData {
     pub path: RoutePath,
+    pub require_auth: bool,
     pub method: String,
     pub description: String,
     pub input: Option<TypeInfo>,
@@ -173,6 +174,11 @@ impl RouteData {
         let mut input_args = Vec::with_capacity(2);
         let mut call_args = Vec::with_capacity(2);
         let param_count = self.path.parameters().count();
+
+        if self.require_auth {
+            input_args.push("Extension(user_id): crate::UserIdExtension".to_string());
+            call_args.push("sauropod_database::UserId(user_id.0)".to_string());
+        }
 
         let parameters = self.path.parameters().collect::<Vec<_>>();
         match param_count {
@@ -237,6 +243,9 @@ impl RouteData {
         let mut input_args = Vec::with_capacity(2);
         input_args.push("&self".to_string());
 
+        if self.require_auth {
+            input_args.push("user_id: sauropod_database::UserId".to_string());
+        }
         for parameter in self.path.parameters() {
             input_args.push(format!("{}: {}", parameter.name, parameter.parameter_type));
         }
@@ -296,7 +305,7 @@ impl Route {
 
 #[macro_export]
 macro_rules! openapi {
-    ($(route $path:literal (
+    ($(route $path:literal auth ( $auth:literal )  (
         $($method:ident ( $input:ty ) -> $output:ty : $description:literal)+
      ) )+) => {
         let mut schema_generator = schemars::SchemaGenerator::new(schemars::generate::SchemaSettings::openapi3());
@@ -318,6 +327,7 @@ macro_rules! openapi {
 
                                 $crate::RouteData {
                                     path: $crate::RoutePath::new($path),
+                                    require_auth: $auth,
                                     method: std::stringify!($method).to_lowercase().to_string(),
                                     description: $description.to_string(),
                                     input: $crate::TypeInfo::maybe_new::<$input>(),
@@ -348,6 +358,7 @@ pub fn generate_rust_server(routes: &[Route]) -> anyhow::Result<()> {
 
     writeln!(&mut output, "//! Generated code.")?;
     writeln!(&mut output, "use tracing::Instrument as _;")?;
+    writeln!(&mut output, "use axum::extract::Extension;")?;
     writeln!(
         &mut output,
         "pub static API_PREFIX: &str = \"{}\";",
@@ -417,6 +428,10 @@ pub fn generate_rust_server(routes: &[Route]) -> anyhow::Result<()> {
 
         writeln!(&mut output, ")")?;
     }
+    writeln!(
+        &mut output,
+        ".layer(axum::middleware::from_fn(crate::auth_middleware))"
+    )?;
     writeln!(&mut output, "}}")?;
 
     Ok(())
