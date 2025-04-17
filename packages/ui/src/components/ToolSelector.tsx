@@ -22,6 +22,7 @@ interface ToolSelectorProps {
   selectedTools: string[];
   className?: string;
   onToolSelected: (toolId: string) => void;
+  excludeTool?: string;
 }
 
 /** Selector for tools. */
@@ -29,6 +30,7 @@ export default function ToolSelector({
   selectedTools,
   className,
   onToolSelected,
+  excludeTool,
 }: ToolSelectorProps) {
   const [open, setOpen] = useState(false);
 
@@ -38,6 +40,9 @@ export default function ToolSelector({
         // Group tools by provider
         const toolsByProvider: Record<string, typeof tools> = {};
         tools.forEach((tool) => {
+          if (excludeTool && tool.id === excludeTool) {
+            return;
+          }
           if (!toolsByProvider[tool.provider]) {
             toolsByProvider[tool.provider] = [];
           }

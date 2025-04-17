@@ -496,6 +496,7 @@ export default function TaskEditor({ taskId }: { taskId?: string }) {
               <ToolSelector
                 selectedTools={formState.tools}
                 onToolSelected={handleToolToggle}
+                excludeTool={`task:${taskId}`}
               />
             </CardContent>
           </Card>
