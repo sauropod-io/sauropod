@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO task_run_steps (run_id, owner_id, parent_step_id, inputs, outputs, task_id, tool_id, error, start_time, end_time)\n             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 10
+    },
+    "nullable": []
+  },
+  "hash": "a69945394e2378f6131a3756484045fde723d86f4deeaaf84d52b82028fc1977"
+}

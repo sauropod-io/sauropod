@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "DELETE FROM task_run_steps WHERE step_id = ? AND owner_id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "dd154e51b710169e16a2dfc4a52487a53ac779aa3f4926c8e9900cdbcc01fff8"
+}

@@ -1,10 +1,12 @@
 //! HTTP server code.
 
 use std::env;
+use std::str::FromStr as _;
 use std::sync::Arc;
 
 use sauropod_database::{DatabaseId, DatabaseTypeWithId, UserId};
 use sauropod_schemas::InputAndOutputSchema;
+use sauropod_schemas::observability::{RunStatus, TaskRun, TaskRunInfo};
 use sauropod_schemas::{Task, TaskInfo};
 use sauropod_task_context::TaskContext;
 use tracing::Instrument;
@@ -57,7 +59,11 @@ impl Server {
     }
 
     /// Create a task context.
-    pub async fn make_task_context(&self, user_id: UserId) -> anyhow::Result<Arc<TaskContext>> {
+    pub async fn make_task_context(
+        &self,
+        user_id: UserId,
+        run_id: DatabaseId,
+    ) -> anyhow::Result<Arc<TaskContext>> {
         let model_config = &self.config.default_model;
 
         // Ensure that the models are available
@@ -83,11 +89,27 @@ impl Server {
 
         Ok(sauropod_task_context::TaskContext::new(
             user_id,
+            run_id,
             self.llm_engine.clone(),
             model_config.clone(),
             self.tools.clone(),
             self.db.clone(),
         ))
+    }
+
+    pub async fn run_task(
+        &self,
+        user_id: UserId,
+        run_id: DatabaseId,
+        task: sauropod_task::Task,
+        input: serde_json::Map<String, serde_json::Value>,
+    ) -> anyhow::Result<serde_json::Map<String, serde_json::Value>> {
+        let context = self.make_task_context(user_id, run_id).await?;
+        let result = task.execute(serde_json::to_value(input)?, context).await?;
+        let Some(result_map) = result.as_object() else {
+            anyhow::bail!("Task result wasn't an object, was {:#?}", result);
+        };
+        Ok(result_map.clone())
     }
 }
 
@@ -161,12 +183,35 @@ impl sauropod_http::ServerInterface for Server {
             }
         };
 
-        let context = self.make_task_context(user_id).await?;
-        let result = task.execute(serde_json::to_value(input)?, context).await?;
-        let Some(result_map) = result.as_object() else {
-            anyhow::bail!("Task result wasn't an object, was {:#?}", result);
-        };
-        Ok(HttpResponse::Ok(result_map.clone()))
+        let run_id = sauropod_database::TaskRunRecord::create(user_id, &self.db).await?;
+        let task_result = self
+            .run_task(user_id, run_id, task, input)
+            .instrument(tracing::info_span!("Task execution"))
+            .await;
+
+        match task_result {
+            Ok(result) => {
+                sauropod_database::TaskRunRecord::end_with_status(
+                    run_id,
+                    user_id,
+                    sauropod_schemas::observability::RunStatus::Completed,
+                    &self.db,
+                )
+                .await?;
+                Ok(HttpResponse::Ok(result))
+            }
+            Err(e) => {
+                tracing::error!("Task execution failed: {:#?}", e);
+                sauropod_database::TaskRunRecord::end_with_status(
+                    run_id,
+                    user_id,
+                    sauropod_schemas::observability::RunStatus::Failed,
+                    &self.db,
+                )
+                .await?;
+                Ok(HttpResponse::InternalServerError(e.to_string()))
+            }
+        }
     }
 
     async fn get_task_id_schema(
@@ -234,6 +279,40 @@ impl sauropod_http::ServerInterface for Server {
                         .collect()
                 })?,
         ))
+    }
+
+    async fn get_task_run(
+        &self,
+        user_id: UserId,
+        input: sauropod_schemas::observability::TaskRunListRequest,
+    ) -> anyhow::Result<HttpResponse<Vec<TaskRunInfo>>> {
+        let records =
+            sauropod_database::TaskRunRecord::list(user_id, input.limit, &self.db).await?;
+
+        Ok(HttpResponse::Ok(
+            records
+                .into_iter()
+                .map(|row| {
+                    anyhow::Result::Ok(TaskRunInfo {
+                        id: row.run_id,
+                        status: RunStatus::from_str(&row.status)?,
+                        start_time_ms: row.start_time.map(|t| t.timestamp_millis()),
+                        end_time_ms: row.end_time.map(|t| t.timestamp_millis()),
+                    })
+                })
+                .collect::<anyhow::Result<Vec<TaskRunInfo>>>()?,
+        ))
+    }
+
+    async fn get_task_run_id(
+        &self,
+        user_id: UserId,
+        id: i64,
+    ) -> anyhow::Result<HttpResponse<TaskRun>> {
+        match sauropod_database::get_task_run_by_id(id, user_id, &self.db).await? {
+            Some(task_run) => Ok(HttpResponse::Ok(task_run)),
+            None => Ok(HttpResponse::NotFound(None)),
+        }
     }
 
     async fn get_tools(

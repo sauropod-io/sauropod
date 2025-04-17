@@ -3,7 +3,7 @@
 use std::{collections::HashMap, sync::Arc};
 
 use sauropod_config::ModelConfig;
-use sauropod_database::{DatabaseTypeWithId as _, UserId};
+use sauropod_database::{DatabaseId, DatabaseTypeWithId as _, UserId};
 use sauropod_schemas::Task;
 mod traits;
 pub use traits::*;
@@ -14,6 +14,8 @@ pub use traits::*;
 pub struct TaskContext {
     /// The user running the task.
     pub user_id: UserId,
+    /// The ID of the current run.
+    pub run_id: DatabaseId,
     /// The LLM engine to use for the task.
     pub llm_engine: sauropod_llm_inference::EnginePointer,
     /// The system prompt to use for the task.
@@ -36,6 +38,7 @@ impl TaskContext {
     /// Create a new task context.
     pub fn new(
         user_id: UserId,
+        run_id: DatabaseId,
         llm_engine: sauropod_llm_inference::EnginePointer,
         model_config: ModelConfig,
         tools: Vec<Arc<dyn Tool>>,
@@ -48,6 +51,7 @@ impl TaskContext {
 
         Arc::new(Self {
             user_id,
+            run_id,
             llm_engine,
             system_prompt: DEFAULT_SYSTEM_PROMPT.trim().to_string(),
             tools: tool_map,

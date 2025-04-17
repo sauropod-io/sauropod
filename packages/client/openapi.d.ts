@@ -262,6 +262,120 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/task/run": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get a list of task runs */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: {
+        content: {
+          "application/json": components["schemas"]["TaskRunListRequest"];
+        };
+      };
+      responses: {
+        /** @description Successful response */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["Array_of_TaskRunInfo"];
+          };
+        };
+        /** @description Bad Request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["Error"];
+          };
+        };
+        /** @description Internal Server Error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["Error"];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/task/run/{id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get a task run by ID */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          id: string;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Successful response */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["TaskRun"];
+          };
+        };
+        /** @description Bad Request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["Error"];
+          };
+        };
+        /** @description Internal Server Error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["Error"];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/task/{id}": {
     parameters: {
       query?: never;
@@ -628,6 +742,7 @@ export interface components {
   schemas: {
     Array_of_ModelDefinition: components["schemas"]["ModelDefinition"][];
     Array_of_TaskInfo: components["schemas"]["TaskInfo"][];
+    Array_of_TaskRunInfo: components["schemas"]["TaskRunInfo"][];
     Array_of_ToolDefinition: components["schemas"]["ToolDefinition"][];
     /** @description An error message. */
     Error: {
@@ -681,6 +796,39 @@ export interface components {
       /** @description The URI of the model. */
       uri: string;
     };
+    /** @description Status of a run of a step or task. */
+    RunStatus: string;
+    /** @description A step of a task. */
+    Step: {
+      /**
+       * Format: int64
+       * @description The end time of the step in milliseconds since UTC epoch.
+       */
+      endTimeMs?: number | null;
+      /** @description The inputs to the tool. */
+      inputs: unknown;
+      /** @description The outputs from the tool. */
+      outputs: unknown;
+      /** Format: int64 */
+      parentStepId?: number | null;
+      /**
+       * Format: int64
+       * @description The start of the step in milliseconds since UTC epoch.
+       */
+      startTimeMs?: number | null;
+      stepAction: components["schemas"]["StepAction"];
+      /** Format: int64 */
+      stepId: number;
+    };
+    /** @description A step of a task run. */
+    StepAction:
+      | {
+          /** Format: int64 */
+          taskId: number;
+        }
+      | {
+          toolId: string;
+        };
     /** @description A task is the smallest unit of work in a workflow. */
     Task: {
       /**
@@ -718,6 +866,55 @@ export interface components {
       id: number;
       /** @description The name of the task. */
       name: string;
+    };
+    /** @description A run of a task. */
+    TaskRun: {
+      /**
+       * Format: int64
+       * @description The end time of the run in milliseconds since UTC epoch.
+       */
+      endTimeMs?: number | null;
+      /**
+       * Format: int64
+       * @description The ID of the run.
+       */
+      id: number;
+      /**
+       * Format: int64
+       * @description The start of the run in milliseconds since UTC epoch.
+       */
+      startTimeMs?: number | null;
+      status: components["schemas"]["RunStatus"];
+      /** @description The steps in the run. */
+      steps: components["schemas"]["Step"][];
+    };
+    /** @description Information about a task run. */
+    TaskRunInfo: {
+      /**
+       * Format: int64
+       * @description The end time of the run in milliseconds since UTC epoch.
+       */
+      endTimeMs?: number | null;
+      /**
+       * Format: int64
+       * @description The ID of the run.
+       */
+      id: number;
+      /**
+       * Format: int64
+       * @description The start of the run in milliseconds since UTC epoch.
+       */
+      startTimeMs?: number | null;
+      status: components["schemas"]["RunStatus"];
+    };
+    /** @description A request to list task runs. */
+    TaskRunListRequest: {
+      /**
+       * Format: int64
+       * @description How many task runs to list.
+       * @default 100
+       */
+      limit: number;
     };
     /** @description A template.
      *

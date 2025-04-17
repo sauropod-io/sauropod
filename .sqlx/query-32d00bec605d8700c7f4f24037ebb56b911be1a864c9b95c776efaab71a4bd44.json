@@ -1,6 +1,6 @@
 {
   "db_name": "SQLite",
-  "query": "\n                SELECT run_id, owner_id, step_id, parent_step_id, inputs as \"inputs: Json<serde_json::Value>\",\n                       outputs as \"outputs: Json<serde_json::Value>\", task_id, tool_id, error\n                FROM task_run\n                WHERE run_id = ? AND owner_id = ?\n            ",
+  "query": "\n                SELECT run_id, owner_id, step_id as \"step_id!\", parent_step_id, inputs as \"inputs: Json<serde_json::Value>\",\n                        outputs as \"outputs: Json<serde_json::Value>\", task_id, tool_id, error,\n                        start_time as \"start_time?: DateTime<Utc>\", end_time as \"end_time?: DateTime<Utc>\"\n                FROM task_run_steps\n                WHERE run_id = ? AND owner_id = ?\n            ",
   "describe": {
     "columns": [
       {
@@ -14,7 +14,7 @@
         "type_info": "Integer"
       },
       {
-        "name": "step_id",
+        "name": "step_id!",
         "ordinal": 2,
         "type_info": "Integer"
       },
@@ -47,6 +47,16 @@
         "name": "error",
         "ordinal": 8,
         "type_info": "Text"
+      },
+      {
+        "name": "start_time?: DateTime<Utc>",
+        "ordinal": 9,
+        "type_info": "Datetime"
+      },
+      {
+        "name": "end_time?: DateTime<Utc>",
+        "ordinal": 10,
+        "type_info": "Datetime"
       }
     ],
     "parameters": {
@@ -61,8 +71,10 @@
       false,
       true,
       true,
+      true,
+      true,
       true
     ]
   },
-  "hash": "a9f0ed38e1e07ada9fed22684ce02c4b9a57dd8937354b527e847df307758f94"
+  "hash": "32d00bec605d8700c7f4f24037ebb56b911be1a864c9b95c776efaab71a4bd44"
 }

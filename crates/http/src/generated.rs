@@ -58,6 +58,20 @@ pub trait ServerInterface {
         user_id: sauropod_database::UserId,
         input: sauropod_schemas::Task,
     ) -> anyhow::Result<crate::HttpResponse<i64>>;
+    /// Get a list of task runs
+    async fn get_task_run(
+        &self,
+        user_id: sauropod_database::UserId,
+        input: sauropod_schemas::observability::TaskRunListRequest,
+    ) -> anyhow::Result<
+        crate::HttpResponse<std::vec::Vec<sauropod_schemas::observability::TaskRunInfo>>,
+    >;
+    /// Get a task run by ID
+    async fn get_task_run_id(
+        &self,
+        user_id: sauropod_database::UserId,
+        id: i64,
+    ) -> anyhow::Result<crate::HttpResponse<sauropod_schemas::observability::TaskRun>>;
     /// Get the list of available tools
     async fn get_tools(
         &self,
@@ -262,6 +276,52 @@ pub fn register_routes<T: ServerInterface + Sync + Send + 'static>(
                             "Request",
                             method = "POST",
                             path = "/task"
+                        ))
+                        .await;
+                    if let Err(error) = &response {
+                        tracing::error!("Error responding to request: {:?}", error);
+                    }
+                    crate::create_response_from_result(response)
+                }
+            }),
+        )
+        .route(
+            "/task/run",
+            axum::routing::get({
+                let server_clone = server.clone();
+                async move |Extension(user_id): crate::UserIdExtension,
+                            axum::extract::Json(input): axum::extract::Json<
+                    sauropod_schemas::observability::TaskRunListRequest,
+                >| {
+                    tracing::debug!("GET /task/run");
+                    let response = server_clone
+                        .get_task_run(sauropod_database::UserId(user_id.0), input)
+                        .instrument(tracing::info_span!(
+                            "Request",
+                            method = "GET",
+                            path = "/task/run"
+                        ))
+                        .await;
+                    if let Err(error) = &response {
+                        tracing::error!("Error responding to request: {:?}", error);
+                    }
+                    crate::create_response_from_result(response)
+                }
+            }),
+        )
+        .route(
+            "/task/run/{id}",
+            axum::routing::get({
+                let server_clone = server.clone();
+                async move |Extension(user_id): crate::UserIdExtension,
+                            axum::extract::Path(id): axum::extract::Path<i64>| {
+                    tracing::debug!("GET /task/run/{{id}}");
+                    let response = server_clone
+                        .get_task_run_id(sauropod_database::UserId(user_id.0), id)
+                        .instrument(tracing::info_span!(
+                            "Request",
+                            method = "GET",
+                            path = "/task/run/{{id}}"
                         ))
                         .await;
                     if let Err(error) = &response {

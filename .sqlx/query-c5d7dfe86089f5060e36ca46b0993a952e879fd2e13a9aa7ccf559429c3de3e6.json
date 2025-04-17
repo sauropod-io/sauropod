@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE task_run SET status = ?, end_time = ? WHERE run_id = ? AND owner_id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 4
+    },
+    "nullable": []
+  },
+  "hash": "c5d7dfe86089f5060e36ca46b0993a952e879fd2e13a9aa7ccf559429c3de3e6"
+}

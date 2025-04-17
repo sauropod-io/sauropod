@@ -221,6 +221,99 @@
         }
       }
     },
+    "/api/task/run": {
+      "get": {
+        "summary": "Get a list of task runs",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TaskRunListRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Array_of_TaskRunInfo"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/task/run/{id}": {
+      "get": {
+        "summary": "Get a task run by ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskRun"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/task/{id}": {
       "get": {
         "summary": "Get a task by ID",
@@ -545,6 +638,12 @@
           "$ref": "#/components/schemas/TaskInfo"
         }
       },
+      "Array_of_TaskRunInfo": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/TaskRunInfo"
+        }
+      },
       "Array_of_ToolDefinition": {
         "type": "array",
         "items": {
@@ -667,6 +766,89 @@
         "required": ["name", "uri"],
         "additionalProperties": false
       },
+      "RunStatus": {
+        "description": "Status of a run of a step or task.",
+        "oneOf": [
+          {
+            "description": "The run is running.",
+            "type": "string"
+          },
+          {
+            "description": "The run is completed.",
+            "type": "string"
+          },
+          {
+            "description": "The run failed.",
+            "type": "string"
+          }
+        ]
+      },
+      "Step": {
+        "description": "A step of a task.",
+        "type": "object",
+        "properties": {
+          "endTimeMs": {
+            "description": "The end time of the step in milliseconds since UTC epoch.",
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "inputs": {
+            "description": "The inputs to the tool."
+          },
+          "outputs": {
+            "description": "The outputs from the tool."
+          },
+          "parentStepId": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "startTimeMs": {
+            "description": "The start of the step in milliseconds since UTC epoch.",
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "stepAction": {
+            "$ref": "#/components/schemas/StepAction"
+          },
+          "stepId": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "required": ["stepId", "inputs", "outputs", "stepAction"],
+        "additionalProperties": false
+      },
+      "StepAction": {
+        "description": "A step of a task run.",
+        "oneOf": [
+          {
+            "description": "A step that is a task.",
+            "type": "object",
+            "properties": {
+              "taskId": {
+                "type": "integer",
+                "format": "int64"
+              }
+            },
+            "required": ["taskId"],
+            "additionalProperties": false
+          },
+          {
+            "description": "A step that is a tool.",
+            "type": "object",
+            "properties": {
+              "toolId": {
+                "type": "string"
+              }
+            },
+            "required": ["toolId"],
+            "additionalProperties": false
+          }
+        ]
+      },
       "Task": {
         "description": "A task is the smallest unit of work in a workflow.",
         "type": "object",
@@ -717,6 +899,82 @@
           }
         },
         "required": ["id", "name"],
+        "additionalProperties": false
+      },
+      "TaskRun": {
+        "description": "A run of a task.",
+        "type": "object",
+        "properties": {
+          "endTimeMs": {
+            "description": "The end time of the run in milliseconds since UTC epoch.",
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "id": {
+            "description": "The ID of the run.",
+            "type": "integer",
+            "format": "int64"
+          },
+          "startTimeMs": {
+            "description": "The start of the run in milliseconds since UTC epoch.",
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "status": {
+            "$ref": "#/components/schemas/RunStatus"
+          },
+          "steps": {
+            "description": "The steps in the run.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Step"
+            }
+          }
+        },
+        "required": ["id", "steps", "status"],
+        "additionalProperties": false
+      },
+      "TaskRunInfo": {
+        "description": "Information about a task run.",
+        "type": "object",
+        "properties": {
+          "endTimeMs": {
+            "description": "The end time of the run in milliseconds since UTC epoch.",
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "id": {
+            "description": "The ID of the run.",
+            "type": "integer",
+            "format": "int64"
+          },
+          "startTimeMs": {
+            "description": "The start of the run in milliseconds since UTC epoch.",
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "status": {
+            "$ref": "#/components/schemas/RunStatus"
+          }
+        },
+        "required": ["id", "status"],
+        "additionalProperties": false
+      },
+      "TaskRunListRequest": {
+        "description": "A request to list task runs.",
+        "type": "object",
+        "properties": {
+          "limit": {
+            "description": "How many task runs to list.",
+            "type": "integer",
+            "format": "int64",
+            "default": 100
+          }
+        },
         "additionalProperties": false
       },
       "Template": {

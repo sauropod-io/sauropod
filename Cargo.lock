@@ -2298,6 +2298,7 @@ name = "sauropod-database"
 version = "0.0.2"
 dependencies = [
  "anyhow",
+ "chrono",
  "sauropod-schemas",
  "serde",
  "serde_json",
@@ -2383,6 +2384,8 @@ dependencies = [
 name = "sauropod-schemas"
 version = "0.0.2"
 dependencies = [
+ "anyhow",
+ "chrono",
  "schemars",
  "serde",
  "serde_json",

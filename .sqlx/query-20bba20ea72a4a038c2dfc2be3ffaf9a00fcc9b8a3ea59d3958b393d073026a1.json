@@ -1,0 +1,44 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT run_id, owner_id, status, start_time as \"start_time?: DateTime<Utc>\", end_time as \"end_time?: DateTime<Utc>\"\n            FROM task_run\n            WHERE owner_id = ?\n            ORDER BY start_time DESC\n            LIMIT ?\n            ",
+  "describe": {
+    "columns": [
+      {
+        "name": "run_id",
+        "ordinal": 0,
+        "type_info": "Integer"
+      },
+      {
+        "name": "owner_id",
+        "ordinal": 1,
+        "type_info": "Integer"
+      },
+      {
+        "name": "status",
+        "ordinal": 2,
+        "type_info": "Text"
+      },
+      {
+        "name": "start_time?: DateTime<Utc>",
+        "ordinal": 3,
+        "type_info": "Datetime"
+      },
+      {
+        "name": "end_time?: DateTime<Utc>",
+        "ordinal": 4,
+        "type_info": "Datetime"
+      }
+    ],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      true
+    ]
+  },
+  "hash": "20bba20ea72a4a038c2dfc2be3ffaf9a00fcc9b8a3ea59d3958b393d073026a1"
+}

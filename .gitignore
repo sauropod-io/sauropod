@@ -1,5 +1,5 @@
 __pycache__
-/target
+target
 node_modules
 wasm-pack.log
 tmp.db
