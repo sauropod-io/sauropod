@@ -1,120 +1,6 @@
 use sqlx::{FromRow, types::Json};
 
-use crate::Database;
-
-/// ID of types stored in the database.
-pub type DatabaseId = i64;
-
-/// ID of a user in the database.
-#[derive(Clone, Copy, sqlx::Type)]
-#[sqlx(transparent)]
-pub struct UserId(pub DatabaseId);
-
-/// Trait for objects that have an ID for use in the database.
-pub trait DatabaseTypeWithId: Sized {
-    /// Get a SQL query to get an object by ID.
-    ///
-    /// Returns `None` if the object was not found.
-    fn get_by_id(
-        id: DatabaseId,
-        owner: UserId,
-        connection: &Database,
-    ) -> impl Future<Output = sqlx::Result<Option<Self>>>;
-
-    /// Delete an object by ID.
-    ///
-    /// Returns `true` if the object was deleted, `false` if it was not found.
-    fn delete_by_id(
-        id: DatabaseId,
-        owner: UserId,
-        connection: &Database,
-    ) -> impl Future<Output = sqlx::Result<bool>>;
-
-    /// Get a list of objects.
-    fn list(owner: UserId, connection: &Database) -> impl Future<Output = sqlx::Result<Vec<Self>>>;
-}
-
-/// Schema for users in the database.
-#[derive(Debug, Clone, PartialEq, sqlx::FromRow)]
-pub struct User {
-    /// The ID of the user.
-    pub user_id: DatabaseId,
-    /// The name of the user.
-    pub name: String,
-}
-
-impl User {
-    /// Add a user to the database.
-    pub async fn insert(&self, connection: &Database) -> sqlx::Result<DatabaseId> {
-        sqlx::query!(
-            "INSERT INTO user (user_id, name) VALUES (?, ?)",
-            self.user_id,
-            self.name
-        )
-        .execute(connection)
-        .await
-        .map(|result| result.last_insert_rowid())
-    }
-}
-
-impl DatabaseTypeWithId for User {
-    async fn get_by_id(
-        id: DatabaseId,
-        _owner: UserId,
-        connection: &Database,
-    ) -> sqlx::Result<Option<Self>> {
-        let result = sqlx::query_as!(
-            User,
-            r#"
-                SELECT user_id, name
-                FROM user
-                WHERE user_id = ?
-            "#,
-            id
-        )
-        .fetch_one(connection)
-        .await;
-
-        match result {
-            Ok(user) => Ok(Some(user)),
-            Err(sqlx::Error::RowNotFound) => Ok(None),
-            Err(e) => Err(e),
-        }
-    }
-
-    async fn delete_by_id(
-        id: DatabaseId,
-        _owner: UserId,
-        connection: &Database,
-    ) -> sqlx::Result<bool> {
-        let result = sqlx::query!("DELETE FROM user WHERE user_id = ?", id)
-            .execute(connection)
-            .await;
-
-        match result {
-            Ok(result) => Ok(result.rows_affected() > 0),
-            Err(sqlx::Error::RowNotFound) => Ok(false),
-            Err(e) => Err(e),
-        }
-    }
-
-    async fn list(_owner: UserId, connection: &Database) -> sqlx::Result<Vec<Self>> {
-        let result = sqlx::query_as!(
-            User,
-            r#"
-                SELECT user_id, name
-                FROM user
-            "#
-        )
-        .fetch_all(connection)
-        .await;
-
-        match result {
-            Ok(users) => Ok(users),
-            Err(e) => Err(e),
-        }
-    }
-}
+use crate::{Database, DatabaseId, DatabaseTypeWithId, UserId};
 
 /// A task is the smallest unit of work in a workflow.
 #[derive(Debug, Clone, PartialEq, sqlx::FromRow)]
@@ -306,7 +192,9 @@ impl DatabaseTypeWithId for Task {
 
 #[cfg(test)]
 mod test {
-    use super::*;
+    use crate::*;
+
+    use sqlx::types::Json;
 
     #[sqlx::test]
     async fn test_task(connection: Database) -> anyhow::Result<()> {

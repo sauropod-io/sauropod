@@ -1,10 +1,10 @@
 //! Database.
 
 use anyhow::Context;
-
-mod schema;
-pub use schema::*;
 use sqlx::sqlite::SqliteConnectOptions;
+
+mod schemas;
+pub use schemas::*;
 
 pub type Database = sqlx::SqlitePool;
 

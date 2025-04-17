@@ -1,0 +1,68 @@
+{
+  "db_name": "SQLite",
+  "query": "\n                SELECT run_id, owner_id, step_id, parent_step_id, inputs as \"inputs: Json<serde_json::Value>\",\n                       outputs as \"outputs: Json<serde_json::Value>\", task_id, tool_id, error\n                FROM task_run\n                WHERE run_id = ? AND owner_id = ?\n            ",
+  "describe": {
+    "columns": [
+      {
+        "name": "run_id",
+        "ordinal": 0,
+        "type_info": "Integer"
+      },
+      {
+        "name": "owner_id",
+        "ordinal": 1,
+        "type_info": "Integer"
+      },
+      {
+        "name": "step_id",
+        "ordinal": 2,
+        "type_info": "Integer"
+      },
+      {
+        "name": "parent_step_id",
+        "ordinal": 3,
+        "type_info": "Integer"
+      },
+      {
+        "name": "inputs: Json<serde_json::Value>",
+        "ordinal": 4,
+        "type_info": "Null"
+      },
+      {
+        "name": "outputs: Json<serde_json::Value>",
+        "ordinal": 5,
+        "type_info": "Null"
+      },
+      {
+        "name": "task_id",
+        "ordinal": 6,
+        "type_info": "Integer"
+      },
+      {
+        "name": "tool_id",
+        "ordinal": 7,
+        "type_info": "Text"
+      },
+      {
+        "name": "error",
+        "ordinal": 8,
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      true,
+      false,
+      false,
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "a9f0ed38e1e07ada9fed22684ce02c4b9a57dd8937354b527e847df307758f94"
+}
