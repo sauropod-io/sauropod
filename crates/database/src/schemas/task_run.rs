@@ -35,6 +35,51 @@ pub struct TaskStep {
 }
 
 impl TaskStep {
+    // Set the result of a successful task.
+    pub async fn set_success(
+        step_id: DatabaseId,
+        output: serde_json::Value,
+        connection: &Database,
+    ) -> sqlx::Result<bool> {
+        let current_time = chrono::Utc::now();
+        let json_output = Json(output);
+
+        sqlx::query!(
+            r#"
+            UPDATE task_run_steps
+            SET outputs = ?, end_time = ?
+            WHERE step_id = ?"#,
+            json_output,
+            current_time,
+            step_id
+        )
+        .execute(connection)
+        .await
+        .map(|result| result.rows_affected() > 0)
+    }
+
+    // Set failure.
+    pub async fn set_failure(
+        step_id: DatabaseId,
+        error: String,
+        connection: &Database,
+    ) -> sqlx::Result<bool> {
+        let current_time = chrono::Utc::now();
+
+        sqlx::query!(
+            r#"
+            UPDATE task_run_steps
+            SET error = ?, end_time = ?
+            WHERE step_id = ?"#,
+            error,
+            current_time,
+            step_id
+        )
+        .execute(connection)
+        .await
+        .map(|result| result.rows_affected() > 0)
+    }
+
     /// Insert the task run into the database.
     ///
     /// Note: Insertions ignore the step_id field, as it is auto-incremented.

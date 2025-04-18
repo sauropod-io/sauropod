@@ -6,12 +6,15 @@ use std::sync::Arc;
 use sauropod_llm_inference::LlmContext;
 use sauropod_llm_inference::openai_api::{FinishReason, Message, Role};
 use sauropod_prompt_templates::Template;
+use sauropod_task_context::Tool;
 use tracing::Instrument;
 
 pub const TASK_TOOL_PREFIX: &str = "task:";
 
 /// Task to invoke an LLM.
 pub struct Task {
+    /// The ID of the task.
+    task_id: sauropod_schemas::TaskId,
     /// The underlying schema representation of the task.
     schema_representation: sauropod_schemas::Task,
     /// The output JSON schema for the task.
@@ -71,8 +74,27 @@ where
     }
 }
 
+/// Call a tool with the given input and context.
+async fn call_tool(
+    tool: Arc<dyn Tool>,
+    input: serde_json::Value,
+    context: Arc<sauropod_task_context::TaskContext>,
+) -> anyhow::Result<String> {
+    let step_id = context
+        .create_tool_step_for_task(tool.get_id().to_string(), &input)
+        .await?;
+
+    let result = sauropod_task_context::PARENT_TASK_ID
+        .scope(Some(step_id), tool.run(input, context.clone()))
+        .await;
+    context.report_step_result(step_id, result).await
+}
+
 impl Task {
-    pub fn new(task: sauropod_schemas::Task) -> anyhow::Result<Self> {
+    pub fn new(
+        task_id: sauropod_schemas::TaskId,
+        task: sauropod_schemas::Task,
+    ) -> anyhow::Result<Self> {
         let use_structured_output = task.output_schema.is_some();
         let output_schema: serde_json::Value = serde_json::json!(
             task.output_schema
@@ -96,6 +118,7 @@ impl Task {
         }
 
         Ok(Self {
+            task_id,
             schema_representation: task.clone(),
             output_schema,
             input_schema,
@@ -131,8 +154,23 @@ impl Task {
         Ok(object)
     }
 
-    /// Execute the task.
     pub async fn execute(
+        &self,
+        input: serde_json::Value,
+        context: Arc<sauropod_task_context::TaskContext>,
+    ) -> anyhow::Result<serde_json::Value> {
+        let step_id = context
+            .create_run_step_for_task(self.task_id, &input)
+            .await?;
+
+        let result = sauropod_task_context::PARENT_TASK_ID
+            .scope(Some(step_id), self.execute_inner(input, context.clone()))
+            .await;
+        context.report_step_result(step_id, result).await
+    }
+
+    /// Execute the task.
+    pub async fn execute_inner(
         &self,
         input: serde_json::Value,
         context: Arc<sauropod_task_context::TaskContext>,
@@ -181,6 +219,7 @@ impl Task {
                     tools.insert(
                         tool_id.to_string(),
                         Arc::new(TaskAsTool {
+                            task_id,
                             tool_id: tool_id.to_string(),
                             task_schema: task.clone(),
                             definition: tool_definition.clone(),
@@ -249,7 +288,7 @@ impl Task {
                             );
                         }
 
-                        let content: String = tool.run(parameters, context.clone()).await?;
+                        let content: String = call_tool(tool, parameters, context.clone()).await?;
                         request.messages.push(Message {
                             role: Role::User, // Gemma 3 uses the user role for function call responses
                             tool_call_id: None,
@@ -297,7 +336,7 @@ impl Task {
                                     &function_call.name
                                 )
                             })?;
-                        let content = tool.run(arguments, context.clone()).await?;
+                        let content = call_tool(tool, arguments, context.clone()).await?;
                         request.messages.push(Message {
                             role: Role::Tool,
                             tool_call_id: Some(tool_call.id.clone()),
@@ -326,6 +365,7 @@ impl Task {
 
 /// A interface to call a task as a tool.
 pub struct TaskAsTool {
+    task_id: sauropod_schemas::TaskId,
     /// The ID of the tool.
     tool_id: String,
     /// The task to call.
@@ -340,7 +380,7 @@ impl TaskAsTool {
         input: serde_json::Value,
         task_context: Arc<sauropod_task_context::TaskContext>,
     ) -> anyhow::Result<String> {
-        let task = Task::new(self.task_schema.clone())?;
+        let task = Task::new(self.task_id, self.task_schema.clone())?;
         let result = task.execute(input, task_context).await?;
         Ok(serde_json::to_string(&result)?)
     }
@@ -371,8 +411,7 @@ impl sauropod_task_context::Tool for TaskAsTool {
 
 /// Check whether a task is valid.
 pub fn validate_task(task: sauropod_schemas::Task) -> anyhow::Result<()> {
-    // Check that the template is parseable into an input schema.
-    let _ = Task::new(task)?;
+    let _ = Task::new(0, task)?;
     Ok(())
 }
 

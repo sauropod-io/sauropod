@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            UPDATE task_run_steps\n            SET outputs = ?, end_time = ?\n            WHERE step_id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": []
+  },
+  "hash": "38059d829ad3c48fc48b90f68e73ad09dbc3a2e24430f6e72ecb0c867bd980d9"
+}

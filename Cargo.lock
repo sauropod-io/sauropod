@@ -2442,6 +2442,7 @@ name = "sauropod-task-context"
 version = "0.0.2"
 dependencies = [
  "anyhow",
+ "chrono",
  "sauropod-config",
  "sauropod-database",
  "sauropod-llm-inference",
@@ -2449,6 +2450,8 @@ dependencies = [
  "schemars",
  "serde",
  "serde_json",
+ "sqlx",
+ "tokio",
  "tracing",
 ]
 

@@ -3,7 +3,7 @@
 use std::{collections::HashMap, sync::Arc};
 
 use sauropod_config::ModelConfig;
-use sauropod_database::{DatabaseId, DatabaseTypeWithId as _, UserId};
+use sauropod_database::{DatabaseId, DatabaseTypeWithId as _, TaskStep, UserId};
 use sauropod_schemas::Task;
 mod traits;
 pub use traits::*;
@@ -33,6 +33,11 @@ You are an automation that executes user tasks.
 Your response may be used as part of a larger system or as input to other automation tools.
 Do not ask for clarification or additional information.
 "#;
+
+tokio::task_local! {
+    /// The current parent task ID.
+    pub static PARENT_TASK_ID: Option<DatabaseId>;
+}
 
 impl TaskContext {
     /// Create a new task context.
@@ -72,6 +77,83 @@ impl TaskContext {
             None => {
                 tracing::error!("Task with ID {id} not found");
                 Ok(None)
+            }
+        }
+    }
+
+    /// Create a task run step.
+    pub async fn create_run_step_for_task(
+        &self,
+        task_id: DatabaseId,
+        inputs: &serde_json::Value,
+    ) -> anyhow::Result<DatabaseId> {
+        let parent_step_id = PARENT_TASK_ID
+            .try_with(|parent_id| *parent_id)
+            .unwrap_or(None);
+
+        Ok(TaskStep {
+            step_id: 0,
+            run_id: self.run_id,
+            owner_id: self.user_id.0,
+            parent_step_id,
+            inputs: sqlx::types::Json(inputs.clone()),
+            outputs: sqlx::types::Json(serde_json::json!(Option::<serde_json::Value>::None)),
+            task_id: Some(task_id),
+            tool_id: None,
+            error: None,
+            start_time: Some(chrono::Utc::now()),
+            end_time: None,
+        }
+        .insert(&self.db)
+        .await?)
+    }
+
+    /// Create a tool run step.
+    pub async fn create_tool_step_for_task(
+        &self,
+        tool_id: String,
+        inputs: &serde_json::Value,
+    ) -> anyhow::Result<DatabaseId> {
+        let parent_step_id = PARENT_TASK_ID
+            .try_with(|parent_id| *parent_id)
+            .unwrap_or(None);
+        Ok(TaskStep {
+            step_id: 0,
+            run_id: self.run_id,
+            owner_id: self.user_id.0,
+            parent_step_id,
+            inputs: sqlx::types::Json(inputs.clone()),
+            outputs: sqlx::types::Json(serde_json::json!(Option::<serde_json::Value>::None)),
+            task_id: None,
+            tool_id: Some(tool_id),
+            error: None,
+            start_time: Some(chrono::Utc::now()),
+            end_time: None,
+        }
+        .insert(&self.db)
+        .await?)
+    }
+
+    /// Create a tool run step.
+    pub async fn report_step_result<T: Clone + Into<serde_json::Value>>(
+        &self,
+        step_id: i64,
+        result: anyhow::Result<T>,
+    ) -> anyhow::Result<T> {
+        match result {
+            Ok(value) => {
+                let json_value: serde_json::Value = value.clone().into();
+                if let Err(db_err) = TaskStep::set_success(step_id, json_value, &self.db).await {
+                    tracing::error!("Failed to record successful step result: {}", db_err);
+                }
+                Ok(value)
+            }
+            Err(err) => {
+                let error_message = err.to_string();
+                if let Err(db_err) = TaskStep::set_failure(step_id, error_message, &self.db).await {
+                    tracing::error!("Failed to record step failure: {}", db_err);
+                }
+                Err(err)
             }
         }
     }

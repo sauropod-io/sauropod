@@ -87,6 +87,9 @@ pub struct Template(
     pub String,
 );
 
+/// ID of a task.
+pub type TaskId = i64;
+
 /// A task is the smallest unit of work in a workflow.
 #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
 #[cfg_attr(feature = "json_schema", derive(schemars::JsonSchema))]

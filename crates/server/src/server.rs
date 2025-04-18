@@ -133,7 +133,7 @@ impl sauropod_http::ServerInterface for Server {
     async fn get_task_id(
         &self,
         user_id: UserId,
-        id: DatabaseId,
+        id: sauropod_schemas::TaskId,
     ) -> anyhow::Result<HttpResponse<Task>> {
         match Task::get_by_id(id, user_id, &self.db).await? {
             Some(object) => Ok(object.into()),
@@ -144,7 +144,7 @@ impl sauropod_http::ServerInterface for Server {
     async fn delete_task_id(
         &self,
         user_id: UserId,
-        id: DatabaseId,
+        id: sauropod_schemas::TaskId,
     ) -> anyhow::Result<HttpResponse<()>> {
         match Task::delete_by_id(id, user_id, &self.db).await? {
             true => Ok(HttpResponse::Ok(())),
@@ -155,7 +155,7 @@ impl sauropod_http::ServerInterface for Server {
     async fn post_task_id(
         &self,
         user_id: UserId,
-        id: DatabaseId,
+        id: sauropod_schemas::TaskId,
         input: Task,
     ) -> anyhow::Result<HttpResponse<()>> {
         if let Err(e) = sauropod_task::validate_task(input.clone()) {
@@ -172,11 +172,11 @@ impl sauropod_http::ServerInterface for Server {
     async fn post_task_id_run(
         &self,
         user_id: UserId,
-        id: DatabaseId,
+        id: sauropod_schemas::TaskId,
         input: serde_json::Map<String, serde_json::Value>,
     ) -> anyhow::Result<HttpResponse<serde_json::Map<String, serde_json::Value>>> {
         let task = match Task::get_by_id(id, user_id, &self.db).await? {
-            Some(task) => sauropod_task::Task::new(task)?,
+            Some(task) => sauropod_task::Task::new(id, task)?,
             None => {
                 tracing::error!("Task not found: {id}");
                 return Ok(HttpResponse::NotFound(None));
@@ -217,13 +217,13 @@ impl sauropod_http::ServerInterface for Server {
     async fn get_task_id_schema(
         &self,
         user_id: UserId,
-        id: i64,
+        id: sauropod_schemas::TaskId,
     ) -> anyhow::Result<HttpResponse<InputAndOutputSchema>> {
         let Some(task) = Task::get_by_id(id, user_id, &self.db).await? else {
             return Ok(HttpResponse::NotFound(None));
         };
 
-        let internal_task = sauropod_task::Task::new(task)?;
+        let internal_task = sauropod_task::Task::new(id, task)?;
 
         let input_schema = match internal_task.input_schema() {
             serde_json::Value::Object(obj) => obj,
