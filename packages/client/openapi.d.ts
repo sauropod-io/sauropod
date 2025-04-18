@@ -277,11 +277,7 @@ export interface paths {
         path?: never;
         cookie?: never;
       };
-      requestBody?: {
-        content: {
-          "application/json": components["schemas"]["TaskRunListRequest"];
-        };
-      };
+      requestBody?: never;
       responses: {
         /** @description Successful response */
         200: {
@@ -779,10 +775,10 @@ export interface components {
       /** @description The module where the log message was emitted. */
       module: string;
       /**
-       * Format: uint64
-       * @description The number of seconds since epoch.
+       * Format: int64
+       * @description The number of milliseconds since epoch.
        */
-      timestampS: number;
+      timestampMs: number;
     };
     /** @description A list of logged messages. */
     LogResponse: components["schemas"]["LogMessage"][];
@@ -906,15 +902,6 @@ export interface components {
        */
       startTimeMs?: number | null;
       status: components["schemas"]["RunStatus"];
-    };
-    /** @description A request to list task runs. */
-    TaskRunListRequest: {
-      /**
-       * Format: int64
-       * @description How many task runs to list.
-       * @default 100
-       */
-      limit: number;
     };
     /** @description A template.
      *

@@ -6,7 +6,7 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 /// A logged message.
 pub struct LogMessage {
     pub metadata: &'static tracing::Metadata<'static>,
-    pub timestamp: std::time::SystemTime,
+    pub timestamp: chrono::DateTime<chrono::Utc>,
     pub fields: Vec<(&'static str, serde_json::Value)>,
 }
 

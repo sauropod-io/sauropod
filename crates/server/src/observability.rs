@@ -27,11 +27,7 @@ impl Observability {
                 level: tracing_log_level_to_log_level(log_message.metadata.level()),
                 module: log_message.metadata.module_path().unwrap_or("").to_string(),
                 line: log_message.metadata.line(),
-                timestamp_s: log_message
-                    .timestamp
-                    .duration_since(std::time::UNIX_EPOCH)
-                    .unwrap()
-                    .as_secs(),
+                timestamp_ms: log_message.timestamp.timestamp_millis(),
                 fields: HashMap::from_iter(
                     log_message
                         .fields

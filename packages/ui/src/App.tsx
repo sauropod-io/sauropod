@@ -3,7 +3,8 @@ import { Navigate, Route, Routes } from "react-router";
 
 import AppSidebar from "@/components/AppSidebar";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
-import { INDEX, LOGS, taskRoute } from "@/routes";
+import Runs from "@/pages/Runs";
+import { INDEX, LOGS, RUN_HISTORY, taskRoute } from "@/routes";
 
 const Logs = lazy(() => import("@/pages/Logs"));
 const Task = lazy(() => import("@/pages/Task"));
@@ -48,6 +49,22 @@ function PageContent() {
         element={
           <SupportLoading>
             <Logs />
+          </SupportLoading>
+        }
+      />
+      <Route
+        path={LOGS}
+        element={
+          <SupportLoading>
+            <Logs />
+          </SupportLoading>
+        }
+      />
+      <Route
+        path={RUN_HISTORY}
+        element={
+          <SupportLoading>
+            <Runs />
           </SupportLoading>
         }
       />

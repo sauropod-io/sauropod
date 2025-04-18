@@ -224,15 +224,6 @@
     "/api/task/run": {
       "get": {
         "summary": "Get a list of task runs",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/TaskRunListRequest"
-              }
-            }
-          }
-        },
         "responses": {
           "200": {
             "description": "Successful response",
@@ -729,14 +720,13 @@
             "description": "The module where the log message was emitted.",
             "type": "string"
           },
-          "timestampS": {
-            "description": "The number of seconds since epoch.",
+          "timestampMs": {
+            "description": "The number of milliseconds since epoch.",
             "type": "integer",
-            "format": "uint64",
-            "minimum": 0.0
+            "format": "int64"
           }
         },
-        "required": ["module", "timestampS", "fields", "level"],
+        "required": ["module", "timestampMs", "fields", "level"],
         "additionalProperties": false
       },
       "LogResponse": {
@@ -962,19 +952,6 @@
           }
         },
         "required": ["id", "status"],
-        "additionalProperties": false
-      },
-      "TaskRunListRequest": {
-        "description": "A request to list task runs.",
-        "type": "object",
-        "properties": {
-          "limit": {
-            "description": "How many task runs to list.",
-            "type": "integer",
-            "format": "int64",
-            "default": 100
-          }
-        },
         "additionalProperties": false
       },
       "Template": {

@@ -1,11 +1,10 @@
 import { GitHubLogoIcon } from "@radix-ui/react-icons";
-import { Globe, Logs } from "lucide-react";
+import { ChartNetwork, Globe, Logs, PencilRuler } from "lucide-react";
 import { Link, useLocation } from "react-router";
 
 import api from "@/api";
 import SauropodIcon from "@/assets/icon.svg?url";
 import Sauropod from "@/assets/sauropod.svg?url";
-import SidebarTaskGroup from "@/components/sidebar/SidebarTaskGroup";
 import {
   Sidebar as ShadcnSidebar,
   SidebarContent,
@@ -20,7 +19,7 @@ import {
   SidebarRail,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { LOGS } from "@/routes";
+import { LOGS, RUN_HISTORY, taskRoute } from "@/routes";
 
 export default function AppSidebar() {
   const location = useLocation().pathname;
@@ -37,7 +36,35 @@ export default function AppSidebar() {
         />
       </SidebarHeader>
       <SidebarContent className="group-data-[collapsible=icon]:!gap-0 group-data-[collapsible=icon]:mt-1">
-        <SidebarTaskGroup />
+        <SidebarGroup>
+          <SidebarGroupLabel>Tasks</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  isActive={location.startsWith("/task")}
+                  asChild
+                >
+                  <Link to={taskRoute("")}>
+                    <PencilRuler className="h-6 w-6" />
+                    <span className="group-data-[collapsible=icon]:hidden">
+                      Tasks
+                    </span>
+                  </Link>
+                </SidebarMenuButton>
+                <SidebarMenuButton isActive={location === RUN_HISTORY} asChild>
+                  <Link to={RUN_HISTORY}>
+                    <ChartNetwork className="h-6 w-6" />
+                    <span className="group-data-[collapsible=icon]:hidden">
+                      Runs
+                    </span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
         <SidebarGroup className="mt-auto">
           <SidebarGroupLabel>System</SidebarGroupLabel>
           <SidebarGroupContent>

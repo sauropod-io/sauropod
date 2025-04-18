@@ -6,34 +6,32 @@ import api from "@/api";
 import PageHeader from "@/components/PageHeader";
 import { ErrorBadge, Level, LevelBadge } from "@/components/badge";
 
-function LogElement({
-  log,
-  index,
-}: {
-  log: Schemas["LogMessage"];
-  index: number;
-}) {
+function LogElement({ log }: { log: Schemas["LogMessage"] }) {
   const { message, ...rest } = log.fields;
   return (
-    <div key={index} className="py-1 border-b last:border-0">
+    <div className="py-1 border-b last:border-0">
       <div className="flex items-start">
-        <span className="text-muted-foreground mr-2">
-          {log.timestampS != undefined
-            ? format(new Date(log.timestampS * 1000), "yyyy-MM-dd HH:mm:ss")
+        <div className="min-w-42 text-muted-foreground">
+          {log.timestampMs != undefined
+            ? format(new Date(log.timestampMs), "yyyy-MM-dd HH:mm:ss")
             : ""}
-        </span>
+        </div>
         <div className="min-w-16 mr-2">
           <LevelBadge level={log.level as Level}>
             {log.level.toUpperCase()}
           </LevelBadge>
         </div>
-        <span>{message ? `${message} ` : ""}</span>
-      </div>
-      {Object.keys(rest).length !== 0 && (
-        <div className="ml-[180px] text-xs text-muted-foreground">
-          <span className="mr-2">{JSON.stringify(rest)}</span>
+        <div className="flex flex-col w-[calc(100%-15rem)]">
+          <div className="overflow-auto truncate">
+            {message ? `${message} ` : ""}
+          </div>
+          {Object.keys(rest).length !== 0 && (
+            <div className="overflow-auto truncate text-xs text-muted-foreground">
+              {JSON.stringify(rest)}
+            </div>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 }
@@ -59,7 +57,7 @@ function LogMessageRows() {
   return (
     <>
       {data!.map((log, index) => (
-        <LogElement log={log} index={index} key={index} />
+        <LogElement log={log} key={index} />
       ))}
     </>
   );

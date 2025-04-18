@@ -284,10 +284,8 @@ impl sauropod_http::ServerInterface for Server {
     async fn get_task_run(
         &self,
         user_id: UserId,
-        input: sauropod_schemas::observability::TaskRunListRequest,
     ) -> anyhow::Result<HttpResponse<Vec<TaskRunInfo>>> {
-        let records =
-            sauropod_database::TaskRunRecord::list(user_id, input.limit, &self.db).await?;
+        let records = sauropod_database::TaskRunRecord::list(user_id, 100, &self.db).await?;
 
         Ok(HttpResponse::Ok(
             records

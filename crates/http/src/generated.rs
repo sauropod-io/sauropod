@@ -62,7 +62,6 @@ pub trait ServerInterface {
     async fn get_task_run(
         &self,
         user_id: sauropod_database::UserId,
-        input: sauropod_schemas::observability::TaskRunListRequest,
     ) -> anyhow::Result<
         crate::HttpResponse<std::vec::Vec<sauropod_schemas::observability::TaskRunInfo>>,
     >;
@@ -289,13 +288,10 @@ pub fn register_routes<T: ServerInterface + Sync + Send + 'static>(
             "/task/run",
             axum::routing::get({
                 let server_clone = server.clone();
-                async move |Extension(user_id): crate::UserIdExtension,
-                            axum::extract::Json(input): axum::extract::Json<
-                    sauropod_schemas::observability::TaskRunListRequest,
-                >| {
+                async move |Extension(user_id): crate::UserIdExtension| {
                     tracing::debug!("GET /task/run");
                     let response = server_clone
-                        .get_task_run(sauropod_database::UserId(user_id.0), input)
+                        .get_task_run(sauropod_database::UserId(user_id.0))
                         .instrument(tracing::info_span!(
                             "Request",
                             method = "GET",

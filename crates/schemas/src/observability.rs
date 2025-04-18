@@ -24,8 +24,8 @@ pub enum LogLevel {
 pub struct LogMessage {
     /// The module where the log message was emitted.
     pub module: String,
-    /// The number of seconds since epoch.
-    pub timestamp_s: u64,
+    /// The number of milliseconds since epoch.
+    pub timestamp_ms: i64,
     /// Structured logging fields.
     pub fields: std::collections::HashMap<String, serde_json::Value>,
     /// The line number where the log message was emitted.
@@ -136,18 +136,4 @@ pub struct TaskRunInfo {
     pub start_time_ms: Option<i64>,
     /// The end time of the run in milliseconds since UTC epoch.
     pub end_time_ms: Option<i64>,
-}
-
-fn default_limit() -> i64 {
-    100
-}
-
-/// A request to list task runs.
-#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
-#[cfg_attr(feature = "json_schema", derive(schemars::JsonSchema))]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub struct TaskRunListRequest {
-    /// How many task runs to list.
-    #[serde(default = "default_limit")]
-    pub limit: i64,
 }

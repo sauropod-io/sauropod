@@ -1,5 +1,6 @@
 export const INDEX = "/";
 export const LOGS = "/logs";
+export const RUN_HISTORY = "/run-history";
 
 export const TASK_PREFIX = "/task/";
 

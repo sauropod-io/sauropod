@@ -1,4 +1,4 @@
-use sauropod_schemas::observability::{LogResponse, TaskRun, TaskRunInfo, TaskRunListRequest};
+use sauropod_schemas::observability::{LogResponse, TaskRun, TaskRunInfo};
 use sauropod_schemas::{InputAndOutputSchema, ModelDefinition, Task, TaskInfo, ToolDefinition};
 
 use generate_code::{Object, openapi};
@@ -27,7 +27,7 @@ fn main() -> anyhow::Result<()> {
             GET (()) -> Vec<TaskInfo> : "Get the list of tasks"
         )
         route "/task/run" auth(true) (
-            GET (TaskRunListRequest) -> Vec<TaskRunInfo> : "Get a list of task runs"
+            GET (()) -> Vec<TaskRunInfo> : "Get a list of task runs"
         )
         route "/task/run/{id:i64}" auth(true) (
             GET (()) -> TaskRun : "Get a task run by ID"

@@ -36,7 +36,7 @@ function SkeletonCard() {
   );
 }
 
-function TaskCard({ item }: { item: Schemas["ObjectInfo"] }) {
+function TaskCard({ item }: { item: Schemas["TaskInfo"] }) {
   const { data, isLoading, error } = api.useQuery("get", `/api/task/{id}`, {
     params: { path: { id: `${item.id}` } },
   });

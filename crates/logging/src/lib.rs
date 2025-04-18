@@ -70,7 +70,7 @@ where
     ) {
         let mut message = LogMessage {
             metadata: event.metadata(),
-            timestamp: std::time::SystemTime::now(),
+            timestamp: chrono::Utc::now(),
             fields: Vec::with_capacity(event.metadata().fields().len()),
         };
         event.record(&mut message);

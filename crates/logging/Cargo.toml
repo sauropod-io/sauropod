@@ -14,3 +14,4 @@ sauropod-config = { path = "../config" }
 serde_json.workspace = true
 tracing-subscriber.workspace = true
 tracing.workspace = true
+chrono.workspace = true
