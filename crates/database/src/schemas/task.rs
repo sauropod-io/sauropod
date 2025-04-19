@@ -6,7 +6,7 @@ use crate::{Database, DatabaseId, DatabaseTypeWithId, UserId};
 #[derive(Debug, Clone, PartialEq, sqlx::FromRow)]
 pub struct Task {
     /// The ID of the task.
-    pub id: DatabaseId,
+    pub task_id: DatabaseId,
     /// The ID of user that owns the task.
     pub owner_id: DatabaseId,
     /// The name of the task.
@@ -55,7 +55,7 @@ impl Task {
         let input_schema = Json(content.input_schema);
         let available_tool_ids = Json(content.available_tool_ids);
         sqlx::query!(
-            "UPDATE task SET name = ?, template = ?, output_schema = ?, input_schema = ?, available_tool_ids = ? WHERE id = ? AND owner_id = ?",
+            "UPDATE task SET name = ?, template = ?, output_schema = ?, input_schema = ?, available_tool_ids = ? WHERE task_id = ? AND owner_id = ?",
             content.name,
             content.template.0,
             output_schema,
@@ -84,7 +84,7 @@ impl From<Task> for sauropod_schemas::Task {
 impl From<sauropod_schemas::Task> for Task {
     fn from(val: sauropod_schemas::Task) -> Task {
         Task {
-            id: 0,
+            task_id: 0,
             owner_id: 0,
             name: val.name,
             description: "".to_string(),
@@ -134,7 +134,7 @@ impl DatabaseTypeWithId for Task {
             Task,
             r#"
                 SELECT
-                    id,
+                    task_id,
                     owner_id,
                     name,
                     description,
@@ -143,7 +143,7 @@ impl DatabaseTypeWithId for Task {
                     input_schema as "input_schema: Json<serde_json::Map<String, serde_json::Value>>",
                     available_tool_ids as "available_tool_ids: Json<Vec<String>>"
                 FROM task
-                WHERE id = ? AND owner_id = ?
+                WHERE task_id = ? AND owner_id = ?
             "#,
             id,
             owner
@@ -163,9 +163,13 @@ impl DatabaseTypeWithId for Task {
         owner: UserId,
         connection: &Database,
     ) -> sqlx::Result<bool> {
-        let result = sqlx::query!("DELETE FROM task WHERE id = ? AND owner_id = ?", id, owner)
-            .execute(connection)
-            .await;
+        let result = sqlx::query!(
+            "DELETE FROM task WHERE task_id = ? AND owner_id = ?",
+            id,
+            owner
+        )
+        .execute(connection)
+        .await;
         match result {
             Ok(result) => Ok(result.rows_affected() > 0),
             Err(sqlx::Error::RowNotFound) => Ok(false),
@@ -176,7 +180,7 @@ impl DatabaseTypeWithId for Task {
     async fn list(owner: UserId, connection: &Database) -> sqlx::Result<Vec<Self>> {
         // We use a query builder instead of the query macro because there's a glitch in the macro where it thinks owner_id is nullable
         let mut builder = sqlx::query_builder::QueryBuilder::new(
-            "SELECT id, owner_id, name, description, template, output_schema, input_schema, available_tool_ids \
+            "SELECT task_id, owner_id, name, description, template, output_schema, input_schema, available_tool_ids \
             FROM task WHERE owner_id = ",
         );
         builder.push_bind(owner);
@@ -207,7 +211,7 @@ mod test {
         let user_id = UserId(user.user_id);
 
         let task = Task {
-            id: 1234,
+            task_id: 1234,
             owner_id: user.user_id,
             name: "Test Task".to_string(),
             description: "This is a test task.".to_string(),
@@ -224,7 +228,7 @@ mod test {
         let Some(fetched_task) = Task::get_by_id(1, user_id, &connection).await? else {
             anyhow::bail!("Task not found");
         };
-        assert_eq!(fetched_task.id, 1);
+        assert_eq!(fetched_task.task_id, 1);
 
         // List tasks
         let task_list = Task::list(user_id, &connection).await?;

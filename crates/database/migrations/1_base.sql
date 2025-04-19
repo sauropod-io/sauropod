@@ -7,7 +7,7 @@ INSERT OR IGNORE INTO "user" (user_id, name) VALUES (0, 'null-island');
 
 CREATE TABLE IF NOT EXISTS "task"
 (
-    id                  INTEGER PRIMARY KEY AUTOINCREMENT,
+    task_id             INTEGER PRIMARY KEY AUTOINCREMENT,
     owner_id            INTEGER NOT NULL,
     name                TEXT NOT NULL,
     description         TEXT NOT NULL,

@@ -24,6 +24,8 @@ pub struct TaskStep {
     pub outputs: Json<serde_json::Value>,
     /// The ID of the task being run (if this is a task run).
     pub task_id: Option<DatabaseId>,
+    /// The name of the task if `task_id` is set.
+    pub task_name: Option<String>,
     /// The ID of the tool being run (if this is a tool run).
     pub tool_id: Option<String>,
     /// An error message if an error occurs.
@@ -114,8 +116,10 @@ impl TaskStep {
     ) -> sqlx::Result<Vec<Self>> {
         // Use a query builder to work around issues with the query_as! macro
         let mut builder = sqlx::query_builder::QueryBuilder::new(
-            "SELECT run_id, owner_id, step_id, parent_step_id, inputs, outputs, task_id, tool_id, error, start_time, end_time \
-             FROM task_run_steps WHERE task_id = ",
+            r#"
+            SELECT run_id, owner_id, step_id, parent_step_id, inputs, outputs, task_id, tool_id, error, start_time, end_time,
+                (SELECT name FROM task WHERE task_id = task_run_steps.task_id) task_name
+            FROM task_run_steps WHERE task_id = "#,
         );
         builder.push_bind(task_id);
         builder.push(" AND owner_id = ");
@@ -145,7 +149,8 @@ impl TaskStep {
             r#"
                 SELECT run_id, owner_id, step_id as "step_id!", parent_step_id, inputs as "inputs: Json<serde_json::Value>",
                         outputs as "outputs: Json<serde_json::Value>", task_id, tool_id, error,
-                        start_time as "start_time?: DateTime<Utc>", end_time as "end_time?: DateTime<Utc>"
+                        start_time as "start_time?: DateTime<Utc>", end_time as "end_time?: DateTime<Utc>",
+                        (SELECT name FROM task WHERE task_id = task_run_steps.task_id) task_name
                 FROM task_run_steps
                 WHERE run_id = ? AND owner_id = ?
             "#,
@@ -166,11 +171,13 @@ impl DatabaseTypeWithId for TaskStep {
         let result = sqlx::query_as!(
             TaskStep,
             r#"
-                SELECT run_id, owner_id, step_id as "step_id!", parent_step_id, inputs as "inputs: Json<serde_json::Value>",
-                       outputs as "outputs: Json<serde_json::Value>", task_id, tool_id, error,
-                       start_time as "start_time?: DateTime<Utc>", end_time as "end_time?: DateTime<Utc>"
-                FROM task_run_steps
-                WHERE step_id = ? AND owner_id = ?
+            SELECT run_id, owner_id, step_id as "step_id!", parent_step_id, inputs as "inputs: Json<serde_json::Value>",
+                   outputs as "outputs: Json<serde_json::Value>", task_id,
+                   (SELECT name FROM task WHERE task_id = task_run_steps.task_id) task_name,
+                   tool_id, error,
+                   start_time as "start_time?: DateTime<Utc>", end_time as "end_time?: DateTime<Utc>"
+            FROM task_run_steps
+            WHERE step_id = ? AND owner_id = ?
             "#,
             id,
             owner
@@ -207,8 +214,10 @@ impl DatabaseTypeWithId for TaskStep {
 
     async fn list(owner: UserId, connection: &Database) -> sqlx::Result<Vec<Self>> {
         let mut builder = sqlx::query_builder::QueryBuilder::new(
-            "SELECT run_id, owner_id, step_id, parent_step_id, inputs, outputs, task_id, tool_id, error, start_time, end_time \
-            FROM task_run_steps WHERE owner_id = ",
+            r#"SELECT
+                run_id, owner_id, step_id, parent_step_id, inputs, outputs, task_id, tool_id, error, start_time, end_time,
+                (SELECT name FROM task WHERE task_id = task_run_steps.task_id) task_name
+            FROM task_run_steps WHERE owner_id = "#,
         );
         builder.push_bind(owner);
         builder
@@ -346,8 +355,10 @@ pub async fn get_task_run_by_id(
         task_run.steps.push(Step {
             step_id: x.step_id,
             parent_step_id: x.parent_step_id,
+            task_name: x.task_name,
             inputs: x.inputs.0,
             outputs: x.outputs.0,
+            error: x.error,
             step_action: if let Some(task_id) = x.task_id {
                 StepAction::TaskId(task_id)
             } else if let Some(tool_id) = x.tool_id {
@@ -390,7 +401,7 @@ mod test {
 
         // Create a task first
         let task = Task {
-            id: 0,
+            task_id: 0,
             owner_id: user.user_id,
             name: "Test Task for Run".to_string(),
             description: "This is a test task for task_run.".to_string(),
@@ -406,7 +417,8 @@ mod test {
 
         // Create a task step
         let task_step = TaskStep {
-            step_id: 1, // will be ignored during insert
+            step_id: 1,      // will be ignored during insert
+            task_name: None, // will be ignored during insert
             run_id,
             owner_id: user.user_id,
             parent_step_id: None,

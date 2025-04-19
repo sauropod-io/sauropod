@@ -1,6 +1,6 @@
 {
   "db_name": "SQLite",
-  "query": "\n                SELECT run_id, owner_id, step_id as \"step_id!\", parent_step_id, inputs as \"inputs: Json<serde_json::Value>\",\n                        outputs as \"outputs: Json<serde_json::Value>\", task_id, tool_id, error,\n                        start_time as \"start_time?: DateTime<Utc>\", end_time as \"end_time?: DateTime<Utc>\"\n                FROM task_run_steps\n                WHERE run_id = ? AND owner_id = ?\n            ",
+  "query": "\n            SELECT run_id, owner_id, step_id as \"step_id!\", parent_step_id, inputs as \"inputs: Json<serde_json::Value>\",\n                   outputs as \"outputs: Json<serde_json::Value>\", task_id,\n                   (SELECT name FROM task WHERE task_id = task_run_steps.task_id) task_name,\n                   tool_id, error,\n                   start_time as \"start_time?: DateTime<Utc>\", end_time as \"end_time?: DateTime<Utc>\"\n            FROM task_run_steps\n            WHERE step_id = ? AND owner_id = ?\n            ",
   "describe": {
     "columns": [
       {
@@ -39,23 +39,28 @@
         "type_info": "Integer"
       },
       {
-        "name": "tool_id",
+        "name": "task_name",
         "ordinal": 7,
         "type_info": "Text"
       },
       {
-        "name": "error",
+        "name": "tool_id",
         "ordinal": 8,
         "type_info": "Text"
       },
       {
-        "name": "start_time?: DateTime<Utc>",
+        "name": "error",
         "ordinal": 9,
+        "type_info": "Text"
+      },
+      {
+        "name": "start_time?: DateTime<Utc>",
+        "ordinal": 10,
         "type_info": "Datetime"
       },
       {
         "name": "end_time?: DateTime<Utc>",
-        "ordinal": 10,
+        "ordinal": 11,
         "type_info": "Datetime"
       }
     ],
@@ -65,10 +70,11 @@
     "nullable": [
       false,
       false,
-      true,
+      false,
       true,
       false,
       false,
+      true,
       true,
       true,
       true,
@@ -76,5 +82,5 @@
       true
     ]
   },
-  "hash": "32d00bec605d8700c7f4f24037ebb56b911be1a864c9b95c776efaab71a4bd44"
+  "hash": "2647d7a7443d98ac0b8633a2d522a0f8e48f9b37295d0cc1a593f6ea844e9f3b"
 }

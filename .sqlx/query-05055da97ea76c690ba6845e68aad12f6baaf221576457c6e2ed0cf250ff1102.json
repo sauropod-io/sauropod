@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE task SET name = ?, template = ?, output_schema = ?, input_schema = ?, available_tool_ids = ? WHERE task_id = ? AND owner_id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 7
+    },
+    "nullable": []
+  },
+  "hash": "05055da97ea76c690ba6845e68aad12f6baaf221576457c6e2ed0cf250ff1102"
+}

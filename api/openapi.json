@@ -783,13 +783,19 @@
             "format": "int64",
             "nullable": true
           },
+          "error": {
+            "description": "An error message if the step failed.",
+            "type": "string",
+            "nullable": true
+          },
           "inputs": {
-            "description": "The inputs to the tool."
+            "description": "The inputs to the step."
           },
           "outputs": {
-            "description": "The outputs from the tool."
+            "description": "The outputs from the step."
           },
           "parentStepId": {
+            "description": "The ID of the parent.",
             "type": "integer",
             "format": "int64",
             "nullable": true
@@ -804,8 +810,14 @@
             "$ref": "#/components/schemas/StepAction"
           },
           "stepId": {
+            "description": "The ID of the step.",
             "type": "integer",
             "format": "int64"
+          },
+          "taskName": {
+            "description": "The name of the task if this step is a task run.",
+            "type": "string",
+            "nullable": true
           }
         },
         "required": ["stepId", "inputs", "outputs", "stepAction"],

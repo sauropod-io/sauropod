@@ -93,6 +93,7 @@ impl TaskContext {
 
         Ok(TaskStep {
             step_id: 0,
+            task_name: None, // This field isn't used for writes
             run_id: self.run_id,
             owner_id: self.user_id.0,
             parent_step_id,
@@ -120,6 +121,7 @@ impl TaskContext {
         Ok(TaskStep {
             step_id: 0,
             run_id: self.run_id,
+            task_name: None, // This field isn't used for writes
             owner_id: self.user_id.0,
             parent_step_id,
             inputs: sqlx::types::Json(inputs.clone()),

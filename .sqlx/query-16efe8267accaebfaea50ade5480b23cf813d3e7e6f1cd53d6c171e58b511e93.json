@@ -1,10 +1,10 @@
 {
   "db_name": "SQLite",
-  "query": "\n                SELECT\n                    id,\n                    owner_id,\n                    name,\n                    description,\n                    template,\n                    output_schema as \"output_schema: Json<Option<serde_json::Map<String, serde_json::Value>>>\",\n                    input_schema as \"input_schema: Json<serde_json::Map<String, serde_json::Value>>\",\n                    available_tool_ids as \"available_tool_ids: Json<Vec<String>>\"\n                FROM task\n                WHERE id = ? AND owner_id = ?\n            ",
+  "query": "\n                SELECT\n                    task_id,\n                    owner_id,\n                    name,\n                    description,\n                    template,\n                    output_schema as \"output_schema: Json<Option<serde_json::Map<String, serde_json::Value>>>\",\n                    input_schema as \"input_schema: Json<serde_json::Map<String, serde_json::Value>>\",\n                    available_tool_ids as \"available_tool_ids: Json<Vec<String>>\"\n                FROM task\n                WHERE task_id = ? AND owner_id = ?\n            ",
   "describe": {
     "columns": [
       {
-        "name": "id",
+        "name": "task_id",
         "ordinal": 0,
         "type_info": "Integer"
       },
@@ -58,5 +58,5 @@
       false
     ]
   },
-  "hash": "84b59e84c9ec4bd6804c0bf25fa48956c9855ea1b7982b54d969cf460d645b7f"
+  "hash": "16efe8267accaebfaea50ade5480b23cf813d3e7e6f1cd53d6c171e58b511e93"
 }

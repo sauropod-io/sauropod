@@ -56,12 +56,19 @@ pub enum StepAction {
 #[cfg_attr(feature = "json_schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct Step {
+    /// The ID of the step.
     pub step_id: i64,
+    /// The ID of the parent.
     pub parent_step_id: Option<i64>,
-    /// The inputs to the tool.
+    /// The name of the task if this step is a task run.
+    pub task_name: Option<String>,
+    /// The inputs to the step.
     pub inputs: serde_json::Value,
-    /// The outputs from the tool.
+    /// The outputs from the step.
     pub outputs: serde_json::Value,
+    /// An error message if the step failed.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub error: Option<String>,
     /// The action the step took.
     pub step_action: StepAction,
     /// The start of the step in milliseconds since UTC epoch.
@@ -115,7 +122,7 @@ pub struct TaskRun {
     pub id: i64,
     /// The steps in the run.
     pub steps: Vec<Step>,
-    /// The status of the run.
+    /// The overall status of the run.
     pub status: RunStatus,
     /// The start of the run in milliseconds since UTC epoch.
     pub start_time_ms: Option<i64>,

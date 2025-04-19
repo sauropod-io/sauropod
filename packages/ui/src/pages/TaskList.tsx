@@ -16,7 +16,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useDeleteTask } from "@/mutations/taskMutations";
 import { taskRoute } from "@/routes";
@@ -91,33 +90,8 @@ function TaskCard({ item }: { item: Schemas["TaskInfo"] }) {
   );
 }
 
-export default function TaskList() {
-  const { data, isLoading } = api.useQuery("get", "/api/task");
+function TaskListPageWrapper({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
-
-  if (isLoading || data === undefined) {
-    return (
-      <main className="container mx-auto p-6">
-        <div className="flex items-center justify-between mb-6">
-          <SidebarTrigger />
-          <h1 className="text-2xl font-bold">Tasks</h1>
-          <Button
-            variant="outline"
-            onClick={() => navigate(taskRoute("new"))}
-            size="sm"
-          >
-            <Plus className="h-4 w-4 mr-1" />
-            Create Task
-          </Button>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {[1, 2, 3].map((i) => (
-            <SkeletonCard key={i} />
-          ))}
-        </div>
-      </main>
-    );
-  }
   return (
     <main className="container mx-auto p-6">
       <PageHeader pageName="Tasks">
@@ -131,23 +105,51 @@ export default function TaskList() {
         </Button>
       </PageHeader>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {data.length === 0 ? (
-          <Card
-            onClick={() => navigate(taskRoute("new"))}
-            className="cursor-pointer border-dashed"
-          >
-            <CardHeader className="text-center">
-              <CardTitle className="flex items-center justify-center gap-2">
-                <Plus className="h-5 w-5" />
-                Create your first task
-              </CardTitle>
-              <CardDescription>Get started by creating a task</CardDescription>
-            </CardHeader>
-          </Card>
-        ) : (
-          data.map((item) => <TaskCard key={item.id} item={item} />)
-        )}
+        {children}
       </div>
     </main>
+  );
+}
+
+export default function TaskList() {
+  const { data, isLoading, error } = api.useQuery("get", "/api/task");
+  const navigate = useNavigate();
+
+  if (error) {
+    return (
+      <TaskListPageWrapper>
+        <div>Error occured loading tasks: {JSON.stringify(error.error)}</div>
+      </TaskListPageWrapper>
+    );
+  }
+
+  if (isLoading || data === undefined) {
+    return (
+      <TaskListPageWrapper>
+        {[1, 2, 3].map((i) => (
+          <SkeletonCard key={i} />
+        ))}
+      </TaskListPageWrapper>
+    );
+  }
+  return (
+    <TaskListPageWrapper>
+      {data.length === 0 ? (
+        <Card
+          onClick={() => navigate(taskRoute("new"))}
+          className="cursor-pointer border-dashed"
+        >
+          <CardHeader className="text-center">
+            <CardTitle className="flex items-center justify-center gap-2">
+              <Plus className="h-5 w-5" />
+              Create your first task
+            </CardTitle>
+            <CardDescription>Get started by creating a task</CardDescription>
+          </CardHeader>
+        </Card>
+      ) : (
+        data.map((item) => <TaskCard key={item.id} item={item} />)
+      )}
+    </TaskListPageWrapper>
   );
 }

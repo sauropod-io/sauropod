@@ -36,7 +36,7 @@ CREATE TABLE IF NOT EXISTS "task_run_steps"
     -- When the step finished executing
     end_time            TIMESTAMP,
     FOREIGN KEY (owner_id) REFERENCES "user"(user_id),
-    FOREIGN KEY (task_id)  REFERENCES "task"(id),
+    FOREIGN KEY (task_id)  REFERENCES "task"(task_id),
     FOREIGN KEY (run_id)   REFERENCES "task_run"(run_id)
 );
 

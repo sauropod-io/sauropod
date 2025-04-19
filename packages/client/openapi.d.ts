@@ -801,11 +801,16 @@ export interface components {
        * @description The end time of the step in milliseconds since UTC epoch.
        */
       endTimeMs?: number | null;
-      /** @description The inputs to the tool. */
+      /** @description An error message if the step failed. */
+      error?: string | null;
+      /** @description The inputs to the step. */
       inputs: unknown;
-      /** @description The outputs from the tool. */
+      /** @description The outputs from the step. */
       outputs: unknown;
-      /** Format: int64 */
+      /**
+       * Format: int64
+       * @description The ID of the parent.
+       */
       parentStepId?: number | null;
       /**
        * Format: int64
@@ -813,8 +818,13 @@ export interface components {
        */
       startTimeMs?: number | null;
       stepAction: components["schemas"]["StepAction"];
-      /** Format: int64 */
+      /**
+       * Format: int64
+       * @description The ID of the step.
+       */
       stepId: number;
+      /** @description The name of the task if this step is a task run. */
+      taskName?: string | null;
     };
     /** @description A step of a task run. */
     StepAction:

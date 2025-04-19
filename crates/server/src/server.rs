@@ -4,6 +4,7 @@ use std::env;
 use std::str::FromStr as _;
 use std::sync::Arc;
 
+use sauropod_config::ModelConfig;
 use sauropod_database::{DatabaseId, DatabaseTypeWithId, UserId};
 use sauropod_schemas::InputAndOutputSchema;
 use sauropod_schemas::observability::{RunStatus, TaskRun, TaskRunInfo};
@@ -64,10 +65,20 @@ impl Server {
         user_id: UserId,
         run_id: DatabaseId,
     ) -> anyhow::Result<Arc<TaskContext>> {
-        let model_config = &self.config.default_model;
-
+        let mut model_config = self.config.default_model.clone();
         // Ensure that the models are available
         let available_models = self.llm_engine.list_models().await?;
+
+        // If no model is specified and the server only supports one model then just use that
+        if model_config.model.is_empty() && available_models.len() == 1 {
+            let model = &available_models[0];
+            tracing::info!("Using model {}", &model.name);
+            model_config = ModelConfig {
+                model: model.name.clone(),
+                model_type: sauropod_config::ModelType::Default,
+            }
+        }
+
         if !available_models
             .iter()
             .any(|m| m.name == model_config.model)
@@ -76,7 +87,7 @@ impl Server {
                 self.llm_engine.pull_model(&model_config.model).await?;
             } else {
                 anyhow::bail!(
-                    "Model {} not available, the available models are:\n{}",
+                    "Model `{}` not available, the available models are:\n{}",
                     model_config.model,
                     available_models
                         .iter()
@@ -91,7 +102,7 @@ impl Server {
             user_id,
             run_id,
             self.llm_engine.clone(),
-            model_config.clone(),
+            model_config,
             self.tools.clone(),
             self.db.clone(),
         ))
@@ -273,7 +284,7 @@ impl sauropod_http::ServerInterface for Server {
                     tasks
                         .into_iter()
                         .map(|task| TaskInfo {
-                            id: task.id,
+                            id: task.task_id,
                             name: task.name,
                         })
                         .collect()
@@ -327,7 +338,7 @@ impl sauropod_http::ServerInterface for Server {
             .await?
             .into_iter()
             .map(|task| sauropod_schemas::ToolDefinition {
-                id: format!("{}{}", sauropod_task::TASK_TOOL_PREFIX, task.id),
+                id: format!("{}{}", sauropod_task::TASK_TOOL_PREFIX, task.task_id),
                 name: task.name,
                 description: task.description,
                 input_schema: serde_json::json!(task.input_schema.0),
