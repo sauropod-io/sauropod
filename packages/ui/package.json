@@ -41,7 +41,7 @@
     "cmdk": "^1.1.1",
     "date-fns": "^4.1.0",
     "lexical": "^0.30.0",
-    "lucide-react": "^0.501.0",
+    "lucide-react": "^0.503.0",
     "openapi-react-query": "^0.3.1",
     "radix-ui": "^1.2.0",
     "react": "^19.1.0",
