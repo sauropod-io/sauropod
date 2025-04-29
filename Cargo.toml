@@ -18,7 +18,7 @@ homepage = "https://sauropod.io"
 anyhow = "1.0.98"
 async-trait = "0.1.88"
 axum = { version = "0.8", features = ["json", "http1", "http2"] }
-chrono ={ version = "0.4.40", features = ["serde"] }
+chrono ={ version = "0.4.41", features = ["serde"] }
 clap = { version = "4.5.37", features = ["env"]}
 config = {version = "0.15.11", default-features = false, features = ["toml"]}
 directories = "6.0.0"
@@ -32,7 +32,7 @@ serde = {version = "1.0.219", features = ["serde_derive"]}
 serde_json = "1.0.140"
 thiserror = "2.0.12"
 tokio = { version = "1.44", features = ["full"] }
-toml = "0.8.21"
+toml = "0.8.22"
 tower = "0.5.2"
 tower-http = { version = "0.6.2", features = ["cors"] }
 tracing = "0.1.41"
