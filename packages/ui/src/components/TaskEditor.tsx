@@ -39,8 +39,18 @@ import { TASK_PREFIX, taskRoute } from "@/routes";
 
 import IconButton from "./buttons/IconButton";
 
+type InternalFieldType = FieldType | "image";
 // Output type options
-const VARIABLE_TYPES: FieldType[] = ["string", "number", "boolean"];
+const VARIABLE_TYPES: InternalFieldType[] = [
+  "string",
+  "number",
+  "boolean",
+  "image",
+];
+
+const IMAGE_DESCRIPTION =
+  "Base64 encoded image string - e.g. `data:image/png;base64,<data>`";
+const IMAGE_DESCRIPTION_PREFIX = "base64 encoded image";
 
 interface OutputConfigurationProps {
   outputSchema: JsonSchemaObject | null;
@@ -49,7 +59,7 @@ interface OutputConfigurationProps {
 }
 
 /** Convert a field type to more friendly name. */
-function fieldTypeToFriendly(type: FieldType): string {
+function fieldTypeToFriendly(type: InternalFieldType): string {
   switch (type) {
     case "string":
       return "Text";
@@ -57,15 +67,31 @@ function fieldTypeToFriendly(type: FieldType): string {
       return "Number";
     case "boolean":
       return "True/False";
+    case "image":
+      return "Image";
     default:
       return type;
   }
 }
 
+/** Check whether a property is an image. */
+function propertyIsImage(property: JsonSchemaBase): boolean {
+  return !!(
+    property.type === "string" &&
+    property.description?.toLowerCase().startsWith(IMAGE_DESCRIPTION_PREFIX)
+  );
+}
+
+function getFieldType(property: JsonSchemaBase): InternalFieldType {
+  return propertyIsImage(property)
+    ? "image"
+    : (property.type as InternalFieldType);
+}
+
 interface VariableProps {
   name: string;
-  value: FieldType;
-  onChangeType: (type: FieldType) => void;
+  value: InternalFieldType;
+  onChangeType: (type: InternalFieldType) => void;
   onRemove?: () => void;
 }
 
@@ -163,7 +189,7 @@ function OutputConfiguration({
       <Variable
         key={key}
         name={key}
-        value={value.type}
+        value={getFieldType(value)}
         onChangeType={(value) => changeType(key, value as FieldType)}
         onRemove={() => removeOutput(key)}
       />,
@@ -435,12 +461,19 @@ export default function TaskEditor({ taskId }: { taskId?: string }) {
                     <Variable
                       key={variable}
                       name={variable}
-                      value={variableType.type}
+                      value={getFieldType(variableType)}
                       onChangeType={(value) => {
+                        const newProperty: JsonSchemaBase = {
+                          type: value == "image" ? "string" : value,
+                        };
+                        if (value == "image") {
+                          newProperty.description = IMAGE_DESCRIPTION;
+                        }
+
                         setInputSchema(({ properties, ...rest }) => ({
                           properties: {
                             ...properties,
-                            [variable]: { type: value },
+                            [variable]: newProperty,
                           },
                           ...rest,
                         }));

@@ -36,8 +36,8 @@ url = "http://localhost:1234"
 ## Roadmap
 
 - [x] [MCP](https://modelcontextprotocol.io/) tools support
+- [x] Image support
 - [ ] Events
-- [ ] Image processing support
 - [ ] Notifications via Web Push
 - [ ] Multiple accounts
 - [ ] Secrets management
