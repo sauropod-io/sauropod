@@ -4,8 +4,9 @@ import {
   JsonSchemaArray,
   JsonSchemaBase,
   JsonSchemaObject,
-  makeExampleObject,
+  JsonSchemaString,
 } from "./jsonSchema";
+import { IMAGE_REGEX, makeExampleObject } from "./jsonSchemaExtensions";
 
 describe("makeExampleObject", () => {
   it("should return the first example for a string schema with examples", () => {
@@ -14,6 +15,16 @@ describe("makeExampleObject", () => {
       examples: ["example text", "other example"],
     };
     expect(makeExampleObject(schema)).toEqual("example text");
+  });
+
+  it('should return "text" for a string schema without examples', () => {
+    const schema: JsonSchemaBase = { type: "string" };
+    expect(makeExampleObject(schema)).toEqual("text");
+  });
+
+  it('should return "text" for a string schema without examples', () => {
+    const schema: JsonSchemaString = { type: "string", pattern: IMAGE_REGEX };
+    expect(makeExampleObject(schema)).toEqual("data:image/png;base64,<data>");
   });
 
   it('should return "text" for a string schema without examples', () => {

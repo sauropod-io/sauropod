@@ -26,7 +26,8 @@ import {
   makeRustSample,
   makeTypeScriptSample,
 } from "@/lib/codeSamples";
-import { JsonSchemaBase, makeExampleObject } from "@/lib/jsonSchema";
+import { JsonSchemaBase } from "@/lib/jsonSchema";
+import { makeExampleObject } from "@/lib/jsonSchemaExtensions";
 
 interface ModalInputsProps {
   schema?: Record<string, any>;

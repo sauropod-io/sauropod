@@ -30,6 +30,12 @@ import {
   jsonSchemaObjectProperties,
 } from "@/lib/jsonSchema";
 import {
+  InternalFieldType,
+  fieldTypeToFriendly,
+  getFieldType,
+  internalFieldTypeToSchema,
+} from "@/lib/jsonSchemaExtensions";
+import {
   useCreateTask,
   useDeleteTask,
   useUpdateTask,
@@ -39,53 +45,19 @@ import { TASK_PREFIX, taskRoute } from "@/routes";
 
 import IconButton from "./buttons/IconButton";
 
-type InternalFieldType = FieldType | "image";
 // Output type options
 const VARIABLE_TYPES: InternalFieldType[] = [
   "string",
   "number",
   "boolean",
   "image",
+  "audio",
 ];
-
-const IMAGE_DESCRIPTION =
-  "Base64 encoded image string - e.g. `data:image/png;base64,<data>`";
-const IMAGE_DESCRIPTION_PREFIX = "base64 encoded image";
 
 interface OutputConfigurationProps {
   outputSchema: JsonSchemaObject | null;
   onChange: (outputSchema: JsonSchemaObject) => void;
   disabled?: boolean;
-}
-
-/** Convert a field type to more friendly name. */
-function fieldTypeToFriendly(type: InternalFieldType): string {
-  switch (type) {
-    case "string":
-      return "Text";
-    case "number":
-      return "Number";
-    case "boolean":
-      return "True/False";
-    case "image":
-      return "Image";
-    default:
-      return type;
-  }
-}
-
-/** Check whether a property is an image. */
-function propertyIsImage(property: JsonSchemaBase): boolean {
-  return !!(
-    property.type === "string" &&
-    property.description?.toLowerCase().startsWith(IMAGE_DESCRIPTION_PREFIX)
-  );
-}
-
-function getFieldType(property: JsonSchemaBase): InternalFieldType {
-  return propertyIsImage(property)
-    ? "image"
-    : (property.type as InternalFieldType);
 }
 
 interface VariableProps {
@@ -463,17 +435,10 @@ export default function TaskEditor({ taskId }: { taskId?: string }) {
                       name={variable}
                       value={getFieldType(variableType)}
                       onChangeType={(value) => {
-                        const newProperty: JsonSchemaBase = {
-                          type: value == "image" ? "string" : value,
-                        };
-                        if (value == "image") {
-                          newProperty.description = IMAGE_DESCRIPTION;
-                        }
-
                         setInputSchema(({ properties, ...rest }) => ({
                           properties: {
                             ...properties,
-                            [variable]: newProperty,
+                            [variable]: internalFieldTypeToSchema(value),
                           },
                           ...rest,
                         }));
