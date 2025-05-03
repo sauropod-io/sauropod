@@ -25,7 +25,9 @@ pub async fn run_server(
         tokio::net::TcpListener::bind((config.host.as_deref().unwrap_or("::"), config.port))
             .await?;
     let cors = CorsLayer::new().allow_origin(Any);
-    let api = sauropod_http::register_routes(server).layer(cors);
+    let api = sauropod_http::register_routes(server)
+        .layer(cors)
+        .layer(axum::extract::DefaultBodyLimit::max(100_000_000));
     let app = sauropod_http::make_ui_routes().nest(sauropod_http::API_PREFIX, api);
 
     tracing::info!("Listening on {}", listener.local_addr().unwrap());
