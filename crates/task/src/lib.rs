@@ -5,7 +5,7 @@ use std::sync::Arc;
 
 use sauropod_llm_inference::LlmContext;
 use sauropod_llm_inference::openai_api::{
-    ContentItem, FinishReason, Message, MessageContent, Role,
+    ContentItem, FinishReason, ImageUrlContent, Message, MessageContent, Role,
 };
 use sauropod_prompt_templates::Template;
 use sauropod_task_context::Tool;
@@ -236,8 +236,38 @@ impl Task {
             }
         }
 
+        let input_schema = sauropod_json_schema::JsonSchemaInterface::new(&self.input_schema)?;
+        let data_values: HashSet<String> = input_schema
+            .properties()?
+            .into_iter()
+            .filter(|property| match property.schema.pattern() {
+                Some(pattern) => {
+                    pattern == sauropod_json_schema::extension::IMAGE_REGEX
+                        || pattern == sauropod_json_schema::extension::AUDIO_REGEX
+                }
+                None => false,
+            })
+            .map(|x| x.name.to_string())
+            .collect();
+
         let llm_context = LlmContext {
-            user_prompt: vec![ContentItem::from(template.expand(input)?)],
+            user_prompt: template
+                .expand(input, data_values)?
+                .into_iter()
+                .map(|x| {
+                    match x {
+                        sauropod_prompt_templates::OutputSection::Text(text) => {
+                            ContentItem::from(text)
+                        }
+                        // Right now we assume all data is an image...which isn't great.
+                        sauropod_prompt_templates::OutputSection::Data(image_data) => {
+                            ContentItem::ImageUrl(ImageUrlContent {
+                                image_url: image_data,
+                            })
+                        }
+                    }
+                })
+                .collect(),
             tools: tool_definitions,
             system_prompt: context.system_prompt.clone(),
             output_schema: if self.use_structured_output {

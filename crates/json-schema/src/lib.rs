@@ -4,6 +4,8 @@
 
 use std::collections::HashSet;
 
+pub mod extension;
+
 /// The base types supported by JSON Schema.
 ///
 /// Represented as a bitmask for convenience.
@@ -217,6 +219,11 @@ impl<'a> JsonSchemaInterface<'a> {
     /// Get the value from a `const` type.
     pub fn const_value(&self) -> Option<&serde_json::Value> {
         self.schema.get("const")
+    }
+
+    /// Get the pattern regex for a string type.
+    pub fn pattern(&self) -> Option<&str> {
+        self.schema.get("pattern").and_then(|x| x.as_str())
     }
 
     /// Iterate over the properties of a JSON schema object.

@@ -1,5 +1,7 @@
 //! Parsing library for prompt templates.
 
+use std::collections::HashSet;
+
 use nom::{
     IResult, Parser as _,
     branch::alt,
@@ -14,6 +16,14 @@ pub enum Section<'a> {
     Text(&'a str),
     /// A hole to fill in with a variable.
     Variable(&'a str),
+}
+
+/// A section of the output.
+pub enum OutputSection {
+    /// Text.
+    Text(String),
+    /// A data blob, like an image or audio.
+    Data(String),
 }
 
 /// A template.
@@ -37,8 +47,10 @@ impl<'a> Template<'a> {
     pub fn expand(
         &self,
         values: &serde_json::Map<String, serde_json::Value>,
-    ) -> anyhow::Result<String> {
-        let mut result = String::with_capacity(
+        data_values: HashSet<String>,
+    ) -> anyhow::Result<Vec<OutputSection>> {
+        let mut result = Vec::with_capacity(self.sections.len());
+        let mut current_text = String::with_capacity(
             self.sections
                 .iter()
                 .map(|x| match x {
@@ -50,22 +62,38 @@ impl<'a> Template<'a> {
 
         for section in &self.sections {
             match section {
-                Section::Text(text) => result.push_str(text),
+                Section::Text(text) => current_text.push_str(text),
                 Section::Variable(var_name) => {
                     if let Some(value) = values.get(*var_name) {
-                        match value {
-                            serde_json::Value::String(string_value) => {
-                                result.push_str(string_value)
+                        if data_values.contains(*var_name) {
+                            // First add any accumulated text
+                            if !current_text.is_empty() {
+                                result.push(OutputSection::Text(current_text));
+                                current_text = String::new();
                             }
-                            serde_json::Value::Number(number_value) => {
-                                if let Some(integer_value) = number_value.as_i64() {
-                                    result.push_str(&integer_value.to_string());
-                                } else {
-                                    result.push_str(&number_value.to_string());
+
+                            // Add the data variable
+                            let data_content = match value {
+                                serde_json::Value::String(string_value) => string_value.clone(),
+                                _ => value.to_string(),
+                            };
+                            result.push(OutputSection::Data(data_content));
+                        } else {
+                            // Regular variable, append to current text
+                            match value {
+                                serde_json::Value::String(string_value) => {
+                                    current_text.push_str(string_value)
                                 }
-                            }
-                            _ => {
-                                result.push_str(&value.to_string());
+                                serde_json::Value::Number(number_value) => {
+                                    if let Some(integer_value) = number_value.as_i64() {
+                                        current_text.push_str(&integer_value.to_string());
+                                    } else {
+                                        current_text.push_str(&number_value.to_string());
+                                    }
+                                }
+                                _ => {
+                                    current_text.push_str(&value.to_string());
+                                }
                             }
                         }
                     } else {
@@ -73,6 +101,11 @@ impl<'a> Template<'a> {
                     }
                 }
             }
+        }
+
+        // Add any remaining text
+        if !current_text.is_empty() {
+            result.push(OutputSection::Text(current_text));
         }
 
         Ok(result)
@@ -167,7 +200,14 @@ mod tests {
             Section::Variable(_) => panic!("Expected Text section"),
         }
 
-        assert_eq!(template.expand(&serde_json::Map::new()).unwrap(), text);
+        let result = template
+            .expand(&serde_json::Map::new(), HashSet::new())
+            .unwrap();
+        assert_eq!(result.len(), 1);
+        match &result[0] {
+            OutputSection::Text(t) => assert_eq!(t, text),
+            OutputSection::Data(_) => panic!("Expected Text section"),
+        }
     }
 
     #[test]
@@ -195,13 +235,22 @@ mod tests {
             Section::Variable(_) => panic!("Expected Text section"),
         }
 
-        assert_eq!(
-            template
-                .expand(serde_json::json!({"name": "abc"}).as_object().unwrap())
-                .unwrap(),
-            "Hello, abc!"
-        );
-        match template.expand(serde_json::json!({"nam": "abc"}).as_object().unwrap()) {
+        let result = template
+            .expand(
+                serde_json::json!({"name": "abc"}).as_object().unwrap(),
+                HashSet::new(),
+            )
+            .unwrap();
+        assert_eq!(result.len(), 1);
+        match &result[0] {
+            OutputSection::Text(t) => assert_eq!(t, "Hello, abc!"),
+            OutputSection::Data(_) => panic!("Expected Text section"),
+        }
+
+        match template.expand(
+            serde_json::json!({"nam": "abc"}).as_object().unwrap(),
+            HashSet::new(),
+        ) {
             Ok(_) => panic!("Expected error due to missing variable"),
             Err(e) => assert_eq!(
                 e.to_string(),
@@ -266,5 +315,137 @@ mod tests {
         let text = "";
         let template = Template::new(text);
         assert_eq!(template.sections.len(), 0);
+    }
+
+    #[test]
+    fn test_data_variable() {
+        let text = "Here is an image: ${image}";
+        let template = Template::new(text);
+
+        let mut data_values = HashSet::new();
+        data_values.insert("image".to_string());
+
+        let result = template
+            .expand(
+                serde_json::json!({"image": "data:image/png;base64,abc123"})
+                    .as_object()
+                    .unwrap(),
+                data_values,
+            )
+            .unwrap();
+
+        assert_eq!(result.len(), 2);
+        match &result[0] {
+            OutputSection::Text(t) => assert_eq!(t, "Here is an image: "),
+            OutputSection::Data(_) => panic!("Expected Text section"),
+        }
+        match &result[1] {
+            OutputSection::Data(d) => assert_eq!(d, "data:image/png;base64,abc123"),
+            OutputSection::Text(_) => panic!("Expected Data section"),
+        }
+    }
+
+    #[test]
+    fn test_mixed_variables() {
+        let text = "Person: ${name}, Avatar: ${avatar}, Age: ${age}";
+        let template = Template::new(text);
+
+        let mut data_values = HashSet::new();
+        data_values.insert("avatar".to_string());
+
+        let result = template
+            .expand(
+                serde_json::json!({
+                    "name": "John",
+                    "avatar": "data:image/jpeg;base64,xyz789",
+                    "age": 30
+                })
+                .as_object()
+                .unwrap(),
+                data_values,
+            )
+            .unwrap();
+
+        assert_eq!(result.len(), 3);
+        match &result[0] {
+            OutputSection::Text(t) => assert_eq!(t, "Person: John, Avatar: "),
+            OutputSection::Data(_) => panic!("Expected Text section"),
+        }
+        match &result[1] {
+            OutputSection::Data(d) => assert_eq!(d, "data:image/jpeg;base64,xyz789"),
+            OutputSection::Text(_) => panic!("Expected Data section"),
+        }
+        match &result[2] {
+            OutputSection::Text(t) => assert_eq!(t, ", Age: 30"),
+            OutputSection::Data(_) => panic!("Expected Text section"),
+        }
+    }
+
+    #[test]
+    fn test_multiple_data_variables() {
+        let text = "${image1} some text ${image2}";
+        let template = Template::new(text);
+
+        let mut data_values = HashSet::new();
+        data_values.insert("image1".to_string());
+        data_values.insert("image2".to_string());
+
+        let result = template
+            .expand(
+                serde_json::json!({
+                    "image1": "data:image/png;base64,abc123",
+                    "image2": "data:image/png;base64,def456"
+                })
+                .as_object()
+                .unwrap(),
+                data_values,
+            )
+            .unwrap();
+
+        assert_eq!(result.len(), 3);
+        match &result[0] {
+            OutputSection::Data(d) => assert_eq!(d, "data:image/png;base64,abc123"),
+            OutputSection::Text(_) => panic!("Expected Data section"),
+        }
+        match &result[1] {
+            OutputSection::Text(t) => assert_eq!(t, " some text "),
+            OutputSection::Data(_) => panic!("Expected Text section"),
+        }
+        match &result[2] {
+            OutputSection::Data(d) => assert_eq!(d, "data:image/png;base64,def456"),
+            OutputSection::Text(_) => panic!("Expected Data section"),
+        }
+    }
+
+    #[test]
+    fn test_consecutive_data_variables() {
+        let text = "${image1}${image2}";
+        let template = Template::new(text);
+
+        let mut data_values = HashSet::new();
+        data_values.insert("image1".to_string());
+        data_values.insert("image2".to_string());
+
+        let result = template
+            .expand(
+                serde_json::json!({
+                    "image1": "data:image/png;base64,abc123",
+                    "image2": "data:image/png;base64,def456"
+                })
+                .as_object()
+                .unwrap(),
+                data_values,
+            )
+            .unwrap();
+
+        assert_eq!(result.len(), 2);
+        match &result[0] {
+            OutputSection::Data(d) => assert_eq!(d, "data:image/png;base64,abc123"),
+            OutputSection::Text(_) => panic!("Expected Data section"),
+        }
+        match &result[1] {
+            OutputSection::Data(d) => assert_eq!(d, "data:image/png;base64,def456"),
+            OutputSection::Text(_) => panic!("Expected Data section"),
+        }
     }
 }
