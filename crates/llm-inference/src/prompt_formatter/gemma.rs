@@ -71,18 +71,8 @@ pub(super) fn prepare_completion_request(
     Ok(CompletionRequest {
         model: model.model,
         messages: vec![
-            Message {
-                role: Role::System,
-                content: Some(system_prompt),
-                tool_calls: vec![],
-                tool_call_id: None,
-            },
-            Message {
-                role: Role::User,
-                content: Some(context.user_prompt),
-                tool_calls: vec![],
-                tool_call_id: None,
-            },
+            Message::with_text(Role::System, system_prompt),
+            Message::with_content(Role::User, context.user_prompt),
         ],
         response_format: context.output_schema.map(|schema| {
             crate::openai_api::ResponseFormat::JsonSchema {

@@ -17,18 +17,8 @@ pub(super) fn prepare_completion_request(
     Ok(CompletionRequest {
         model: model.model,
         messages: vec![
-            Message {
-                role: Role::System,
-                content: Some(context.system_prompt.trim().to_string()),
-                tool_calls: vec![],
-                tool_call_id: None,
-            },
-            Message {
-                role: Role::User,
-                content: Some(context.user_prompt),
-                tool_calls: vec![],
-                tool_call_id: None,
-            },
+            Message::with_text(Role::System, context.system_prompt.trim().to_string()),
+            Message::with_content(Role::User, context.user_prompt),
         ],
         tools,
         response_format: context.output_schema.map(|schema| {

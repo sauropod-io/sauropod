@@ -39,15 +39,78 @@ pub struct ToolCall {
     pub id: String,
 }
 
+/// Content type for text in a message
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct TextContent {
+    pub text: String,
+}
+
+/// Content type for image URL in a message
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct ImageUrlContent {
+    pub image_url: String,
+}
+
+/// Content type in a message
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+#[serde(tag = "type")]
+pub enum ContentItem {
+    #[serde(rename = "text")]
+    Text(TextContent),
+    #[serde(rename = "image_url")]
+    ImageUrl(ImageUrlContent),
+}
+
+impl From<String> for ContentItem {
+    fn from(text: String) -> Self {
+        ContentItem::Text(TextContent { text })
+    }
+}
+
+/// `content` field of a message.
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+#[serde(untagged)]
+pub enum MessageContent {
+    /// Just a single text item.
+    #[serde(rename = "text")]
+    Text(String),
+    /// A vector of content items.
+    #[serde(rename = "image_url")]
+    ContentVec(Vec<ContentItem>),
+}
+
+impl From<String> for MessageContent {
+    fn from(text: String) -> Self {
+        Self::ContentVec(vec![ContentItem::Text(TextContent { text })])
+    }
+}
+
 /// A single message in a chat conversation.
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct Message {
     pub role: Role,
-    pub content: Option<String>,
+    pub content: Option<MessageContent>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub tool_calls: Vec<ToolCall>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub tool_call_id: Option<String>,
+}
+
+impl Message {
+    /// Helper to create a message with simple text content.
+    pub fn with_text(role: Role, text: String) -> Self {
+        Self::with_content(role, vec![ContentItem::from(text)])
+    }
+
+    /// Helper to create a message a content array.
+    pub fn with_content(role: Role, content: Vec<ContentItem>) -> Self {
+        Self {
+            role,
+            content: Some(MessageContent::ContentVec(content)),
+            tool_calls: vec![],
+            tool_call_id: None,
+        }
+    }
 }
 
 /// A tool.

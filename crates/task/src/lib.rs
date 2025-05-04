@@ -4,7 +4,9 @@ use std::collections::HashSet;
 use std::sync::Arc;
 
 use sauropod_llm_inference::LlmContext;
-use sauropod_llm_inference::openai_api::{FinishReason, Message, Role};
+use sauropod_llm_inference::openai_api::{
+    ContentItem, FinishReason, Message, MessageContent, Role,
+};
 use sauropod_prompt_templates::Template;
 use sauropod_task_context::Tool;
 use tracing::Instrument;
@@ -180,12 +182,14 @@ impl Task {
             tracing::error!("Error running task: {}", &validation_error);
             anyhow::bail!("Error running task: {}", validation_error)
         }
+
         let input = input
             .as_object()
             .ok_or_else(|| anyhow::anyhow!("The input to the task was not a JSON object"))?;
 
         let template =
             sauropod_prompt_templates::Template::new(&self.schema_representation.template.0);
+
         let model = context.get_model();
         let mut tool_definitions: Vec<_> = context
             .tools
@@ -233,7 +237,7 @@ impl Task {
         }
 
         let llm_context = LlmContext {
-            user_prompt: template.expand(input)?,
+            user_prompt: vec![ContentItem::from(template.expand(input)?)],
             tools: tool_definitions,
             system_prompt: context.system_prompt.clone(),
             output_schema: if self.use_structured_output {
@@ -259,21 +263,35 @@ impl Task {
                 return Err(anyhow::anyhow!("LLM API did not return any choices"));
             };
             request.messages.push(choice.message.clone());
+
+            let choice_content = match choice.message.content {
+                None => None,
+                Some(MessageContent::Text(text)) => Some(text),
+                _ => {
+                    tracing::error!(
+                        "LLM API returned a message in an unexpected field layout: {:#?}",
+                        choice
+                    );
+                    return Err(anyhow::anyhow!(
+                        "LLM API returned a message in an unexpected field layout"
+                    ));
+                }
+            };
             tracing::debug!("LLM response: {:#?}", &request);
 
             match choice.finish_reason {
                 FinishReason::Stop => {
                     // A raw JSON response may be a function call
-                    if let Some(mut content) = choice.message.content.as_ref().and_then(|x| {
+                    if let Some(mut content) = choice_content.as_ref().and_then(|x| {
                         parse_json_text::<serde_json::Map<String, serde_json::Value>>(x).ok()
                     }) {
                         let Some(parameters) = content.remove("parameters") else {
-                            return self.make_response(choice.message.content.unwrap_or_default());
+                            return self.make_response(choice_content.unwrap_or_default());
                         };
                         let Some(function_call) =
                             content.get("call_function").and_then(|x| x.as_str())
                         else {
-                            return self.make_response(choice.message.content.unwrap_or_default());
+                            return self.make_response(choice_content.unwrap_or_default());
                         };
                         let Some(tool) = tools.get(function_call).cloned() else {
                             anyhow::bail!(
@@ -292,18 +310,18 @@ impl Task {
                         request.messages.push(Message {
                             role: Role::User, // Gemma 3 uses the user role for function call responses
                             tool_call_id: None,
-                            content: Some(content),
+                            content: Some(MessageContent::from(content)),
                             tool_calls: vec![],
                         })
                     } else {
-                        return self.make_response(choice.message.content.unwrap_or_default());
+                        return self.make_response(choice_content.unwrap_or_default());
                     }
                 }
                 FinishReason::Length => {
                     tracing::error!(
                         "The LLM stopped because it reached the maximum number of tokens"
                     );
-                    return self.make_response(choice.message.content.unwrap_or_default());
+                    return self.make_response(choice_content.unwrap_or_default());
                 }
                 FinishReason::ToolCalls => {
                     let tool_calls = choice.message.tool_calls.clone();
@@ -340,7 +358,7 @@ impl Task {
                         request.messages.push(Message {
                             role: Role::Tool,
                             tool_call_id: Some(tool_call.id.clone()),
-                            content: Some(content),
+                            content: Some(MessageContent::from(content)),
                             tool_calls: vec![],
                         });
                     }
