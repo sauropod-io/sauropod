@@ -6,6 +6,6 @@
   "author": "",
   "license": "Apache-2.0",
   "dependencies": {
-    "openapi-fetch": "^0.13.5"
+    "openapi-fetch": "^0.13.7"
   }
 }
