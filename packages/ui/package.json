@@ -35,7 +35,7 @@
     "@radix-ui/react-tooltip": "^1.2.6",
     "@sauropod-io/client": "*",
     "@tailwindcss/vite": "^4.1.5",
-    "@tanstack/react-query": "^5.75.4",
+    "@tanstack/react-query": "^5.75.5",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
