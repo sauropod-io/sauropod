@@ -19,7 +19,7 @@ anyhow = "1.0.98"
 async-trait = "0.1.88"
 axum = { version = "0.8", features = ["json", "http1", "http2"] }
 chrono ={ version = "0.4.41", features = ["serde"] }
-clap = { version = "4.5.37", features = ["env"]}
+clap = { version = "4.5.38", features = ["env"]}
 config = {version = "0.15.11", default-features = false, features = ["toml"]}
 directories = "6.0.0"
 futures = "0.3.31"
@@ -34,7 +34,7 @@ thiserror = "2.0.12"
 tokio = { version = "1.45", features = ["full"] }
 toml = "0.8.22"
 tower = "0.5.2"
-tower-http = { version = "0.6.3", features = ["cors"] }
+tower-http = { version = "0.6.4", features = ["cors"] }
 tracing = "0.1.41"
 tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
 sqlx = { version = "0.8.5", default-features = false, features = ["derive", "chrono", "runtime-tokio", "migrate", "json", "macros", "sqlite"] }
