@@ -5,7 +5,7 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
     libssl3 \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-FROM node:23-bookworm-slim AS npm-builder
+FROM node:24-bookworm-slim AS npm-builder
 
 WORKDIR /sauropod
 
