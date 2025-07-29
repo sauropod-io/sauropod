@@ -1,0 +1,36 @@
+[package]
+name = "sauropod-inference-responses"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+publish.workspace = true
+repository.workspace = true
+homepage.workspace = true
+
+[dependencies]
+sauropod-global-state.path = "../global-state"
+sauropod-inference-engine-api.path = "../inference-engine-api"
+sauropod-inference-engine.path = "../inference-engine"
+sauropod-inference-http.path = "../inference-http"
+sauropod-openai-api.path = "../openai-api"
+sauropod-prompt-templates.path = "../prompt-templates"
+
+anyhow.workspace = true
+async-stream.workspace = true
+axum.workspace = true
+base64.workspace = true
+byteorder.workspace = true
+chrono.workspace = true
+futures.workspace = true
+rand.workspace = true
+serde_json.workspace = true
+serde.workspace = true
+tokio-stream.workspace = true
+tokio.workspace = true
+tracing.workspace = true
+utoipa.workspace = true
+uuid.workspace = true
+
+[dev-dependencies]
+assert-json-diff.workspace = true

@@ -1,0 +1,19 @@
+Anthropic
+API
+Gemma
+Groq
+gRPC
+HSM
+HTTPS?
+LLM
+MCP
+Model Context Protocol
+OpenAPI
+OTA
+Phi
+Protobuf
+Sauropod
+Scales
+TOML
+TPM
+UI

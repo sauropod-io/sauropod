@@ -1,0 +1,52 @@
+exclude: |
+  (?x)^(
+      .*\.vale/.*|
+  )$
+repos:
+  - repo: meta
+    hooks:
+      - id: check-hooks-apply
+      - id: check-useless-excludes
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: check-added-large-files
+      - id: check-case-conflict
+      - id: check-merge-conflict
+      - id: check-toml
+      - id: check-yaml
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: trailing-whitespace
+      - id: mixed-line-ending
+        args: ["--fix=lf"]
+  - repo: local
+    hooks:
+      - id: cargo-fmt
+        name: cargo fmt
+        language: system
+        types: [rust]
+        entry: cargo
+        args: ["fmt", "--"]
+      - id: cargo-clippy-fix
+        name: cargo clippy --fix
+        language: system
+        types: [rust]
+        entry: cargo
+        args:
+          [
+            "clippy",
+            "--fix",
+            "--allow-dirty",
+            "--allow-staged",
+            "--workspace",
+            "--",
+            "--deny=clippy::all",
+          ]
+        pass_filenames: false
+      - id: clang-format
+        name: clang-format
+        language: system
+        types: [c++]
+        entry: clang-format
+        args: ["-i"]

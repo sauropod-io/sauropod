@@ -1,0 +1,47 @@
+[package]
+name = "sauropod-inference-server"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+publish.workspace = true
+repository.workspace = true
+homepage.workspace = true
+
+[features]
+default = ["vulkan"]
+cuda = ["sauropod-inference-engine/cuda"]
+vulkan = ["sauropod-inference-engine/vulkan"]
+profiling = ["sauropod-profiling/profiling"]
+
+[dependencies]
+sauropod-global-state.path = "../global-state"
+sauropod-config.path = "../config"
+sauropod-inference-engine.path = "../inference-engine"
+sauropod-inference-http.path = "../inference-http"
+sauropod-inference-realtime.path = "../inference-realtime"
+sauropod-inference-responses.path = "../inference-responses"
+sauropod-model-loading.path = "../model-loading"
+sauropod-profiling.path = "../profiling"
+sauropod-device-discovery.path = "../device-discovery"
+
+anyhow.workspace = true
+axum.workspace = true
+base64.workspace = true
+byteorder.workspace = true
+chrono.workspace = true
+clap.workspace = true
+hf-hub.workspace = true
+rand.workspace = true
+serde_json.workspace = true
+serde.workspace = true
+tokio-stream.workspace = true
+tokio.workspace = true
+tower-http.workspace = true
+tracing-perfetto.workspace = true
+tracing-subscriber.workspace = true
+tracing.workspace = true
+utoipa-axum.workspace = true
+utoipa-redoc.workspace = true
+utoipa.workspace = true
+uuid.workspace = true

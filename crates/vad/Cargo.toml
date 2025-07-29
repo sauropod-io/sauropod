@@ -1,0 +1,24 @@
+[package]
+name = "sauropod-vad"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+publish.workspace = true
+repository.workspace = true
+homepage.workspace = true
+
+[dependencies]
+sauropod-audio.path = "../audio"
+sauropod-huggingface.path = "../huggingface"
+sauropod-inference-thread.path = "../inference-thread"
+sauropod-onnxruntime.path = "../../bindings/onnxruntime"
+
+anyhow.workspace = true
+tracing.workspace = true
+
+[dev-dependencies]
+sauropod-hf-test-helpers.path = "../../tools/hf-test-helpers"
+sauropod-config.path = "../config"
+sauropod-tracing-test-helpers.path = "../../tools/tracing-test-helpers"
+tokio.workspace = true

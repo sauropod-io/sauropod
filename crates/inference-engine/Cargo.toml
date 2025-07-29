@@ -1,0 +1,36 @@
+[package]
+name = "sauropod-inference-engine"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+publish.workspace = true
+repository.workspace = true
+homepage.workspace = true
+
+[features]
+default = []
+cuda = ["sauropod-llama-cpp/cuda"]
+vulkan = ["sauropod-llama-cpp/vulkan"]
+
+[dependencies]
+sauropod-huggingface.path = "../huggingface"
+sauropod-config.path = "../config"
+sauropod-inference-engine-api.path = "../inference-engine-api"
+sauropod-llama-cpp.path = "../../bindings/llama-cpp"
+sauropod-openai-api.path = "../openai-api"
+sauropod-output-parser.path = "../../crates/output-parser"
+sauropod-prompt-templates.path = "../prompt-templates"
+
+anyhow.workspace = true
+async-stream.workspace = true
+async-trait.workspace = true
+futures.workspace = true
+hf-hub.workspace = true
+minijinja.workspace = true
+regex.workspace = true
+serde_json.workspace = true
+serde.workspace = true
+tokio-stream.workspace = true
+tokio.workspace = true
+tracing.workspace = true

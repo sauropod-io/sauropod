@@ -1,0 +1,22 @@
+[package]
+name = "sauropod-global-state"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+publish.workspace = true
+repository.workspace = true
+homepage.workspace = true
+
+[dependencies]
+sauropod-database.path = "../database"
+sauropod-config.path = "../config"
+sauropod-inference-engine.path = "../inference-engine"
+sauropod-model-loading.path = "../model-loading"
+sauropod-tts.path = "../tts"
+
+anyhow.workspace = true
+axum.workspace = true
+sqlx.workspace = true
+tokio.workspace = true
+tracing.workspace = true

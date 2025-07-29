@@ -1,0 +1,21 @@
+[package]
+name = "sauropod-profiling"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+publish.workspace = true
+repository.workspace = true
+homepage.workspace = true
+
+[features]
+memory-profiling = ["profiling"]
+profiling = ["tracy-client/enable"]
+cuda = []
+metal = []
+
+[dependencies]
+thiserror.workspace = true
+tracing-subscriber.workspace = true
+tracy-client.workspace = true
+tracing-tracy.workspace = true

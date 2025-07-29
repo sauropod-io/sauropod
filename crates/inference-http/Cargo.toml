@@ -1,0 +1,20 @@
+[package]
+name = "sauropod-inference-http"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+publish.workspace = true
+repository.workspace = true
+homepage.workspace = true
+
+[dependencies]
+sauropod-global-state.path = "../global-state"
+sauropod-users.path = "../users"
+sauropod-config.path = "../config"
+
+anyhow.workspace = true
+axum.workspace = true
+serde.workspace = true
+tracing.workspace = true
+utoipa.workspace = true

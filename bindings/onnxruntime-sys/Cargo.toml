@@ -1,0 +1,21 @@
+[package]
+name = "onnxruntime-sys"
+version = "1.22.1"
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+publish.workspace = true
+repository.workspace = true
+homepage.workspace = true
+
+[dependencies]
+libc.workspace = true
+
+[build-dependencies]
+bindgen.workspace = true
+cc.workspace = true
+pkg-config.workspace = true
+ureq.workspace = true
+zip.workspace = true
+flate2.workspace = true
+tar.workspace = true

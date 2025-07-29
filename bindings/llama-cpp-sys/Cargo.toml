@@ -1,0 +1,25 @@
+[package]
+name = "llama-cpp-sys"
+license = "MIT"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+publish.workspace = true
+repository.workspace = true
+homepage.workspace = true
+
+[features]
+default = []
+cuda = []
+vulkan = []
+
+[dependencies]
+libc.workspace = true
+
+[build-dependencies]
+bindgen.workspace = true
+cmake.workspace = true
+regex.workspace = true
+ureq.workspace = true
+flate2.workspace = true
+tar.workspace = true

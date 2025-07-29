@@ -1,0 +1,57 @@
+verbose = true
+
+[authentication]
+type = "api_key"
+api_key = "hardcoded_api_key"
+
+[models.default]
+# 4-bit quantized version of Gemma 3 1B
+model = "huggingface.co/unsloth/gemma-3-12b-it-qat-GGUF:Q4_0"
+temperature = 1.0
+top_k = 64
+top_p = 0.95
+min_p = 0.0
+system_prompt = """
+You are a helpful assistant.
+
+The user will ask you questions, and you will answer them to the best of your ability.
+The user already knows you, so there is no need to introduce yourself.
+Keep your answers concise and to the point.
+{%- if tools %}
+You have access to functions. If you decide to invoke any of the function(s),
+you MUST put it in the format of
+```tool_call
+{"name": function name, "parameters": dictionary of argument name and its value}
+```
+
+You SHOULD NOT include any other text in the response if you call a function.
+{{ tools | tojson(indent=2) }}
+{%- endif -%}
+"""
+maximum_tokens = 32000
+
+[models.tiny]
+# BF16 version of Gemma 3 1B
+model = "huggingface.co/unsloth/gemma-3-1b-it-GGUF:BF16"
+temperature = 1.0
+top_k = 64
+top_p = 0.95
+min_p = 0.0
+system_prompt = """
+You are a helpful assistant.
+
+The user will ask you questions, and you will answer them to the best of your ability.
+The user already knows you, so there is no need to introduce yourself.
+Keep your answers concise and to the point.
+{%- if tools %}
+You have access to functions. If you decide to invoke any of the function(s),
+you MUST put it in the format of
+```tool_call
+{"name": function name, "parameters": dictionary of argument name and its value}
+```
+
+You SHOULD NOT include any other text in the response if you call a function.
+{{ tools | tojson(indent=2) }}
+{%- endif -%}
+"""
+maximum_tokens = 8192
