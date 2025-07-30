@@ -55,7 +55,13 @@ fn download_and_extract_onnxruntime() -> Result<PathBuf, Box<dyn std::error::Err
         )
         .build()
         .new_agent();
-    let response = agent.get(&url).call()?;
+    let response = match agent.get(&url).call() {
+        Ok(response) => response,
+        Err(e) => {
+            eprintln!("Failed to download ONNX Runtime from {url}: {e}");
+            return Err(e.into());
+        }
+    };
     let filename = url.split('/').next_back().unwrap();
     let archive_path = out_dir.join(filename);
 

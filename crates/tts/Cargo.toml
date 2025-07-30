@@ -30,4 +30,4 @@ sauropod-hf-test-helpers.path = "../../tools/hf-test-helpers"
 sauropod-config.path = "../config"
 sauropod-tracing-test-helpers.path = "../../tools/tracing-test-helpers"
 tokio.workspace = true
-hound = "3.5.1"
+hound = "=3.5.1"

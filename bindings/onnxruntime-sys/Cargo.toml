@@ -1,6 +1,6 @@
 [package]
 name = "onnxruntime-sys"
-version = "1.22.1"
+version = "1.22.0"
 edition.workspace = true
 license.workspace = true
 authors.workspace = true

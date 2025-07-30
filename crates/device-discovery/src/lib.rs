@@ -1,4 +1,4 @@
-use std::process::Stdio;
+use std::{process::Stdio, vec};
 
 /// The capabilities of an accelerator.
 #[derive(Debug, Clone)]
@@ -57,8 +57,6 @@ impl From<NvidiaGpuInfo> for AcceleratorInfo {
 
 #[derive(Debug, thiserror::Error)]
 pub enum DeviceDiscoveryError {
-    #[error("Failed to execute nvidia-smi: {0}")]
-    CommandFailed(#[from] std::io::Error),
     #[error("nvidia-smi command failed with exit code {code}: {stderr}")]
     CommandExitError { code: i32, stderr: String },
     #[error("Failed to parse nvidia-smi output: {0}")]
@@ -67,14 +65,17 @@ pub enum DeviceDiscoveryError {
 
 /// Discovers NVIDIA GPUs using nvidia-smi and returns their information
 fn discover_nvidia_gpus() -> Result<Vec<NvidiaGpuInfo>, DeviceDiscoveryError> {
-    let output = std::process::Command::new("nvidia-smi")
+    let Ok(output) = std::process::Command::new("nvidia-smi")
         .args([
             "--query-gpu=name,memory.total,compute_cap",
             "--format=csv,noheader,nounits",
         ])
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
-        .output()?;
+        .output()
+    else {
+        return Ok(vec![]);
+    };
 
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);

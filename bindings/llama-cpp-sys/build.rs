@@ -6,7 +6,7 @@ use std::path::{Path, PathBuf};
 use flate2::read::GzDecoder;
 use tar::Archive;
 
-const VERSION: &str = "496957e1cbcb522abc63aa18521036e40efce985";
+const VERSION: &str = "aa79524c51fb014f8df17069d31d7c44b9ea6cb8";
 
 fn main() {
     println!("cargo:rerun-if-changed=build.rs");
@@ -93,23 +93,33 @@ fn build_llama(source_dir: &Path) -> PathBuf {
             .map(str::trim)
             .map(String::from),
     );
+
     let target_os = std::env::var("CARGO_CFG_TARGET_OS").unwrap_or_default();
     let rust_flags = std::env::var("CARGO_ENCODED_RUSTFLAGS").unwrap_or_default();
+    let rustc_linker = std::env::var("RUSTC_LINKER").unwrap_or_default();
     let target_cpu_regex =
         regex::Regex::new("-Ctarget-cpu=([a-z0-9]+)").expect("Failed to compile regex");
 
+    let linker_plugin_lto = if rust_flags.contains("-Clinker-plugin-lto") {
+        "ON"
+    } else {
+        "OFF"
+    };
+
     // Configure CMake build
     cmake_config
+        .define("CMAKE_LINKER", rustc_linker)
         .define("BUILD_SHARED_LIBS", "OFF")
         .define("GGML_OPENMP", "OFF")
         .define("LLAMA_BUILD_EXAMPLES", "OFF")
         .define("LLAMA_BUILD_SERVER", "OFF")
         .define("LLAMA_BUILD_TESTS", "OFF")
         .define("LLAMA_CURL", "OFF")
-        .define("LLAMA_LLGUIDANCE", "ON")
+        .define("LLAMA_LLGUIDANCE", "OFF")
         .define("LLAMA_STATIC", "ON")
         .define("GGML_NATIVE", "OFF")
-        .define("CMAKE_CUDA_ARCHITECTURES", "86;89;100;120");
+        .define("GGML_LTO", linker_plugin_lto)
+        .define("CMAKE_CUDA_ARCHITECTURES", "86;89;120");
 
     if let Some(target_cpu) = target_cpu_regex
         .captures_iter(&rust_flags)

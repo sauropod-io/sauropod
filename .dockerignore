@@ -1,0 +1,11 @@
+.*
+*
+
+!.cargo
+!.sqlx
+!bindings/
+!Cargo.lock
+!Cargo.toml
+!crates/
+!Makefile
+!tools/

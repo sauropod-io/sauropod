@@ -22,28 +22,19 @@ repos:
         args: ["--fix=lf"]
   - repo: local
     hooks:
+      - id: generate-dockerfiles
+        name: generate-dockerfiles
+        language: system
+        types: [toml]
+        entry: make
+        args: ["generate-dockerfiles"]
+        pass_filenames: false
       - id: cargo-fmt
         name: cargo fmt
         language: system
         types: [rust]
         entry: cargo
         args: ["fmt", "--"]
-      - id: cargo-clippy-fix
-        name: cargo clippy --fix
-        language: system
-        types: [rust]
-        entry: cargo
-        args:
-          [
-            "clippy",
-            "--fix",
-            "--allow-dirty",
-            "--allow-staged",
-            "--workspace",
-            "--",
-            "--deny=clippy::all",
-          ]
-        pass_filenames: false
       - id: clang-format
         name: clang-format
         language: system

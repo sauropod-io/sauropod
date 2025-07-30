@@ -1,0 +1,33 @@
+name: set-up-docker
+description: |
+  This action set up the Docker environment for the project.
+
+inputs:
+  token:
+    description: "Token to use for repository authentication"
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    # See <https://docs.docker.com/build/ci/github-actions/multi-platform/#build-and-load-multi-platform-images>
+    - name: Set up Docker for multi-platform builds
+      uses: docker/setup-docker-action@b60f85385d03ac8acfca6d9996982511d8620a19 # v4
+      with:
+        daemon-config: |
+          {
+            "debug": true,
+            "features": {
+              "containerd-snapshotter": true
+            }
+          }
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@29109295f81e9208d7d86ff1c6c12d2833863392 # v3
+    - name: Login to GitHub Container Registry
+      uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772 # v3
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ inputs.token }}
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3
