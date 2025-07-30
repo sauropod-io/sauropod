@@ -291,11 +291,21 @@ impl Drop for Sampler {
     }
 }
 
+/// Get the devices to use as a backend.
+///
+/// If no CUDA devices are found, an empty vector is returned causing a nullptr to be passed into `llama_cpp_sys::llama_model_load_from_file`
+/// which will then try to do its own selection of the device to use (e.g. Vulkan or Metal).
 fn get_devices() -> Vec<llama_cpp_sys::ggml_backend_dev_t> {
     let mut devices = Vec::new();
     let mut device_props = Vec::new();
-    for backend_idx in 0..unsafe { llama_cpp_sys::ggml_backend_dev_count() } {
-        let device = unsafe { llama_cpp_sys::ggml_backend_dev_get(backend_idx) };
+    let backend_device_count = unsafe { llama_cpp_sys::ggml_backend_dev_count() };
+    for backend_index in 0..backend_device_count {
+        let device = unsafe { llama_cpp_sys::ggml_backend_dev_get(backend_index) };
+        if device.is_null() {
+            tracing::warn!("Failed to get device at index {}", backend_index);
+            continue;
+        }
+
         let mut props = std::mem::MaybeUninit::uninit();
         let props = unsafe {
             llama_cpp_sys::ggml_backend_dev_get_props(device, props.as_mut_ptr());
@@ -306,20 +316,15 @@ fn get_devices() -> Vec<llama_cpp_sys::ggml_backend_dev_t> {
     }
 
     let mut cuda_devices = Vec::with_capacity(1);
-    let mut vulkan_devices = Vec::with_capacity(1);
     for (device, props) in devices.into_iter().zip(device_props) {
         let name = unsafe { std::ffi::CStr::from_ptr(props.name) };
         if name.to_bytes().starts_with(b"CUDA") {
             cuda_devices.push(device);
-        } else if name.to_bytes().starts_with(b"Vulkan") {
-            vulkan_devices.push(device);
         }
     }
 
     if !cuda_devices.is_empty() {
         cuda_devices
-    } else if !vulkan_devices.is_empty() {
-        vulkan_devices
     } else {
         vec![]
     }
@@ -347,6 +352,7 @@ impl Model {
         init_params.progress_callback_user_data =
             &mut progress_bar as *mut _ as *mut std::os::raw::c_void;
         init_params.devices = if !devices.is_empty() {
+            devices.push(std::ptr::null_mut());
             devices.as_mut_ptr()
         } else {
             std::ptr::null_mut()
