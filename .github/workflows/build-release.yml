@@ -72,6 +72,7 @@ jobs:
     strategy:
       matrix:
         include: ${{ fromJson(needs.generate-target-matrix.outputs.matrix) }}
+    if: fromJson(needs.generate-target-matrix.outputs.matrix).length > 0
     permissions:
       id-token: write
       contents: read
