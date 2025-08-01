@@ -17,11 +17,13 @@ cargo build --locked --profile=optimized-release --features=cuda --package=sauro
 ## Dependencies
 
 - [Rust](https://www.rust-lang.org/tools/install)
+- [Clang](https://clang.llvm.org/)
 - [CMake](https://cmake.org/)
+- OpenSSL
 
 ### Optional dependencies
 
-- [`vulkan-tools`](https://www.vulkan.org/) - required when building with `--features=vulkan`
+- [`vulkan-tools`](https://www.vulkan.org/) and [glslc](https://github.com/google/shaderc/tree/main/glslc) - required when building with `--features=vulkan`
 - [CUDA](https://docs.nvidia.com/cuda/cuda-toolkit-release-notes/index.html) - required when building with `--features=cuda`
 
 ## Configuration
