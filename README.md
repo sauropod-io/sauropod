@@ -6,30 +6,19 @@ Sauropod's inference platform.
 
 ## Dependencies
 
-- [Rust](https://www.rust-lang.org/tools/install) 1.85 or later
-    - Note: The apt rust package for ubuntu/debian is not recent enough, install via rustup in the link above
+- [Rust](https://www.rust-lang.org/tools/install) >= 1.85
+- [Clang](https://clang.llvm.org/)
+- [CMake](https://cmake.org/)
+- OpenSSL
 
-For Debian systems:
-```
-sudo apt install \
-   cmake \
-   clang \
-   libssl-dev \
-   pkg-config
-```
+### Backend dependencies
 
-### Inference backend dependancies
+Either Vulkan, CUDA, or Metal can be used as the inference backend.
 
-Inference can be performed using either Vulkan or CUDA as the backend. You will need to install the appropriate libraries based on which inference backend you are using:
-
-- [Vulkan](https://www.vulkan.org/) - used by default, or set explicitly with `--features=vulkan`
-    - For Debian systems:
-      ```
-      sudo apt install \
-        libvulkan-dev \
-        glslc
-      ```
-- [CUDA](https://docs.nvidia.com/cuda/cuda-toolkit-release-notes/index.html) - set with `--features=cuda`
+- [`libvulkan`](https://www.vulkan.org/) and [glslc](https://github.com/google/shaderc/tree/main/glslc) - required when building with `--features=vulkan`
+  - Debian or Ubuntu: `sudo apt-get install clang lld cmake glslc libssl-dev libvulkan-dev pkg-config`
+- [CUDA](https://docs.nvidia.com/cuda/cuda-toolkit-release-notes/index.html) - required when building with `--features=cuda`
+  - Debian or Ubuntu: `sudo apt-get install clang lld cmake glslc libssl-dev nvidia-cuda-toolkit pkg-config`
 
 ## Build
 
