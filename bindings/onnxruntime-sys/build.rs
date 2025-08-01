@@ -26,7 +26,7 @@ fn get_onnxruntime_url() -> String {
         platform => platform.to_string(),
     };
 
-    let version_with_gpu = if platform != "osx" {
+    let version_with_gpu = if platform != "osx" && platform != "aarch64" {
         format!("gpu-{version}")
     } else {
         version.clone()
