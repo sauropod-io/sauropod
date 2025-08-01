@@ -4,6 +4,33 @@ Sauropod's inference platform.
 
 - Compatible with OpenAI's Responses API and their Realtime WebSocket API
 
+## Dependencies
+
+- [Rust](https://www.rust-lang.org/tools/install) 1.85 or later
+    - Note: The apt rust package for ubuntu/debian is not recent enough, install via rustup in the link above
+
+For Debian systems:
+```
+sudo apt install \
+   cmake \
+   clang \
+   libssl-dev \
+   pkg-config
+```
+
+### Inference backend dependancies
+
+Inference can be performed using either Vulkan or CUDA as the backend. You will need to install the appropriate libraries based on which inference backend you are using:
+
+- [Vulkan](https://www.vulkan.org/) - used by default, or set explicitly with `--features=vulkan`
+    - For Debian systems:
+      ```
+      sudo apt install \
+        libvulkan-dev \
+        glslc
+      ```
+- [CUDA](https://docs.nvidia.com/cuda/cuda-toolkit-release-notes/index.html) - set with `--features=cuda`
+
 ## Build
 
 ```bash
@@ -13,18 +40,6 @@ cargo build --locked --profile=optimized-release --package=sauropod-inference-se
 # For systems with Nvidia GPUs
 cargo build --locked --profile=optimized-release --features=cuda --package=sauropod-inference-server
 ```
-
-## Dependencies
-
-- [Rust](https://www.rust-lang.org/tools/install)
-- [Clang](https://clang.llvm.org/)
-- [CMake](https://cmake.org/)
-- OpenSSL
-
-### Optional dependencies
-
-- [`vulkan-tools`](https://www.vulkan.org/) and [glslc](https://github.com/google/shaderc/tree/main/glslc) - required when building with `--features=vulkan`
-- [CUDA](https://docs.nvidia.com/cuda/cuda-toolkit-release-notes/index.html) - required when building with `--features=cuda`
 
 ## Configuration
 
