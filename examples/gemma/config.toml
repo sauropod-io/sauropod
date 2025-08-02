@@ -6,7 +6,8 @@ api_key = "hardcoded_api_key"
 
 [models.default]
 # 4-bit quantized version of Gemma 3 1B
-model = "huggingface.co/unsloth/gemma-3-12b-it-qat-GGUF:Q4_0"
+model = { repo = "unsloth/gemma-3-12b-it-qat-GGUF", quantization = "Q4_K_M" }
+multimodal_projector = { repo = "unsloth/gemma-3-12b-it-qat-GGUF", file = "mmproj-BF16.gguf" }
 temperature = 1.0
 top_k = 64
 top_p = 0.95
@@ -32,7 +33,7 @@ maximum_tokens = 32000
 
 [models.tiny]
 # BF16 version of Gemma 3 1B
-model = "huggingface.co/unsloth/gemma-3-1b-it-GGUF:BF16"
+model = { repo = "unsloth/gemma-3-1b-it-GGUF", quantization = "BF16" }
 temperature = 1.0
 top_k = 64
 top_p = 0.95

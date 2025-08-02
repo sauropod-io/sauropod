@@ -3,24 +3,6 @@
 mod inference_thread;
 pub use inference_thread::ModelInferenceThread;
 
-/// A stream of tokens from an executor.
-struct LlamaCppStream {
-    _join_handle: tokio::task::JoinHandle<()>,
-    rx: tokio::sync::mpsc::Receiver<anyhow::Result<sauropod_openai_api::ResponseStreamEvent>>,
-}
-
-impl futures_core::stream::Stream for LlamaCppStream {
-    type Item = anyhow::Result<sauropod_openai_api::ResponseStreamEvent>;
-
-    fn poll_next(
-        self: std::pin::Pin<&mut Self>,
-        cx: &mut std::task::Context<'_>,
-    ) -> std::task::Poll<Option<Self::Item>> {
-        let this = self.get_mut();
-        this.rx.poll_recv(cx)
-    }
-}
-
 /// Error type.
 #[derive(thiserror::Error, Debug)]
 pub enum Error {

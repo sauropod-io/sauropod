@@ -20,9 +20,14 @@ const INPUT_STATES_1: &str = "decoder_input_states_1";
 const INPUT_STATES_2: &str = "decoder_input_states_2";
 
 /// Download STT model files from Hugging Face.
-pub async fn download_from_huggingface(repo_url: &str) -> anyhow::Result<std::path::PathBuf> {
-    let Ok(repo) = repo_url.parse::<sauropod_huggingface::HuggingfaceRepo>() else {
-        return Ok(std::path::PathBuf::from(repo_url));
+pub async fn download_from_huggingface(
+    model_source: &sauropod_config::ConfigModelSource,
+) -> anyhow::Result<std::path::PathBuf> {
+    let repo = match &model_source {
+        sauropod_config::ConfigModelSource::HuggingFace(repo) => repo,
+        sauropod_config::ConfigModelSource::LocalPath(dir) => {
+            return Ok(std::path::PathBuf::from(dir));
+        }
     };
     let files = sauropod_huggingface::download_onnx_files(
         &repo,

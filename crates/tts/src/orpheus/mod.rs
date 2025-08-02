@@ -2,7 +2,6 @@
 
 use std::collections::VecDeque;
 
-use sauropod_huggingface::HuggingfaceRepo;
 use tokio_stream::StreamExt as _;
 
 /// TTS model wrapper
@@ -16,24 +15,24 @@ impl Orpheus {
     /// Load the TTS model from a directory path
     pub async fn new(
         ort_env: &sauropod_onnxruntime::Env,
-        model_source: &sauropod_inference_engine_api::ModelSource,
+        model_source: &sauropod_config::ConfigModelSource,
     ) -> anyhow::Result<Self> {
         let model_path = sauropod_inference_engine::get_model_path(model_source).await?;
         let model =
             sauropod_inference_engine::load_model("orpheus".to_string(), &model_path).await?;
-        let tokenizer = load_tokenizer(HuggingfaceRepo {
+        let tokenizer = load_tokenizer(sauropod_config::HuggingfacePath {
             repo: "canopylabs/orpheus-3b-0.1-ft".to_string(),
             revision: None,
-            quantization: None,
+            path_or_quantization: None,
         })
         .await?;
 
         let snac_repo_interface = sauropod_huggingface::RepositoryInterface::new()?;
         let snac_repo_info = snac_repo_interface
-            .get_repository_metadata(&sauropod_huggingface::HuggingfaceRepo {
+            .get_repository_metadata(&sauropod_config::HuggingfacePath {
                 repo: "onnx-community/snac_24khz-ONNX".to_string(),
                 revision: None,
-                quantization: None,
+                path_or_quantization: None,
             })
             .await?;
         let snac_downloaded_files = snac_repo_info
@@ -143,14 +142,16 @@ impl sauropod_inference_thread::InferenceProvider for Orpheus {
 /// Create a new TTS inference thread.
 pub async fn make_tts_thread(
     ort_env: &sauropod_onnxruntime::Env,
-    model_source: &sauropod_inference_engine_api::ModelSource,
+    model_source: &sauropod_config::ConfigModelSource,
 ) -> anyhow::Result<crate::TtsThread> {
     let provider = Orpheus::new(ort_env, model_source).await?;
     Ok(crate::TtsThread::new("orpheus".to_string(), 1, provider)?)
 }
 
 /// Load a tokenizer from a Hugging Face repository asynchronously.
-async fn load_tokenizer(repo: HuggingfaceRepo) -> anyhow::Result<tokenizers::Tokenizer> {
+async fn load_tokenizer(
+    repo: sauropod_config::HuggingfacePath,
+) -> anyhow::Result<tokenizers::Tokenizer> {
     let interface = sauropod_huggingface::RepositoryInterface::new()?;
     let repo_info = interface.get_repository_metadata(&repo).await?;
     let files = repo_info.download(&["tokenizer.json"]).await?;

@@ -13,3 +13,4 @@ anyhow.workspace = true
 futures.workspace = true
 hf-hub.workspace = true
 serde.workspace = true
+sauropod-config = { path = "../config" }

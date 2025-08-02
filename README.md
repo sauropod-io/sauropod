@@ -27,7 +27,7 @@ Either Vulkan, CUDA, or Metal can be used as the inference backend.
 cargo build --locked --profile=optimized-release --features=vulkan --package=sauropod-inference-server
 
 # For systems with Nvidia GPUs
-cargo build --locked --profile=optimized-release --features=cuda --package=sauropod-inference-server
+cargo build --locked --profile=optimized-release --no-default-features --features=cuda --package=sauropod-inference-server
 ```
 
 ## Configuration
@@ -39,8 +39,6 @@ Sauropod uses a TOML configuration file located at `$CONFIG_DIR/config.toml`:
 - Windows: `%APPDATA%\sauropod\io\config\config.toml`
 
 You can override the config file location by setting the `SAUROPOD_CONFIG_FILE` environment variable or passing the `--config-file` flag.
-
-See the examples in `./examples`.
 
 ### Configuration options
 
@@ -61,25 +59,66 @@ See the examples in `./examples`.
 
 Each model in the `models` map has the following options:
 
-| Option           | Description                            | Default  |
-| ---------------- | -------------------------------------- | -------- |
-| `model`          | Path or Hugging Face repo of the model | Required |
-| `system_prompt`  | System prompt for the model            | `null`   |
-| `temperature`    | Sampling temperature                   | `null`   |
-| `top_p`          | Top-p sampling parameter               | `null`   |
-| `maximum_tokens` | Maximum number of tokens to generate   | `null`   |
-| `top_k`          | Top-k sampling parameter               | `null`   |
-| `min_p`          | Minimum probability parameter          | `null`   |
+| Option                 | Description                                         | Default  |
+| ---------------------- | --------------------------------------------------- | -------- |
+| `model`                | Path or Hugging Face repo of the model              | Required |
+| `multimodal_projector` | Path or Hugging Face repo of the multimodal project | `null`   |
+| `system_prompt`        | System prompt for the model                         | `null`   |
+| `temperature`          | Sampling temperature                                | `null`   |
+| `top_p`                | Top-p sampling parameter                            | `null`   |
+| `maximum_tokens`       | Maximum number of tokens to generate                | `null`   |
+| `top_k`                | Top-k sampling parameter                            | `null`   |
+| `min_p`                | Minimum probability parameter                       | `null`   |
+
+##### Model source formats
+
+The `model` field (and `multimodal_projector`) accepts three formats:
+
+**Local path:**
+
+```toml
+model = "/path/to/local/model.gguf"
+```
+
+**Hugging Face with quantization:**
+
+```toml
+model = { repo = "unsloth/gemma-3-27b-it-qat-GGUF", quantization = "Q4_K_M" }
+```
+
+**Hugging Face with specific file:**
+
+```toml
+model = { repo = "unsloth/gemma-3-27b-it-qat-GGUF", file = "gemma-3-27b-it-qat-Q4_K_M.gguf" }
+```
 
 #### Voice configuration
 
 Each entry in the `voices` map has the following options:
 
-| Option  | Description                                     | Default  |
-| ------- | ----------------------------------------------- | -------- |
-| `type`  | The voice engine to use (`kokoro` or `orpheus`) | Required |
-| `voice` | The name of the voice to use                    | Required |
-| `model` | The voice synthesis model to use                | Required |
+| Option  | Description                                     | Default                 |
+| ------- | ----------------------------------------------- | ----------------------- |
+| `type`  | The voice engine to use (`kokoro` or `orpheus`) | Required                |
+| `voice` | The name of the voice to use                    | Required                |
+| `model` | The voice synthesis model to use                | Optional (has defaults) |
+
+##### Kokoro voice configuration
+
+```toml
+[voices.my_voice]
+type = "kokoro"
+voice = "af_heart"  # or other available voices
+model = "huggingface.co/onnx-community/Kokoro-82M-v1.0-ONNX"  # optional, uses default if not specified
+```
+
+##### Orpheus voice configuration
+
+```toml
+[voices.my_voice]
+type = "orpheus"
+voice = "tara"  # or other available voices
+model = "huggingface.co/unsloth/orpheus-3b-0.1-ft-GGUF:Q4_K_M"  # optional, uses default if not specified
+```
 
 #### STT & VAD configuration
 
@@ -92,41 +131,30 @@ These top-level keys select the speech-to-text and voice activity detection mode
 
 #### Authentication configuration
 
-Controls API access.
+Controls API access using a tagged enum structure:
 
-| Option                  | Description                               | Default |
-| ----------------------- | ----------------------------------------- | ------- |
-| `allow_unauthenticated` | Allow API requests without authentication | `true`  |
-
-### Example configuration
+##### No authentication (default)
 
 ```toml
-verbose = true
-database_path = "/path/to/database.sqlite"
-host = "127.0.0.1"
-port = 8080
-
-[voices.default]
-type = "orpheus"
-voice = "tara"
-
-[voices.fast]
-type = "kokoro"
-voice = "af_heart"
-
-[models.default]
-model = "huggingface.co/unsloth/gemma-3-27b-it-qat-GGUF:Q4_K_M"
-temperature = 0.7
-top_p = 0.9
-maximum_tokens = 2048
-
-[models.small]
-model = "huggingface.co/unsloth/SmolLM3-3B-128K-GGUF:Q4_K_M"
-system_prompt = "You are a helpful dinosaur assistant."
-temperature = 0.6
-top_p = 0.95
-maximum_tokens = 1024
-
 [authentication]
 type = "none"
 ```
+
+##### API key authentication
+
+```toml
+[authentication]
+type = "api_key"
+api_key = "your-secret-api-key"
+```
+
+##### Database-based authentication
+
+```toml
+[authentication]
+type = "database"
+```
+
+### Example configuration
+
+See the examples in `./examples`.

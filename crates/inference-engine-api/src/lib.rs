@@ -61,36 +61,6 @@ impl ModelPath {
     }
 }
 
-/// The source to load a model from.
-#[derive(Debug, Clone, Hash, PartialEq, Eq)]
-pub enum ModelSource {
-    /// A local file path.
-    LocalFile(std::path::PathBuf),
-    /// A Huggingface repository in the form huggingface.co/<repo>@<revision>:<quantization>.
-    HuggingfaceRepo(sauropod_huggingface::HuggingfaceRepo),
-}
-
-impl std::str::FromStr for ModelSource {
-    type Err = anyhow::Error;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        if let Ok(huggingface_repo) = sauropod_huggingface::HuggingfaceRepo::from_str(s) {
-            Ok(ModelSource::HuggingfaceRepo(huggingface_repo))
-        } else {
-            Ok(ModelSource::LocalFile(std::path::PathBuf::from(s)))
-        }
-    }
-}
-
-impl std::fmt::Display for ModelSource {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            ModelSource::LocalFile(path) => write!(f, "{}", path.display()),
-            ModelSource::HuggingfaceRepo(repo) => write!(f, "{repo}"),
-        }
-    }
-}
-
 /// A token in the model's vocabulary.
 pub type Token = u32;
 /// A sequence of tokens.
@@ -131,57 +101,3 @@ pub type ResponseStream = futures_core::stream::BoxStream<
     'static,
     anyhow::Result<sauropod_openai_api::ResponseStreamEvent>,
 >;
-
-#[cfg(test)]
-mod tests {
-    use sauropod_huggingface::HuggingfaceRepo;
-
-    use super::*;
-
-    #[test]
-    fn test_model_source_from_str() {
-        let local_model: ModelSource = "path/to/local/model".parse().unwrap();
-        let hf_model_1: ModelSource = "huggingface.co/repo".parse().unwrap();
-        let hf_model_2: ModelSource = "huggingface.co/repo@revision".parse().unwrap();
-        let hf_model_3: ModelSource = "huggingface.co/repo@revision:quantization".parse().unwrap();
-        let hf_model_4: ModelSource = "huggingface.co/repo:quantization".parse().unwrap();
-
-        assert_eq!(
-            local_model,
-            ModelSource::LocalFile(std::path::PathBuf::from("path/to/local/model"))
-        );
-
-        assert_eq!(
-            hf_model_1,
-            ModelSource::HuggingfaceRepo(HuggingfaceRepo {
-                repo: "repo".to_string(),
-                revision: None,
-                quantization: None
-            })
-        );
-        assert_eq!(
-            hf_model_2,
-            ModelSource::HuggingfaceRepo(HuggingfaceRepo {
-                repo: "repo".to_string(),
-                revision: Some("revision".to_string()),
-                quantization: None
-            })
-        );
-        assert_eq!(
-            hf_model_3,
-            ModelSource::HuggingfaceRepo(HuggingfaceRepo {
-                repo: "repo".to_string(),
-                revision: Some("revision".to_string()),
-                quantization: Some("quantization".to_string())
-            })
-        );
-        assert_eq!(
-            hf_model_4,
-            ModelSource::HuggingfaceRepo(HuggingfaceRepo {
-                repo: "repo".to_string(),
-                revision: None,
-                quantization: Some("quantization".to_string())
-            })
-        );
-    }
-}

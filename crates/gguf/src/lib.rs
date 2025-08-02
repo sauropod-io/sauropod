@@ -166,10 +166,10 @@ mod tests {
 
     #[tokio::test]
     async fn test_parse_smallm2_metadata() {
-        let repo = sauropod_huggingface::HuggingfaceRepo {
+        let repo = sauropod_config::HuggingfacePath {
             repo: "unsloth/SmolLM2-135M-Instruct-GGUF".to_string(),
             revision: None,
-            quantization: None,
+            path_or_quantization: None,
         };
 
         let repo_interface = sauropod_huggingface::RepositoryInterface::new().unwrap();

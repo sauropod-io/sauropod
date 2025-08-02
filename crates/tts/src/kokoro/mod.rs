@@ -2,7 +2,7 @@
 
 use anyhow::Context as _;
 
-use sauropod_huggingface::{HuggingfaceRepo, RepositoryInterface};
+use sauropod_huggingface::RepositoryInterface;
 use sauropod_onnxruntime::{MemoryInfo, Session};
 
 mod tokenizer;
@@ -14,7 +14,7 @@ const TOKENIZER_FILENAME: &str = "tokenizer.json";
 
 /// Download TTS model files from Hugging Face.
 pub async fn download_from_huggingface(
-    repo: &HuggingfaceRepo,
+    repo: &sauropod_config::HuggingfacePath,
 ) -> anyhow::Result<std::path::PathBuf> {
     let repo_interface = RepositoryInterface::new()?;
     let repo_info = repo_interface.get_repository_metadata(repo).await?;

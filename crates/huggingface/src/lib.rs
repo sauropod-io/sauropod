@@ -1,56 +1,6 @@
 use std::path::PathBuf;
 
-/// A Huggingface repository in the form huggingface.co/<repo>@<revision>:<quantization>.
-#[derive(Debug, Clone, Hash, PartialEq, Eq)]
-pub struct HuggingfaceRepo {
-    /// The repository name, for example "meta-llama/Llama-4-Scout-17B-16E-Instruct".
-    pub repo: String,
-    /// The revision of the repository, for example "main" or a specific commit hash.
-    pub revision: Option<String>,
-    /// The quantization type, for example "Q4_K_M" or "Q8_0".
-    pub quantization: Option<String>,
-}
-
-impl std::str::FromStr for HuggingfaceRepo {
-    type Err = anyhow::Error;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        if let Some(suffix) = s.strip_prefix("huggingface.co/") {
-            let (prefix, quantization) = suffix
-                .split_once(':')
-                .map(|(repo, quantization)| (repo, Some(quantization.to_string())))
-                .unwrap_or((suffix, None));
-            let (repo, version) = prefix
-                .split_once('@')
-                .map(|(prefix, version)| (prefix, Some(version.to_string())))
-                .unwrap_or((prefix, None));
-            Ok(HuggingfaceRepo {
-                repo: repo.to_string(),
-                revision: version,
-                quantization,
-            })
-        } else {
-            anyhow::bail!(
-                "Invalid Huggingface repository - expected huggingface.co/<repo>@[revision]:[quantization], got: {}",
-                s
-            );
-        }
-    }
-}
-
-impl std::fmt::Display for HuggingfaceRepo {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "huggingface.co/{}", self.repo)?;
-        if let Some(revision) = &self.revision {
-            write!(f, "@{revision}")?;
-        }
-        if let Some(quantization) = &self.quantization {
-            write!(f, ":{quantization}")?;
-        }
-
-        Ok(())
-    }
-}
+use sauropod_config::HuggingfacePath;
 
 /// Interface for Hugging Face repository.
 pub struct RepositoryInterface {
@@ -152,7 +102,7 @@ impl RepositoryInterface {
 
     pub async fn get_repository_metadata(
         &self,
-        repository: &HuggingfaceRepo,
+        repository: &HuggingfacePath,
     ) -> anyhow::Result<RepositoryInfo> {
         let repository = match &repository.revision {
             Some(revision) => hf_hub::Repo::with_revision(
@@ -177,7 +127,7 @@ impl RepositoryInterface {
 
 /// Download an ONNX file from a Hugging Face repository.
 pub async fn download_onnx_files(
-    repo: &HuggingfaceRepo,
+    repo: &HuggingfacePath,
     file_names: &[&str],
 ) -> anyhow::Result<Vec<std::path::PathBuf>> {
     let repo_interface = RepositoryInterface::new()?;

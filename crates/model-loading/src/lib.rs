@@ -1,9 +1,8 @@
 use std::{collections::HashMap, sync::Arc};
 
 use anyhow::Context;
+use sauropod_config::ConfigModelSource;
 use tracing::Instrument as _;
-
-use sauropod_inference_engine_api::ModelSource;
 
 /// The internal data of `LoadedModels`.
 struct LoadedModelsInternal {
@@ -39,9 +38,9 @@ impl LoadedModels {
 
         // Download VAD, STT, and TTS models
         let (vad_model_dir, stt_model_dir) = tokio::try_join!(
-            sauropod_vad::download_from_huggingface(config.get_vad_model())
+            sauropod_vad::download_from_huggingface(config.vad_model.as_ref().unwrap())
                 .instrument(tracing::info_span!("download VAD model")),
-            sauropod_stt::download_from_huggingface(config.get_stt_model())
+            sauropod_stt::download_from_huggingface(config.stt_model.as_ref().unwrap())
                 .instrument(tracing::info_span!("download STT model")),
         )?;
 
@@ -75,11 +74,10 @@ impl LoadedModels {
 
         // Load LLM models
         let mut source_to_model_pointer =
-            HashMap::<ModelSource, sauropod_inference_engine::ModelPointer>::with_capacity(2);
+            HashMap::<ConfigModelSource, sauropod_inference_engine::ModelPointer>::with_capacity(2);
         for (alias, model_config) in &config.models {
-            let model_source: ModelSource = model_config.model.parse()?;
-            let pointer = get_or_create(&mut source_to_model_pointer, &model_source, {
-                let model_source = model_source.clone();
+            let pointer = get_or_create(&mut source_to_model_pointer, &model_config.model, {
+                let model_source = model_config.model.clone();
                 let alias = alias.clone();
                 let model_config = model_config.clone();
                 async move || {
@@ -133,20 +131,23 @@ impl LoadedModels {
             );
         }
 
-        let mut source_to_tts_pointer: HashMap<ModelSource, Arc<sauropod_tts::TtsThread>> =
+        let mut source_to_tts_pointer: HashMap<ConfigModelSource, Arc<sauropod_tts::TtsThread>> =
             HashMap::new();
         let mut tts_models: HashMap<String, Arc<sauropod_tts::ConfiguredTtsThread>> =
             HashMap::new();
         for (alias, voice_config) in &config.voices {
             let model = match &voice_config {
-                sauropod_config::VoiceConfig::Kokoro { voice, model, .. } => {
-                    let model_source = model.parse()?;
+                sauropod_config::VoiceConfig::Kokoro {
+                    voice,
+                    model: model_source,
+                    ..
+                } => {
                     get_or_create(&mut source_to_tts_pointer, &model_source, async || {
                         let model_dir = match &model_source {
-                            ModelSource::HuggingfaceRepo(repo) => {
+                            ConfigModelSource::HuggingFace(repo) => {
                                 sauropod_tts::kokoro::download_from_huggingface(repo).await?
                             }
-                            ModelSource::LocalFile(dir) => dir.to_owned(),
+                            ConfigModelSource::LocalPath(dir) => std::path::PathBuf::from(dir),
                         };
                         let model = Arc::new(
                             sauropod_tts::kokoro::make_tts_thread(&onnxruntime_env, &model_dir)
@@ -164,8 +165,10 @@ impl LoadedModels {
                     })
                     .await?
                 }
-                sauropod_config::VoiceConfig::Orpheus { model, .. } => {
-                    let model_source = model.parse()?;
+                sauropod_config::VoiceConfig::Orpheus {
+                    model: model_source,
+                    ..
+                } => {
                     get_or_create(&mut source_to_tts_pointer, &model_source, async || {
                         let model = Arc::new(
                             sauropod_tts::orpheus::make_tts_thread(&onnxruntime_env, &model_source)
@@ -235,8 +238,8 @@ impl LoadedModels {
 }
 
 async fn get_or_create<T>(
-    collection: &mut HashMap<ModelSource, T>,
-    key: &ModelSource,
+    collection: &mut HashMap<ConfigModelSource, T>,
+    key: &ConfigModelSource,
     create: impl AsyncFnOnce() -> anyhow::Result<T>,
 ) -> anyhow::Result<T>
 where

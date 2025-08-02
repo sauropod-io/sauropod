@@ -3401,6 +3401,7 @@ dependencies = [
  "anyhow",
  "futures",
  "hf-hub",
+ "sauropod-config",
  "serde",
 ]
 

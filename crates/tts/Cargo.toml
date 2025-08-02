@@ -10,6 +10,7 @@ homepage.workspace = true
 
 [dependencies]
 sauropod-audio.path = "../audio"
+sauropod-config.path = "../config"
 sauropod-huggingface.path = "../huggingface"
 sauropod-inference-engine-api.path = "../inference-engine-api"
 sauropod-inference-engine.path = "../inference-engine"

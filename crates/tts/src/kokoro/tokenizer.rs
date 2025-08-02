@@ -114,7 +114,7 @@ mod tests {
     async fn test_tokenizer() -> anyhow::Result<()> {
         sauropod_tracing_test_helpers::init_tracing();
 
-        let repo: sauropod_huggingface::HuggingfaceRepo =
+        let repo: sauropod_config::HuggingfacePath =
             "huggingface.co/onnx-community/Kokoro-82M-v1.0-ONNX".parse()?;
         let repo_interface = sauropod_huggingface::RepositoryInterface::new()?;
         let repo_info = repo_interface.get_repository_metadata(&repo).await?;

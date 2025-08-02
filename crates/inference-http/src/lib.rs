@@ -35,9 +35,7 @@ pub async fn auth_middleware(
                     .strip_prefix("Bearer ")
                     .map(|s| s.trim().to_string())
                 else {
-                    tracing::info!(
-                        "Client's Authorization header is not a Bearer token {auth_str}"
-                    );
+                    tracing::info!("Client's Authorization header is not a Bearer token");
                     return HttpResponse::<()>::Unauthorized(
                         "Invalid token format - expected a bearer token".to_string(),
                     )

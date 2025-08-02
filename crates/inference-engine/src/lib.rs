@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use anyhow::Context;
-use sauropod_inference_engine_api::{LlmModel, ModelSource};
+use sauropod_inference_engine_api::LlmModel;
 
 mod model_file_selector;
 
@@ -132,10 +132,11 @@ impl Model {
 ///
 /// This may download files from Hugging Face.
 pub async fn get_model_path(
-    model_source: &ModelSource,
+    model_source: &sauropod_config::ConfigModelSource,
 ) -> anyhow::Result<sauropod_inference_engine_api::ModelPath> {
     let selected_file = match model_source {
-        ModelSource::LocalFile(path) => {
+        sauropod_config::ConfigModelSource::LocalPath(path) => {
+            let path = std::path::PathBuf::from(path);
             if path.is_dir() {
                 // Collect all files in the directory
                 let files: Result<Vec<String>, _> = path
@@ -154,12 +155,17 @@ pub async fn get_model_path(
                 path.clone()
             }
         }
-        ModelSource::HuggingfaceRepo(hf_repo) => {
+        sauropod_config::ConfigModelSource::HuggingFace(hf_repo) => {
             let interface = sauropod_huggingface::RepositoryInterface::new()?;
             let metadata = interface.get_repository_metadata(hf_repo).await?;
-            let selected_file =
-                model_file_selector::select_file(&metadata.files, hf_repo.quantization.as_deref())
-                    .unwrap_or(".");
+            let selected_file = match &hf_repo.path_or_quantization {
+                Some(sauropod_config::PathOrQuantization::Quantization { quantization }) => {
+                    model_file_selector::select_file(&metadata.files, Some(quantization.as_str()))
+                        .unwrap_or(".")
+                }
+                Some(sauropod_config::PathOrQuantization::FilePath { file }) => file.as_str(),
+                None => model_file_selector::select_file(&metadata.files, None).unwrap_or("."),
+            };
             let mut files_to_download = Vec::with_capacity(1);
 
             for file in &metadata.files {

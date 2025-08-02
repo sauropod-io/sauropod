@@ -2,6 +2,9 @@
 
 use std::{collections::HashMap, path::PathBuf};
 
+mod model_source;
+pub use model_source::*;
+
 #[derive(Clone, Debug, Default)]
 pub struct ClapConfigSource {
     values: config::Map<String, config::Value>,
@@ -30,11 +33,13 @@ impl ClapConfigSource {
 }
 
 /// Configuration for a model.
-#[derive(Clone, Debug, Default, serde::Deserialize, serde::Serialize)]
+#[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct ModelConfig {
     /// The path or Hugging Face repo of the model.
-    pub model: String,
+    pub model: ConfigModelSource,
+    /// The project to use for multimodal models.
+    pub multimodal_projector: Option<ConfigModelSource>,
     /// The system prompt for the model.
     #[serde(default)]
     pub system_prompt: Option<String>,
@@ -50,13 +55,6 @@ pub struct ModelConfig {
     pub min_p: Option<i64>,
 }
 
-impl ModelConfig {
-    /// Get the name of the model.
-    pub fn get_name(&self) -> &str {
-        self.model.as_str()
-    }
-}
-
 /// Voice model configuration.
 #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
 #[serde(deny_unknown_fields, tag = "type", rename_all = "snake_case")]
@@ -64,22 +62,27 @@ pub enum VoiceConfig {
     Kokoro {
         voice: String,
         #[serde(default = "VoiceConfig::default_kokoro_model")]
-        model: String,
+        model: ConfigModelSource,
     },
     Orpheus {
         voice: String,
         #[serde(default = "VoiceConfig::default_orpheus_model")]
-        model: String,
+        model: ConfigModelSource,
     },
 }
 
 impl VoiceConfig {
-    fn default_kokoro_model() -> String {
-        "huggingface.co/onnx-community/Kokoro-82M-v1.0-ONNX".to_string()
+    fn default_kokoro_model() -> ConfigModelSource {
+        ConfigModelSource::from_huggingface("onnx-community/Kokoro-82M-v1.0-ONNX", None)
     }
 
-    fn default_orpheus_model() -> String {
-        "huggingface.co/unsloth/orpheus-3b-0.1-ft-GGUF:Q4_K_M".to_string()
+    fn default_orpheus_model() -> ConfigModelSource {
+        ConfigModelSource::from_huggingface(
+            "unsloth/orpheus-3b-0.1-ft-GGUF:",
+            Some(PathOrQuantization::Quantization {
+                quantization: "Q4_K_M".to_string(),
+            }),
+        )
     }
 
     /// Get the voice name.
@@ -131,10 +134,10 @@ pub struct Config {
     /// The path to output a Perfetto trace file to.
     #[serde(default)]
     pub trace_output: Option<String>,
-    #[serde(default)]
-    pub stt_model: Option<String>,
-    #[serde(default)]
-    pub vad_model: Option<String>,
+    #[serde(default = "Config::default_stt_model")]
+    pub stt_model: Option<ConfigModelSource>,
+    #[serde(default = "Config::default_vad_model")]
+    pub vad_model: Option<ConfigModelSource>,
     #[serde(default)]
     pub authentication: AuthenticationConfig,
 }
@@ -155,7 +158,13 @@ impl Config {
         HashMap::from([(
             "default".to_string(),
             ModelConfig {
-                model: "huggingface.co/unsloth/gemma-3-27b-it-qat-GGUF:Q4_K_M".to_string(),
+                model: ConfigModelSource::from_huggingface(
+                    "unsloth/gemma-3-27b-it-qat-GGUF",
+                    Some(PathOrQuantization::Quantization {
+                        quantization: "Q4_K_M".to_string(),
+                    }),
+                ),
+                multimodal_projector: None,
                 system_prompt: None,
                 top_p: None,
                 temperature: None,
@@ -174,6 +183,20 @@ impl Config {
                 model: VoiceConfig::default_kokoro_model(),
             },
         )])
+    }
+
+    fn default_vad_model() -> Option<ConfigModelSource> {
+        Some(ConfigModelSource::from_huggingface(
+            "sauropod/Frame_VAD_Multilingual_MarbleNet_v2.0",
+            None,
+        ))
+    }
+
+    fn default_stt_model() -> Option<ConfigModelSource> {
+        Some(ConfigModelSource::from_huggingface(
+            "sauropod/parakeet-tdt-0.6b-v2",
+            None,
+        ))
     }
 }
 
@@ -221,18 +244,6 @@ impl Config {
 
         Self::load_from_file(config, cli_overrides)
     }
-
-    pub fn get_vad_model(&self) -> &str {
-        self.vad_model
-            .as_deref()
-            .unwrap_or("huggingface.co/sauropod/Frame_VAD_Multilingual_MarbleNet_v2.0")
-    }
-
-    pub fn get_stt_model(&self) -> &str {
-        self.stt_model
-            .as_deref()
-            .unwrap_or("huggingface.co/sauropod/parakeet-tdt-0.6b-v2")
-    }
 }
 
 impl Default for Config {
@@ -245,8 +256,8 @@ impl Default for Config {
             models: Self::default_models(),
             voices: Self::default_voices(),
             trace_output: None,
-            stt_model: None,
-            vad_model: None,
+            stt_model: Self::default_stt_model(),
+            vad_model: Self::default_vad_model(),
             authentication: AuthenticationConfig::default(),
         }
     }
