@@ -24,7 +24,7 @@ Either Vulkan, CUDA, or Metal can be used as the inference backend.
 
 ```bash
 # A normal release build
-cargo build --locked --profile=optimized-release --package=sauropod-inference-server
+cargo build --locked --profile=optimized-release --features=vulkan --package=sauropod-inference-server
 
 # For systems with Nvidia GPUs
 cargo build --locked --profile=optimized-release --features=cuda --package=sauropod-inference-server

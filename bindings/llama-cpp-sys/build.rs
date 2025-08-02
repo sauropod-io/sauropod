@@ -119,7 +119,7 @@ fn build_llama(source_dir: &Path) -> PathBuf {
         .define("LLAMA_STATIC", "ON")
         .define("GGML_NATIVE", "OFF")
         .define("GGML_LTO", linker_plugin_lto)
-        .define("CMAKE_CUDA_ARCHITECTURES", "86;89;120");
+        .define("CMAKE_CUDA_ARCHITECTURES", "native");
 
     if let Some(target_cpu) = target_cpu_regex
         .captures_iter(&rust_flags)
