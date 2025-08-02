@@ -4,7 +4,7 @@ members = ["crates/*", "bindings/*", "tools/*"]
 
 
 [workspace.package]
-version = "0.0.11"
+version = "0.0.1"
 edition = "2024"
 license = "AGPL-3.0-only"
 authors = ["Sauropod Inc. <contact@sauropod.io>"]
@@ -103,4 +103,7 @@ panic = "abort"
 
 # Speed up sqlx-macros for incremental builds
 [profile.dev.package.sqlx-macros]
+opt-level = 3
+# Speed up tokenizers since they're slow in debug mode
+[profile.dev.package.tokenizers]
 opt-level = 3
