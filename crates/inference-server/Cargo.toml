@@ -9,7 +9,7 @@ repository.workspace = true
 homepage.workspace = true
 
 [features]
-default = ["vulkan"]
+default = []
 cuda = ["sauropod-inference-engine/cuda"]
 vulkan = ["sauropod-inference-engine/vulkan"]
 profiling = ["sauropod-profiling/profiling"]
