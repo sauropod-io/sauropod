@@ -1,7 +1,10 @@
 //! Sauropod's bindings around [llama.cpp](https://github.com/ggml-org/llama.cpp).
 
 mod inference_thread;
+mod mtmd;
+
 pub use inference_thread::ModelInferenceThread;
+use mtmd::MtmdContext;
 
 /// Error type.
 #[derive(thiserror::Error, Debug)]
@@ -18,6 +21,12 @@ pub enum Error {
     ChatTemplateBufferTooSmallError(usize),
     #[error("Failed to create llama.cpp context")]
     FailedToCreateContext,
+    #[error("Failed to create mtmd context")]
+    FailedToCreateMtmdContext,
+    #[error("Failed to create mtmd input chunks")]
+    FailedToCreateMtmdInputChunks,
+    #[error("Failed to create mtmd bitmap")]
+    FailedToCreateMtmdBitmap,
     #[error("Failed to create llama.cpp sampler")]
     FailedToCreateSampler,
     #[error("The model doesn't have a chat template")]
@@ -26,7 +35,15 @@ pub enum Error {
     InvalidChatTemplate(#[from] minijinja::Error),
     #[error("GGUF metadata parsing error: {0}")]
     GgufMetadataParsingError(#[from] sauropod_gguf::GgufError),
+    #[error("The number of bitmaps ({0}) did not match the markers in the prompt")]
+    MtmdNumberOfBitsmapsDidNotMatchMarkers(usize),
+    #[error("Image preprocessing error")]
+    MtmdImagePreprocessingError,
+    #[error("MTMD tokenization failed with error code {0}")]
+    MtmdTokenizationError(i32),
 }
+
+const TRACING_TARGET: &str = "llama.cpp";
 
 /// The logging callback for `llama.cpp`.
 extern "C" fn log_callback(
@@ -41,7 +58,7 @@ extern "C" fn log_callback(
     match level {
         llama_cpp_sys::ggml_log_level::GGML_LOG_LEVEL_DEBUG => {
             tracing::event!(
-                target: "llama.cpp",
+                target: TRACING_TARGET,
                 tracing::Level::DEBUG,
                 "{}",
                 message_content
@@ -49,7 +66,7 @@ extern "C" fn log_callback(
         }
         llama_cpp_sys::ggml_log_level::GGML_LOG_LEVEL_INFO => {
             tracing::event!(
-                target: "llama.cpp",
+                target: TRACING_TARGET,
                 tracing::Level::INFO,
                 "{}",
                 message_content
@@ -57,7 +74,7 @@ extern "C" fn log_callback(
         }
         llama_cpp_sys::ggml_log_level::GGML_LOG_LEVEL_WARN => {
             tracing::event!(
-                target: "llama.cpp",
+                target: TRACING_TARGET,
                 tracing::Level::WARN,
                 "{}",
                 message_content
@@ -65,7 +82,7 @@ extern "C" fn log_callback(
         }
         llama_cpp_sys::ggml_log_level::GGML_LOG_LEVEL_ERROR => {
             tracing::event!(
-                target: "llama.cpp",
+                target: TRACING_TARGET,
                 tracing::Level::ERROR,
                 "{}",
                 message_content
@@ -103,43 +120,6 @@ pub struct Vocab(pub *const llama_cpp_sys::llama_vocab);
 unsafe impl Send for Vocab {}
 
 impl Vocab {
-    pub fn tokenize(
-        &self,
-        prompt: &str,
-    ) -> Result<Vec<sauropod_inference_engine_api::Token>, Error> {
-        let c_str = std::ffi::CString::new(prompt).unwrap();
-        let token_count = -unsafe {
-            llama_cpp_sys::llama_tokenize(
-                self.0,
-                c_str.as_ptr(),
-                c_str.as_bytes().len() as i32,
-                std::ptr::null_mut(),
-                0,
-                true, // add_special
-                true, // parse_special
-            )
-        };
-        let mut tokens =
-            vec![sauropod_inference_engine_api::Token::default(); token_count as usize];
-
-        let tokenization_result = unsafe {
-            llama_cpp_sys::llama_tokenize(
-                self.0,
-                c_str.as_ptr(),
-                c_str.as_bytes().len() as i32,
-                tokens.as_mut_ptr() as *mut i32,
-                token_count,
-                true, // add_special
-                true, // parse_special
-            )
-        };
-        if tokenization_result < 0 {
-            return Err(Error::TokenizationError);
-        }
-
-        Ok(tokens)
-    }
-
     pub fn is_end_of_generation(&self, token_id: sauropod_inference_engine_api::Token) -> bool {
         unsafe { llama_cpp_sys::llama_vocab_is_eog(self.0, token_id as i32) }
     }
@@ -312,17 +292,29 @@ fn get_devices() -> Vec<llama_cpp_sys::ggml_backend_dev_t> {
     }
 }
 
+pub struct OwnedBatch(pub llama_cpp_sys::llama_batch);
+
+impl Drop for OwnedBatch {
+    fn drop(&mut self) {
+        unsafe { llama_cpp_sys::llama_batch_free(self.0) };
+    }
+}
+
 pub struct Model {
     ptr: *mut llama_cpp_sys::llama_model,
     chat_template: String,
     model_type: sauropod_output_parser::ModelType,
+    mtmd_context: Option<MtmdContext>,
 }
 unsafe impl Send for Model {}
 unsafe impl Sync for Model {}
 
 impl Model {
     /// Create a new model from a file.
-    pub async fn from_file(path: &std::path::Path) -> Result<Self, Error> {
+    pub async fn from_file(
+        path: &std::path::Path,
+        projector: Option<&std::path::Path>,
+    ) -> Result<Self, Error> {
         init();
 
         let mut devices = get_devices();
@@ -380,6 +372,21 @@ impl Model {
             _ => sauropod_output_parser::ModelType::Unknown,
         };
 
+        let mtmd_context = if let Some(projector) = projector {
+            let mut context_params = unsafe { llama_cpp_sys::mtmd_context_params_default() };
+            context_params.use_gpu = true;
+            context_params.print_timings = false;
+            context_params.verbosity = if tracing::event_enabled!(target: TRACING_TARGET, tracing::Level::DEBUG)
+            {
+                llama_cpp_sys::ggml_log_level::GGML_LOG_LEVEL_INFO
+            } else {
+                llama_cpp_sys::ggml_log_level::GGML_LOG_LEVEL_WARN
+            };
+            Some(MtmdContext::new(projector, ctx, context_params)?)
+        } else {
+            None
+        };
+
         Ok(Self {
             ptr: ctx,
             chat_template: match model_chat_template {
@@ -389,6 +396,7 @@ impl Model {
                 }
             },
             model_type,
+            mtmd_context,
         })
     }
 
@@ -399,6 +407,45 @@ impl Model {
         } else {
             Ok(Vocab(vocab))
         }
+    }
+
+    #[tracing::instrument(level = "info", skip(self, prompt))]
+    pub fn tokenize(
+        &self,
+        prompt: &str,
+    ) -> Result<Vec<sauropod_inference_engine_api::Token>, Error> {
+        let c_str = std::ffi::CString::new(prompt).unwrap();
+        let vocab = self.get_vocab()?;
+        let token_count = -unsafe {
+            llama_cpp_sys::llama_tokenize(
+                vocab.as_ptr(),
+                c_str.as_ptr(),
+                c_str.as_bytes().len() as i32,
+                std::ptr::null_mut(),
+                0,
+                true, // add_special
+                true, // parse_special
+            )
+        };
+        let mut tokens =
+            vec![sauropod_inference_engine_api::Token::default(); token_count as usize];
+
+        let tokenization_result = unsafe {
+            llama_cpp_sys::llama_tokenize(
+                vocab.as_ptr(),
+                c_str.as_ptr(),
+                c_str.as_bytes().len() as i32,
+                tokens.as_mut_ptr() as *mut i32,
+                token_count,
+                true, // add_special
+                true, // parse_special
+            )
+        };
+        if tokenization_result < 0 {
+            return Err(Error::TokenizationError);
+        }
+
+        Ok(tokens)
     }
 
     fn llama_context(&self, prompt_length: i64, prediction_length: i64) -> Result<Context, Error> {
@@ -417,6 +464,36 @@ impl Model {
             return Err(Error::FailedToCreateContext);
         }
         Ok(Context(ctx))
+    }
+
+    /// Whether the model supports vision.
+    pub fn supports_vision(&self) -> bool {
+        self.mtmd_context
+            .as_ref()
+            .map(|x| unsafe { llama_cpp_sys::mtmd_support_vision(x.0) })
+            .unwrap_or(false)
+    }
+
+    /// Whether the model supports audio.
+    pub fn supports_audio(&self) -> bool {
+        self.mtmd_context
+            .as_ref()
+            .map(|x| unsafe { llama_cpp_sys::mtmd_support_audio(x.0) })
+            .unwrap_or(false)
+    }
+
+    /// Get the input audio sample rate.
+    pub fn get_input_audio_sample_rate(&self) -> Option<i32> {
+        let sample_rate = self
+            .mtmd_context
+            .as_ref()
+            .map(|x| unsafe { llama_cpp_sys::mtmd_get_audio_bitrate(x.0) })
+            .unwrap_or(-1);
+        if sample_rate != -1 {
+            Some(sample_rate)
+        } else {
+            None
+        }
     }
 }
 

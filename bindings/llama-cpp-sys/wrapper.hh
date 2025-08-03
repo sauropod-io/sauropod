@@ -1,6 +1,7 @@
 #include <ggml.h>
 #include <gguf.h>
 #include <llama.h>
+#include <mtmd.h>
 
 #include <ggml-backend.h>
 #include <ggml-cpu.h>

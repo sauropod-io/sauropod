@@ -52,7 +52,7 @@ release-vulkan:
 	$(MAKE) _release CARGO_FEATURES=vulkan
 
 release-cuda:
-	$(MAKE) _release CARGO_FEATURES=cuda
+	$(MAKE) _release CARGO_FEATURES=cuda-multiple-arches
 
 docker-vulkan:
 	docker build -t ghcr.io/sauropod-io/sauropod:latest -f docker/Dockerfile.vulkan .

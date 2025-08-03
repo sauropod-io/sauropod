@@ -11,15 +11,17 @@ homepage.workspace = true
 [features]
 default = []
 cuda = ["llama-cpp-sys/cuda"]
+cuda-multiple-arches = ["cuda", "llama-cpp-sys/cuda-multiple-arches"]
 vulkan = ["llama-cpp-sys/vulkan"]
 
 [dependencies]
 llama-cpp-sys.path = "../llama-cpp-sys"
 sauropod-config.path = "../../crates/config"
+sauropod-gguf.path = "../../crates/gguf"
 sauropod-inference-engine-api.path = "../../crates/inference-engine-api"
 sauropod-openai-api.path = "../../crates/openai-api"
 sauropod-output-parser.path = "../../crates/output-parser"
-sauropod-gguf.path = "../../crates/gguf"
+sauropod-prompt-templates.path = "../../crates/prompt-templates"
 
 anyhow.workspace = true
 async-stream.workspace = true

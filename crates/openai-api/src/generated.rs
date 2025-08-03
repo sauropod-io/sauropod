@@ -1871,7 +1871,8 @@ impl InputFileContentType {
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize, utoipa::ToSchema)]
 pub struct InputImageContent {
     /// The detail level of the image to be sent to the model. One of `high`, `low`, or `auto`. Defaults to `auto`.
-    pub detail: InputImageContentDetail,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub detail: Option<InputImageContentDetail>,
     /// The ID of the file to be sent to the model.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub file_id: Option<String>,
@@ -1884,12 +1885,13 @@ pub struct InputImageContent {
 }
 
 /// The detail level of the image to be sent to the model. One of `high`, `low`, or `auto`. Defaults to `auto`.
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, utoipa::ToSchema)]
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, utoipa::ToSchema, Default)]
 pub enum InputImageContentDetail {
     #[serde(rename = "low")]
     Low,
     #[serde(rename = "high")]
     High,
+    #[default]
     #[serde(rename = "auto")]
     Auto,
 }
@@ -2880,6 +2882,13 @@ impl ModelObject {
 pub struct ModelResponseProperties {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub metadata: Option<Metadata>,
+    /// Used by OpenAI to cache responses for similar requests to optimize your cache hit rates. Replaces the `user` field. [Learn more](/docs/guides/prompt-caching).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub prompt_cache_key: Option<String>,
+    /// A stable identifier used to help detect users of your application that may be violating OpenAI's usage policies.
+    /// The IDs should be a string that uniquely identifies each user. We recommend hashing their username or email address, in order to avoid sending us any identifying information. [Learn more](/docs/guides/safety-best-practices#safety-identifiers).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub safety_identifier: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub service_tier: Option<ServiceTier>,
     /// What sampling temperature to use, between 0 and 2. Higher values like 0.8 will make the output more random, while lower values like 0.2 will make it more focused and deterministic.
@@ -2898,8 +2907,9 @@ pub struct ModelResponseProperties {
     /// We generally recommend altering this or `temperature` but not both.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub top_p: Option<f64>,
+    /// This field is being replaced by `safety_identifier` and `prompt_cache_key`. Use `prompt_cache_key` instead to maintain caching optimizations.
     /// A stable identifier for your end-users.
-    /// Used to boost cache hit rates by better bucketing similar requests and  to help OpenAI detect and prevent abuse. [Learn more](/docs/guides/safety-best-practices#end-user-ids).
+    /// Used to boost cache hit rates by better bucketing similar requests and  to help OpenAI detect and prevent abuse. [Learn more](/docs/guides/safety-best-practices#safety-identifiers).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub user: Option<String>,
 }

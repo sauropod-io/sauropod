@@ -30,7 +30,7 @@ pub async fn download_from_huggingface(
         }
     };
     let files = sauropod_huggingface::download_onnx_files(
-        &repo,
+        repo,
         &[
             PREPROCESSOR_FILENAME,
             TOKENIZER_FILENAME,

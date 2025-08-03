@@ -10,11 +10,17 @@ response = client.responses.create(
     model="default",
     input="What are interesting landmarks I should visit in France?",
 )
-print(f"Big model response: {response.output_text}\n\n")
+if response.error:
+    print(f"Error: {response.error}")
+else:
+    print(f"Big model response: {response.output_text}\n\n")
 
 # Query the small model
 response = client.responses.create(
     model="tiny",
     input="What are interesting landmarks I should visit in France?",
 )
-print(f"Tiny model response: {response.output_text}")
+if response.error:
+    print(f"Error: {response.error}")
+else:
+    print(f"Tiny model response: {response.output_text}")

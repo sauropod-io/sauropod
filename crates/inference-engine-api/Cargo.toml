@@ -9,10 +9,10 @@ repository.workspace = true
 homepage.workspace = true
 
 [dependencies]
-sauropod-huggingface.path = "../huggingface"
 sauropod-config.path = "../config"
 sauropod-openai-api.path = "../openai-api"
 sauropod-output-parser.path = "../output-parser"
+sauropod-prompt-templates.path = "../prompt-templates"
 
 anyhow.workspace = true
 async-trait.workspace = true
@@ -20,6 +20,5 @@ chrono.workspace = true
 futures-core.workspace = true
 serde_json.workspace = true
 serde.workspace = true
-tokio.workspace = true
 tracing.workspace = true
 uuid.workspace = true

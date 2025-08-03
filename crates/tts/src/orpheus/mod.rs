@@ -19,7 +19,7 @@ impl Orpheus {
     ) -> anyhow::Result<Self> {
         let model_path = sauropod_inference_engine::get_model_path(model_source).await?;
         let model =
-            sauropod_inference_engine::load_model("orpheus".to_string(), &model_path).await?;
+            sauropod_inference_engine::load_model("orpheus".to_string(), &model_path, None).await?;
         let tokenizer = load_tokenizer(sauropod_config::HuggingfacePath {
             repo: "canopylabs/orpheus-3b-0.1-ft".to_string(),
             revision: None,

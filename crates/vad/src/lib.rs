@@ -22,7 +22,7 @@ pub async fn download_from_huggingface(
         }
     };
     let files =
-        sauropod_huggingface::download_onnx_files(&repo, &[PREPROCESSOR_FILENAME, MODEL_FILENAME])
+        sauropod_huggingface::download_onnx_files(repo, &[PREPROCESSOR_FILENAME, MODEL_FILENAME])
             .await?;
 
     // Return the directory containing the downloaded files

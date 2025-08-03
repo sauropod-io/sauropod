@@ -128,7 +128,7 @@ impl std::str::FromStr for ConfigModelSource {
 impl std::fmt::Display for ConfigModelSource {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            ConfigModelSource::LocalPath(path) => write!(f, "{}", path),
+            ConfigModelSource::LocalPath(path) => write!(f, "{path}"),
             ConfigModelSource::HuggingFace(repo) => write!(f, "{repo}"),
         }
     }

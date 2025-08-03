@@ -6,19 +6,15 @@ use std::path::{Path, PathBuf};
 use flate2::read::GzDecoder;
 use tar::Archive;
 
-const VERSION: &str = "aa79524c51fb014f8df17069d31d7c44b9ea6cb8";
+const VERSION: &str = "5c0eb5ef544aeefd81c303e03208f768e158d93c";
 
 fn main() {
     println!("cargo:rerun-if-changed=build.rs");
 
     let out_dir = PathBuf::from(env::var("OUT_DIR").unwrap());
     let llama_source_dir = download_llama_source();
-
-    // Build llama.cpp using CMake
     let llama_build_dir = build_llama(&llama_source_dir);
 
-    // Tell cargo to link the library
-    // Try different possible library locations
     let lib_path = llama_build_dir.join("lib");
     println!("cargo:rustc-link-search=native={}", lib_path.display());
     for library in ["ggml-base", "ggml-cpu", "ggml", "llama", "mtmd"] {
@@ -33,7 +29,7 @@ fn main() {
     }
 
     // Generate bindings
-    generate_bindings(&llama_source_dir, &out_dir);
+    generate_bindings(&out_dir);
 }
 
 fn download_llama_source() -> PathBuf {
@@ -119,7 +115,14 @@ fn build_llama(source_dir: &Path) -> PathBuf {
         .define("LLAMA_STATIC", "ON")
         .define("GGML_NATIVE", "OFF")
         .define("GGML_LTO", linker_plugin_lto)
-        .define("CMAKE_CUDA_ARCHITECTURES", "native");
+        .define(
+            "CMAKE_CUDA_ARCHITECTURES",
+            if cfg!(feature = "cuda-multiple-arches") {
+                "86;89;120"
+            } else {
+                "native"
+            },
+        );
 
     if let Some(target_cpu) = target_cpu_regex
         .captures_iter(&rust_flags)
@@ -153,7 +156,6 @@ fn build_llama(source_dir: &Path) -> PathBuf {
         if cfg!(feature = "vulkan") {
             println!("cargo:rustc-link-lib=static=ggml-vulkan");
             cmake_config.define("GGML_VULKAN", "ON");
-            // Vulkan linking is handled by the Vulkan SDK
             if target_os == "linux" {
                 println!("cargo:rustc-link-lib=vulkan");
             } else if target_os == "windows" {
@@ -175,13 +177,14 @@ fn build_llama(source_dir: &Path) -> PathBuf {
     cmake_config.build()
 }
 
-fn generate_bindings(source_dir: &Path, out_dir: &Path) {
+fn generate_bindings(out_dir: &Path) {
     println!("cargo:rerun-if-changed=wrapper.hh");
     let mut builder = bindgen::Builder::default()
         .header("wrapper.hh")
-        .allowlist_item("gguf_.*")
         .allowlist_item("ggml_.*")
+        .allowlist_item("gguf_.*")
         .allowlist_item("llama_.*")
+        .allowlist_item("mtmd_.*")
         .rustified_enum(".*")
         .default_enum_style(bindgen::EnumVariation::Rust {
             non_exhaustive: false,
@@ -195,18 +198,15 @@ fn generate_bindings(source_dir: &Path, out_dir: &Path) {
         .generate_cstr(true)
         .parse_callbacks(Box::new(bindgen::CargoCallbacks::new()));
 
-    // Add include directories - both source and build directories
-    builder = builder.clang_arg(format!("-I{}", source_dir.join("include").display()));
-    builder = builder.clang_arg(format!(
-        "-I{}",
-        source_dir.join("ggml").join("include").display()
-    ));
-    builder = builder.clang_arg(format!("-I{}", source_dir.display()));
-
-    // Also try the installed include directory from the build
+    // Include the installed include directory from the build
     let build_include_dir = out_dir.join("include");
     if build_include_dir.exists() {
         builder = builder.clang_arg(format!("-I{}", build_include_dir.display()));
+    } else {
+        println!(
+            "cargo:warning=Include directory {} does not exist.",
+            build_include_dir.display()
+        );
     }
 
     let bindings = builder.generate().expect("Unable to generate bindings");

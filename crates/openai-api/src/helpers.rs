@@ -357,6 +357,8 @@ impl Default for crate::ModelResponseProperties {
             user: None,
             top_logprobs: None,
             service_tier: None,
+            prompt_cache_key: None,
+            safety_identifier: None,
         }
     }
 }

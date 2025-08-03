@@ -11,6 +11,7 @@ homepage.workspace = true
 [features]
 default = []
 cuda = ["sauropod-llama-cpp/cuda"]
+cuda-multiple-arches = ["cuda", "sauropod-llama-cpp/cuda-multiple-arches"]
 vulkan = ["sauropod-llama-cpp/vulkan"]
 
 [dependencies]

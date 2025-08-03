@@ -2,12 +2,21 @@
 
 use anyhow::Context as _;
 
-#[derive(serde::Serialize, Debug, Clone, Copy, Eq, PartialEq)]
+#[derive(serde::Serialize, Clone, Copy, Debug, Eq, PartialEq)]
 #[serde(rename_all = "snake_case")]
 pub enum RenderContextRole {
     User,
     System,
     Assistant,
+}
+
+#[derive(serde::Serialize, Clone, Copy, Debug, Default, Eq, PartialEq)]
+#[serde(rename_all = "snake_case")]
+pub enum RenderContextType {
+    #[default]
+    Text,
+    Audio,
+    Image,
 }
 
 #[derive(serde::Serialize, Debug, Clone)]
@@ -32,6 +41,56 @@ pub struct RenderContextMessage {
     pub tools: Option<String>,
 }
 
+/// Multimodal data that can be used in the render context.
+#[derive(Debug, Clone)]
+pub enum MultimodalData {
+    Audio(Vec<f32>),
+    Image(image::RgbImage),
+}
+
+impl MultimodalData {
+    /// Create a new `MultimodalData::Image` from an image.
+    pub fn from_image(image: &sauropod_openai_api::InputImageContent) -> anyhow::Result<Self> {
+        use base64::prelude::*;
+
+        let _detail = image.detail.clone().unwrap_or_default();
+        let Some(image_url) = &image.image_url else {
+            return Err(anyhow::anyhow!("Image content must have an image URL"));
+        };
+        let Some(image_data) = image_url.strip_prefix("data:") else {
+            return Err(anyhow::anyhow!(
+                "Image URL must be a base64-encoded data URL"
+            ));
+        };
+        let Some((mime_type, base64_data)) = image_data.split_once(';') else {
+            return Err(anyhow::anyhow!(
+                "Image URL must be a base64-encoded data URL with a MIME type"
+            ));
+        };
+        let Some(base64_data) = base64_data.strip_prefix("base64,") else {
+            return Err(anyhow::anyhow!(
+                "Image URL must be a base64-encoded data URL with a MIME type"
+            ));
+        };
+
+        let image_format = match mime_type {
+            "image/jpeg" | "image/jpg" => image::ImageFormat::Jpeg,
+            "image/png" => image::ImageFormat::Png,
+            _ => anyhow::bail!("Unsupported image MIME type: {mime_type}"),
+        };
+
+        let image_data = BASE64_STANDARD
+            .decode(base64_data)
+            .context("Failed to decode base64 image data")?;
+        let image = image::load_from_memory_with_format(&image_data, image_format)
+            .context("Failed to load image")?
+            .to_rgb8();
+
+        dbg!(base64_data);
+        Ok(MultimodalData::Image(image))
+    }
+}
+
 #[derive(serde::Serialize, Debug, Clone)]
 pub struct RenderContext {
     /// The messages to render.
@@ -41,6 +100,30 @@ pub struct RenderContext {
     /// Tools that the model may use.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub tools: Option<Vec<Tool>>,
+    /// Multimodal data.
+    #[serde(skip)]
+    pub multimodal_data: Vec<MultimodalData>,
+}
+
+/// Get the last user message from the messages vector, or create a new one if it doesn't exist.
+fn get_last_user_message(messages: &mut Vec<RenderContextMessage>) -> &mut RenderContextMessage {
+    // Check if we need to add a new message
+    let needs_new_message = match messages.last() {
+        Some(message) => message.role != RenderContextRole::User,
+        None => true,
+    };
+
+    if needs_new_message {
+        messages.push(RenderContextMessage {
+            role: RenderContextRole::User,
+            content: String::new(),
+            tools: None,
+        });
+    }
+
+    messages
+        .last_mut()
+        .expect("Messages vector should not be empty")
 }
 
 impl RenderContext {
@@ -102,11 +185,12 @@ impl RenderContext {
         };
 
         let mut messages = Vec::new();
+        let mut multimodal_data = Vec::new();
         let mut result = Ok(());
         if let Some(input) = &request.input {
             input.for_each(|message| match message {
                 sauropod_openai_api::InputItem::EasyInputMessage(msg) => {
-                    let role = match msg.role {
+                    let _role = match msg.role {
                         sauropod_openai_api::EasyInputMessageRole::Assistant => {
                             crate::RenderContextRole::Assistant
                         }
@@ -124,14 +208,19 @@ impl RenderContext {
 
                     msg.content.for_each(|content| match content {
                         sauropod_openai_api::InputContent::InputTextContent(text_content) => {
-                            messages.push(crate::RenderContextMessage {
-                                role,
-                                content: text_content.text.to_string(),
-                                tools: None,
-                            })
+                            get_last_user_message(&mut messages)
+                                .content
+                                .push_str(&text_content.text);
                         }
-                        sauropod_openai_api::InputContent::InputImageContent(_) => {
-                            result = Err(anyhow::anyhow!("InputImageContent not handled"));
+                        sauropod_openai_api::InputContent::InputImageContent(image_content) => {
+                            let message = get_last_user_message(&mut messages);
+                            message.content.push_str("<__media__>");
+                            match MultimodalData::from_image(image_content) {
+                                Ok(data) => multimodal_data.push(data),
+                                Err(e) => {
+                                    result = Err(e);
+                                }
+                            }
                         }
                         sauropod_openai_api::InputContent::InputFileContent(_) => {
                             result = Err(anyhow::anyhow!("InputFileContent not handled"));
@@ -247,6 +336,7 @@ impl RenderContext {
             messages,
             tools: function_tools,
             add_generation_prompt: true,
+            multimodal_data,
         })
     }
 }

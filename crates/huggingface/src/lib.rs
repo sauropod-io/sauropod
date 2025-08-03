@@ -90,9 +90,23 @@ impl RepositoryInfo {
     }
 }
 
+/// Make an API client for Hugging Face.
+fn make_api_client() -> Result<hf_hub::api::tokio::Api, hf_hub::api::tokio::ApiError> {
+    hf_hub::api::tokio::ApiBuilder::from_env().high().build()
+}
+
+fn make_hf_repo(repository: String, revision: Option<String>) -> hf_hub::Repo {
+    match revision {
+        Some(revision) => {
+            hf_hub::Repo::with_revision(repository, hf_hub::RepoType::Model, revision)
+        }
+        None => hf_hub::Repo::model(repository),
+    }
+}
+
 impl RepositoryInterface {
     pub fn new() -> anyhow::Result<Self> {
-        let client = hf_hub::api::tokio::ApiBuilder::from_env().high().build()?;
+        let client = make_api_client()?;
         let cache = hf_hub::Cache::from_env();
         Ok(Self {
             api_client: client,
@@ -104,15 +118,7 @@ impl RepositoryInterface {
         &self,
         repository: &HuggingfacePath,
     ) -> anyhow::Result<RepositoryInfo> {
-        let repository = match &repository.revision {
-            Some(revision) => hf_hub::Repo::with_revision(
-                repository.repo.clone(),
-                hf_hub::RepoType::Model,
-                revision.clone(),
-            ),
-            None => hf_hub::Repo::model(repository.repo.clone()),
-        };
-
+        let repository = make_hf_repo(repository.repo.clone(), repository.revision.clone());
         let model = self.api_client.repo(repository.clone());
         let model_cache = self.cache.repo(repository);
         let info = model.info().await?;
@@ -164,4 +170,33 @@ pub async fn download_onnx_files(
         file_names.len(),
         onnx_files.len()
     ))
+}
+
+/// Download a model from Hugging Face or return its path.
+pub async fn download_file(
+    model_source: &sauropod_config::ConfigModelSource,
+) -> anyhow::Result<std::path::PathBuf> {
+    match model_source {
+        sauropod_config::ConfigModelSource::LocalPath(path) => Ok(std::path::PathBuf::from(path)),
+        sauropod_config::ConfigModelSource::HuggingFace(sauropod_config::HuggingfacePath {
+            repo,
+            revision,
+            path_or_quantization,
+        }) => match path_or_quantization {
+            Some(sauropod_config::PathOrQuantization::FilePath { file }) => {
+                let api_client = make_api_client()?;
+                let repository = make_hf_repo(repo.clone(), revision.clone());
+                let api_repo = api_client.repo(repository.clone());
+                Ok(api_repo.get(file.as_str()).await?)
+            }
+            Some(sauropod_config::PathOrQuantization::Quantization { .. }) => {
+                anyhow::bail!(
+                    "Determining file from quantization not supported for {model_source}"
+                );
+            }
+            None => {
+                anyhow::bail!("No file path specified for {model_source}");
+            }
+        },
+    }
 }

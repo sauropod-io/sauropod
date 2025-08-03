@@ -81,6 +81,7 @@ pub trait LlmModel: Send + Sync {
         self: Arc<Self>,
         sampler_properties: SamplerProperties,
         text: String,
+        multimodal_data: Vec<sauropod_prompt_templates::MultimodalData>,
     ) -> anyhow::Result<PartStream>;
 
     /// Get the Jinja template for the model.

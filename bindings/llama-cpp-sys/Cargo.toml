@@ -11,6 +11,7 @@ homepage.workspace = true
 [features]
 default = []
 cuda = []
+cuda-multiple-arches = ["cuda"]
 vulkan = []
 
 [dependencies]

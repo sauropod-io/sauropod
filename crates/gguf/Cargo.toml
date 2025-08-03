@@ -13,4 +13,5 @@ tokio.workspace = true
 thiserror.workspace = true
 
 [dev-dependencies]
+sauropod-config = { path = "../config" }
 sauropod-huggingface = { path = "../huggingface" }

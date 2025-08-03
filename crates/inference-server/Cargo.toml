@@ -10,7 +10,13 @@ homepage.workspace = true
 
 [features]
 default = ["vulkan"]
-cuda = ["sauropod-inference-engine/cuda"]
+cuda = [ # Enable CUDA targeting the native compute capability
+    "sauropod-inference-engine/cuda",
+]
+cuda-multiple-arches = [ # Enable CUDA targeting multiple compute capabilities
+    "cuda",
+    "sauropod-inference-engine/cuda-multiple-arches",
+]
 vulkan = ["sauropod-inference-engine/vulkan"]
 profiling = ["sauropod-profiling/profiling"]
 

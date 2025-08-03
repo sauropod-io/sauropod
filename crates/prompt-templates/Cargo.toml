@@ -12,7 +12,9 @@ homepage.workspace = true
 sauropod-openai-api.path = "../openai-api"
 
 anyhow.workspace = true
+base64.workspace = true
+image.workspace = true
+minijinja.workspace = true
 serde_json.workspace = true
 serde.workspace = true
 tracing.workspace = true
-minijinja.workspace = true

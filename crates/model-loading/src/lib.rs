@@ -85,10 +85,13 @@ impl LoadedModels {
                         .await
                         .context(format!("Failed to get model path for {alias}"))?;
 
-                    let llm_model =
-                        sauropod_inference_engine::load_model(alias.to_string(), &model_path)
-                            .await
-                            .context(format!("Failed to load model for {alias}"))?;
+                    let llm_model = sauropod_inference_engine::load_model(
+                        alias.to_string(),
+                        &model_path,
+                        model_config.multimodal_projector.as_ref(),
+                    )
+                    .await
+                    .context(format!("Failed to load model for {alias}"))?;
 
                     let temporary_model = Arc::new(sauropod_inference_engine::Model::new(
                         llm_model.clone(),
@@ -142,7 +145,7 @@ impl LoadedModels {
                     model: model_source,
                     ..
                 } => {
-                    get_or_create(&mut source_to_tts_pointer, &model_source, async || {
+                    get_or_create(&mut source_to_tts_pointer, model_source, async || {
                         let model_dir = match &model_source {
                             ConfigModelSource::HuggingFace(repo) => {
                                 sauropod_tts::kokoro::download_from_huggingface(repo).await?
@@ -169,9 +172,9 @@ impl LoadedModels {
                     model: model_source,
                     ..
                 } => {
-                    get_or_create(&mut source_to_tts_pointer, &model_source, async || {
+                    get_or_create(&mut source_to_tts_pointer, model_source, async || {
                         let model = Arc::new(
-                            sauropod_tts::orpheus::make_tts_thread(&onnxruntime_env, &model_source)
+                            sauropod_tts::orpheus::make_tts_thread(&onnxruntime_env, model_source)
                                 .await?,
                         );
                         model
