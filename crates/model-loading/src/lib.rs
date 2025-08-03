@@ -75,6 +75,11 @@ impl LoadedModels {
         // Load LLM models
         let mut source_to_model_pointer =
             HashMap::<ConfigModelSource, sauropod_inference_engine::ModelPointer>::with_capacity(2);
+        if config.models.is_empty() {
+            tracing::warn!(
+                "No models configured - you may be missing the models section in your config file."
+            );
+        }
         for (alias, model_config) in &config.models {
             let pointer = get_or_create(&mut source_to_model_pointer, &model_config.model, {
                 let model_source = model_config.model.clone();

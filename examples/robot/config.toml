@@ -1,0 +1,20 @@
+verbose = true
+
+voices = {}
+
+[authentication]
+type = "api_key"
+api_key = "hardcoded_api_key"
+
+[models.default]
+# We use the SmolVLM2-500M-Video-Instruct since it's pretty small.
+model = { repo = "ggml-org/SmolVLM2-500M-Video-Instruct-GGUF", quantization = "Q8_0" }
+multimodal_projector = { repo = "ggml-org/SmolVLM2-500M-Video-Instruct-GGUF", file = "mmproj-SmolVLM2-500M-Video-Instruct-Q8_0.gguf" }
+temperature = 0.6
+top_k = 64
+top_p = 0.5
+min_p = 0.0
+system_prompt = "You are a robot with a camera for vision."
+# Use a modified chat template so the content doesn't need to be an array
+chat_template = "<|im_start|>{% for message in messages %}{{message['role'] | capitalize}}: {{ message['content'] }}<end_of_utterance>\n{% endfor %}{% if add_generation_prompt %}{{ 'Assistant:' }}{% endif %}"
+maximum_tokens = 16000

@@ -27,7 +27,10 @@ impl Model {
         model_config: sauropod_config::ModelConfig,
     ) -> anyhow::Result<Self> {
         let chat_template = sauropod_prompt_templates::PromptTemplate::new(
-            underlying_model.get_model_chat_template().to_string(),
+            model_config
+                .chat_template
+                .clone()
+                .unwrap_or_else(|| underlying_model.get_model_chat_template().to_string()),
         )?;
 
         Ok(Self {

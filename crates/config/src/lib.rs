@@ -53,6 +53,9 @@ pub struct ModelConfig {
     pub top_k: Option<i64>,
     /// The minimum probability for the model.
     pub min_p: Option<i64>,
+    /// Jinja template for the chat.
+    #[serde(default)]
+    pub chat_template: Option<String>,
 }
 
 /// Voice model configuration.
@@ -126,7 +129,7 @@ pub struct Config {
     #[serde(default = "Config::default_port")]
     pub port: u16,
     /// The model configurations.
-    #[serde(default = "Config::default_models")]
+    #[serde(default)]
     pub models: HashMap<String, ModelConfig>,
     /// Map from voice name to voice configuration.
     #[serde(default = "Config::default_voices")]
@@ -151,28 +154,6 @@ impl Config {
     /// The default verbose value.
     fn default_verbose() -> bool {
         true
-    }
-
-    fn default_models() -> HashMap<String, ModelConfig> {
-        // TODO detect available video memory and use that to select default models
-        HashMap::from([(
-            "default".to_string(),
-            ModelConfig {
-                model: ConfigModelSource::from_huggingface(
-                    "unsloth/gemma-3-27b-it-qat-GGUF",
-                    Some(PathOrQuantization::Quantization {
-                        quantization: "Q4_K_M".to_string(),
-                    }),
-                ),
-                multimodal_projector: None,
-                system_prompt: None,
-                top_p: None,
-                temperature: None,
-                maximum_tokens: None,
-                top_k: None,
-                min_p: None,
-            },
-        )])
     }
 
     fn default_voices() -> HashMap<String, VoiceConfig> {
@@ -253,7 +234,7 @@ impl Default for Config {
             database_path: "".to_string(),
             host: "".to_string(),
             port: Self::default_port(),
-            models: Self::default_models(),
+            models: HashMap::new(),
             voices: Self::default_voices(),
             trace_output: None,
             stt_model: Self::default_stt_model(),

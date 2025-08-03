@@ -86,7 +86,6 @@ impl MultimodalData {
             .context("Failed to load image")?
             .to_rgb8();
 
-        dbg!(base64_data);
         Ok(MultimodalData::Image(image))
     }
 }
