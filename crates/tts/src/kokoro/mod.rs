@@ -97,7 +97,7 @@ impl sauropod_inference_thread::InferenceProvider for Kokoro {
         let tokens = self
             .tokenizer
             .tokenize(&text.text)
-            .context("Tokenizing text")?;
+            .context("Tokenizing text - is espeak-ng installed?")?;
         let token_count = tokens.len();
         if token_count > 510 {
             return Err(anyhow::anyhow!(
