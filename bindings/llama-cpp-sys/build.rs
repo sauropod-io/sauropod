@@ -94,8 +94,8 @@ fn build_llama(source_dir: &Path) -> PathBuf {
     let rust_flags = std::env::var("CARGO_ENCODED_RUSTFLAGS").unwrap_or_default();
     let rustc_linker = std::env::var("RUSTC_LINKER").unwrap_or_default();
     let target_cpu_regex =
-        regex::Regex::new("-Ctarget-cpu=([a-z0-9]+)").expect("Failed to compile regex");
-
+        regex::Regex::new(r#"-Ctarget-cpu=((?:cortex|apple|neoverse)-[a-z0-9_]+|[a-z0-9_]+(?:-[0-9]+)?(?:-avx\d*|-v\d)?)"#)
+            .expect("Failed to compile regex");
     let linker_plugin_lto = if rust_flags.contains("-Clinker-plugin-lto") {
         "ON"
     } else {
