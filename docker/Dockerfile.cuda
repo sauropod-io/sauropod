@@ -119,10 +119,7 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 COPY --from=rust-builder /sauropod/target/optimized-release/sauropod-inference-server /usr/bin/
-COPY --from=rust-builder /sauropod/target/optimized-release/libonnxruntime.so.1 /usr/lib/
-COPY --from=rust-builder /sauropod/target/optimized-release/libonnxruntime_providers_cuda.so /usr/lib/
-COPY --from=rust-builder /sauropod/target/optimized-release/libonnxruntime_providers_shared.so /usr/lib/
-COPY --from=rust-builder /sauropod/target/optimized-release/libonnxruntime_providers_tensorrt.so /usr/lib/
+COPY --from=rust-builder /sauropod/target/optimized-release/libonnxruntime* /usr/lib/
 
 ENV SAUROPOD_HOST=0.0.0.0
 CMD ["/usr/bin/sauropod-inference-server"]
