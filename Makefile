@@ -26,7 +26,7 @@ generate-dockerfiles:
 .PHONY: release release-cuda docker-vulkan docker-cuda
 release:
 	@rust_sysroot=$$(rustc --print sysroot); \
-	rust_lld_wrapper=$$(find $$rust_sysroot -name ld.lld -executable | head -n 1); \
+	rust_lld_wrapper=$$(find $$rust_sysroot -name ld.lld | head -n 1); \
 	export SOURCE_DATE_EPOCH="$$(git log -1 --pretty=%ct)"; \
 	if [ -z "$$rust_lld_wrapper" ]; then \
 	  echo "Error: Could not find ld.lld in $$rust_sysroot"; \
