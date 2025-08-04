@@ -92,6 +92,7 @@ jobs:
       - name: Set up
         uses: ./.github/actions/set-up-rust
       - name: Install vulkan-tools
+        if: runner.os == 'Linux'
         run: sudo apt-get install -y vulkan-tools glslc libvulkan-dev
 
       - name: Build the release
