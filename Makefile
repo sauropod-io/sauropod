@@ -23,8 +23,8 @@ generate-dockerfiles:
 	cargo run -p generate-dockerfiles
 
 # Artifact building targets
-.PHONY: _release release-cuda docker-vulkan docker-cuda
-_release:
+.PHONY: release release-cuda docker-vulkan docker-cuda
+release:
 	@rust_sysroot=$$(rustc --print sysroot); \
 	rust_lld_wrapper=$$(find $$rust_sysroot -name ld.lld -executable | head -n 1); \
 	export SOURCE_DATE_EPOCH="$$(git log -1 --pretty=%ct)"; \
@@ -49,10 +49,10 @@ _release:
 	  --features="$${CARGO_FEATURES}"
 
 release-vulkan:
-	$(MAKE) _release CARGO_FEATURES=vulkan
+	$(MAKE) release CARGO_FEATURES=vulkan
 
 release-cuda:
-	$(MAKE) _release CARGO_FEATURES=cuda-multiple-arches
+	$(MAKE) release CARGO_FEATURES=cuda-multiple-arches
 
 docker-vulkan:
 	docker build -t ghcr.io/sauropod-io/sauropod:latest -f docker/Dockerfile.vulkan .
