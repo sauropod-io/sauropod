@@ -82,20 +82,11 @@ fn build_llama(source_dir: &Path) -> PathBuf {
             );
         }
     }
-    let target_features: std::collections::HashSet<String> = std::collections::HashSet::from_iter(
-        std::env::var("CARGO_CFG_TARGET_FEATURE")
-            .unwrap_or_default()
-            .split(',')
-            .map(str::trim)
-            .map(String::from),
-    );
 
     let target_os = std::env::var("CARGO_CFG_TARGET_OS").unwrap_or_default();
     let rust_flags = std::env::var("CARGO_ENCODED_RUSTFLAGS").unwrap_or_default();
+    let target_arch = std::env::var("CARGO_CFG_TARGET_ARCH").unwrap_or_default();
     let rustc_linker = std::env::var("RUSTC_LINKER").unwrap_or_default();
-    let target_cpu_regex =
-        regex::Regex::new(r#"-Ctarget-cpu=((?:cortex|apple|neoverse)-[a-z0-9_]+|[a-z0-9_]+(?:-[0-9]+)?(?:-avx\d*|-v\d)?)"#)
-            .expect("Failed to compile regex");
     let linker_plugin_lto = if rust_flags.contains("-Clinker-plugin-lto") {
         "ON"
     } else {
@@ -124,13 +115,22 @@ fn build_llama(source_dir: &Path) -> PathBuf {
             },
         );
 
+    let target_cpu_regex =
+        regex::Regex::new(r#"-Ctarget-cpu=((?:cortex|apple|neoverse)-[a-z0-9_]+|[a-z0-9_]+(?:-[0-9]+)?(?:-avx\d*|-v\d)?)"#)
+            .expect("Failed to compile regex");
     if let Some(target_cpu) = target_cpu_regex
         .captures_iter(&rust_flags)
         .last()
         .and_then(|x| x.get(1))
+        .map(|x| x.as_str())
     {
-        cmake_config.cflag(format!("-march={}", target_cpu.as_str()));
-        cmake_config.cxxflag(format!("-march={}", target_cpu.as_str()));
+        if target_arch == "aarch64" {
+            cmake_config.cflag(format!("-mcpu={target_cpu}"));
+            cmake_config.cxxflag(format!("-mcpu={target_cpu}"));
+        } else {
+            cmake_config.cflag(format!("-march={target_cpu}"));
+            cmake_config.cxxflag(format!("-march={target_cpu}"));
+        }
     }
 
     if target_os == "macos" {
@@ -164,6 +164,13 @@ fn build_llama(source_dir: &Path) -> PathBuf {
         }
     }
 
+    let target_features: std::collections::HashSet<String> = std::collections::HashSet::from_iter(
+        std::env::var("CARGO_CFG_TARGET_FEATURE")
+            .unwrap_or_default()
+            .split(',')
+            .map(str::trim)
+            .map(String::from),
+    );
     for feature in &["sse4.2", "avx", "avx2", "avx512"] {
         if target_features.contains(*feature) {
             cmake_config.define(
