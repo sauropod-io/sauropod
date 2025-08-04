@@ -30,6 +30,8 @@ cargo build --locked --profile=optimized-release --features=vulkan --package=sau
 cargo build --locked --profile=optimized-release --no-default-features --features=cuda --package=sauropod-inference-server
 ```
 
+The built binary will be available at `./target/optimized-release/sauropod-inference-server`.
+
 ## Configuration
 
 Sauropod uses a TOML configuration file located at `$CONFIG_DIR/config.toml`:

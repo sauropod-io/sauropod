@@ -8,6 +8,23 @@ use tar::Archive;
 
 const VERSION: &str = "5c0eb5ef544aeefd81c303e03208f768e158d93c";
 
+/// Discover the CUDA installation path.
+fn discover_cuda() -> Option<PathBuf> {
+    println!("cargo:rerun-if-env-changed=CUDA_ROOT");
+    if let Ok(cuda_home) = env::var("CUDA_HOME") {
+        return Some(PathBuf::from(cuda_home));
+    }
+
+    let candidate_paths = &[PathBuf::from("/usr/local/cuda"), PathBuf::from("/opt/cuda")];
+    for path in candidate_paths {
+        if path.exists() {
+            return Some(path.to_path_buf());
+        }
+    }
+
+    return None;
+}
+
 fn main() {
     println!("cargo:rerun-if-changed=build.rs");
 
@@ -140,8 +157,19 @@ fn build_llama(source_dir: &Path) -> PathBuf {
         println!("cargo:rustc-link-lib=framework=MetalKit");
     } else {
         if cfg!(feature = "cuda") {
-            if let Some(cuda_path) = env::var_os("CUDA_HOME") {
-                println!("cargo:rustc-link-search=native={}/lib", cuda_path.display());
+            if let Some(cuda_path) = discover_cuda() {
+                let target_dir = cuda_path
+                    .join("targets")
+                    .join(format!("{}-linux-gnu", target_arch));
+                if target_dir.exists() {
+                    println!("cargo:rustc-link-search=native={}", target_dir.display());
+                }
+
+                for lib_dir in &[cuda_path.join("lib64"), cuda_path.join("lib")] {
+                    if lib_dir.exists() {
+                        println!("cargo:rustc-link-search=native={}", lib_dir.display());
+                    }
+                }
             }
 
             cmake_config.define("GGML_CUDA", "ON");
