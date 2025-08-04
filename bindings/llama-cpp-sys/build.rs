@@ -162,11 +162,16 @@ fn build_llama(source_dir: &Path) -> PathBuf {
                     .join("targets")
                     .join(format!("{}-linux-gnu", target_arch));
                 if target_dir.exists() {
+                    println!(
+                        "cargo:rustc-link-search=native={}/stubs",
+                        target_dir.display()
+                    );
                     println!("cargo:rustc-link-search=native={}", target_dir.display());
                 }
 
                 for lib_dir in &[cuda_path.join("lib64"), cuda_path.join("lib")] {
                     if lib_dir.exists() {
+                        println!("cargo:rustc-link-search=native={}/stubs", lib_dir.display());
                         println!("cargo:rustc-link-search=native={}", lib_dir.display());
                     }
                 }
