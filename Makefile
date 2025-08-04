@@ -35,14 +35,21 @@ release:
 	if [ -z "$$SOURCE_DATE_EPOCH" ]; then \
 	  export SOURCE_DATE_EPOCH=0; \
 	fi; \
-	export CFLAGS="-ffile-prefix-map=$(CURDIR)=. -fdebug-prefix-map=$(CURDIR)=. -g0"; \
-	PATH=$$(dirname $$rust_lld_wrapper):$${PATH} \
-	TZ=UTC \
-	CARGO_INCREMENTAL=0 \
-	CXXFLAGS="$${CFLAGS}" \
-	CC=$${CC:-clang} CXX=$${CXX:-clang++} \
-	LDFLAGS="-fuse-ld=lld" \
-	RUSTFLAGS="$$RUSTFLAGS -Clinker-plugin-lto -Clink-arg=-fuse-ld=lld -Clink-arg=-Wl,-rpath,\$$ORIGIN -Clink-arg=-Wl,--threads=4 --remap-path-prefix=$(CURDIR)=." \
+	export \
+		CARGO_INCREMENTAL=0 \
+		CC=$${CC:-clang} \
+		CFLAGS="-ffile-prefix-map=$(CURDIR)=. -fdebug-prefix-map=$(CURDIR)=. -g0"; \
+		CXX=$${CXX:-clang++} \
+		CXXFLAGS="$${CFLAGS}" \
+		RUSTFLAGS="$$RUSTFLAGS --remap-path-prefix=$(CURDIR)=. -Clinker-plugin-lto -Clink-arg=-Wl,-rpath,\$$ORIGIN" \
+		TZ=UTC; \
+	if [ "$$(uname)" = "Linux" ]; then \
+		export \
+			LDFLAGS="-fuse-ld=lld"; \
+			RUSTFLAGS="$$RUSTFLAGS -Clink-arg=-fuse-ld=lld -Clink-arg=-Wl,--threads=4" \
+			PATH=$$(dirname $$rust_lld_wrapper):$${PATH}; \
+	fi; \
+	export CXXFLAGS="$${CFLAGS}"; \
 	cargo build --locked --profile=optimized-release \
 	  --no-default-features \
 	  --package=sauropod-inference-server \

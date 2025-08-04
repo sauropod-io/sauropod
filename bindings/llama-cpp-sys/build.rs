@@ -41,8 +41,6 @@ fn main() {
     // Link standard C++ library
     if cfg!(target_os = "linux") {
         println!("cargo:rustc-link-lib=stdc++");
-    } else if cfg!(target_os = "macos") {
-        println!("cargo:rustc-link-lib=c++");
     }
 
     // Generate bindings
@@ -112,6 +110,7 @@ fn build_llama(source_dir: &Path) -> PathBuf {
 
     // Configure CMake build
     cmake_config
+        .cxxflag("-std=c++17")
         .define("CMAKE_LINKER", rustc_linker)
         .define("BUILD_SHARED_LIBS", "OFF")
         .define("GGML_OPENMP", "OFF")
@@ -152,9 +151,13 @@ fn build_llama(source_dir: &Path) -> PathBuf {
 
     if target_os == "macos" {
         cmake_config.define("GGML_METAL", "ON");
-        println!("cargo:rustc-link-lib=framework=Metal");
+        cmake_config.define("GGML_METAL_USE_BF16", "ON");
+        println!("cargo:rustc-link-lib=static=ggml-metal");
+        println!("cargo:rustc-link-lib=static=ggml-blas");
         println!("cargo:rustc-link-lib=framework=Foundation");
+        println!("cargo:rustc-link-lib=framework=Metal");
         println!("cargo:rustc-link-lib=framework=MetalKit");
+        println!("cargo:rustc-link-lib=framework=Accelerate");
     } else {
         if cfg!(feature = "cuda") {
             if let Some(cuda_path) = discover_cuda() {
@@ -221,6 +224,7 @@ fn generate_bindings(out_dir: &Path) {
     println!("cargo:rerun-if-changed=wrapper.hh");
     let mut builder = bindgen::Builder::default()
         .header("wrapper.hh")
+        .clang_arg("-std=c++17")
         .allowlist_item("ggml_.*")
         .allowlist_item("gguf_.*")
         .allowlist_item("llama_.*")

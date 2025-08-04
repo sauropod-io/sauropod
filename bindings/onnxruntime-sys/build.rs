@@ -22,11 +22,11 @@ fn get_onnxruntime_url() -> String {
     {
         "x86_64" if target_os == "osx" => "x86_64".to_string(),
         "x86_64" => "x64".to_string(),
-        "arm64" if target_os == "osx" || target_os == "win" => "arm64".to_string(),
+        "aarch64" if target_os == "osx" || target_os == "win" => "arm64".to_string(),
         platform => platform.to_string(),
     };
 
-    let version_with_gpu = if platform != "osx" && platform != "aarch64" {
+    let version_with_gpu = if target_os != "osx" && platform != "aarch64" {
         format!("gpu-{version}")
     } else {
         version.clone()
@@ -163,6 +163,7 @@ fn main() {
         .allowlist_item("Ort.*")
         .rustified_enum(".*")
         .clang_arg("-xc++")
+        .clang_arg("-std=c++17")
         .default_enum_style(bindgen::EnumVariation::Rust {
             non_exhaustive: false,
         })
@@ -178,7 +179,10 @@ fn main() {
 
     let mut cc_builder = cc::Build::new();
     cc_builder.cpp(true);
-    cc_builder.file("wrapper.cc").flag("-Wno-unused-variable");
+    cc_builder
+        .file("wrapper.cc")
+        .flag("-Wno-unused-variable")
+        .flag("-std=c++17");
 
     for include in include_paths {
         builder = builder.clang_arg(format!("-I{}", include.display()));
