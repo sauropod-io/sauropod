@@ -1,0 +1,20 @@
+name: MacOS Debug
+
+on:
+  workflow_dispatch:
+
+env:
+  # We don't need incremental compilation in CI
+  CARGO_INCREMENTAL: "0"
+  CARGO_TERM_COLORS: always
+
+jobs:
+  build-release-binaries:
+    permissions:
+      contents: read
+    runs-on: macos-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
