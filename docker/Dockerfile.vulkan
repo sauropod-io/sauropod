@@ -113,11 +113,11 @@ RUN cargo fetch --locked
 COPY . ./
 
 # Build the release binary
+ARG RUSTFLAGS
 RUN --mount=type=secret,id=actions_results_url,env=ACTIONS_RESULTS_URL \
     --mount=type=secret,id=actions_runtime_token,env=ACTIONS_RUNTIME_TOKEN \
     if [ -n "$ACTIONS_RESULTS_URL" ]; then export ACTIONS_CACHE_SERVICE_V2=on SCCACHE_GHA_ENABLED=true RUSTC_WRAPPER=/usr/local/bin/sccache; fi; \
     make release-vulkan
-RUN find target/optimized-release/ -path "*/onnxruntime/lib/*.so*" -exec cp {} target/optimized-release/ \;
 
 FROM base
 

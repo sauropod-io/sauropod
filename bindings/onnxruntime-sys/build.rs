@@ -125,6 +125,29 @@ fn main() {
             let include_dir = onnxruntime_dir.join("include");
             let lib_dir = onnxruntime_dir.join("lib");
 
+            // Copy shared libraries to OUT_DIR so they can be found at runtime
+            let out_dir = PathBuf::from(std::env::var("OUT_DIR").unwrap());
+            // Terrible hack to get the top level output directory
+            let shared_library_dir = out_dir
+                .parent()
+                .unwrap()
+                .parent()
+                .unwrap()
+                .parent()
+                .unwrap();
+            for entry in std::fs::read_dir(&lib_dir).unwrap() {
+                let entry = entry.unwrap();
+                let path = entry.path();
+                let filename = path.file_name().unwrap().to_string_lossy().to_string();
+                if matches!(
+                    path.extension().and_then(|e| e.to_str()),
+                    Some("so") | Some("so.1") | Some("dylib") | Some("dll")
+                ) || filename.ends_with(".so.1")
+                {
+                    std::fs::copy(&path, shared_library_dir.join(&filename)).unwrap();
+                }
+            }
+
             (
                 vec![include_dir],
                 vec![lib_dir],

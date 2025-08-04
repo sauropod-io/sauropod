@@ -22,7 +22,7 @@ jobs:
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7
         with:
           script: |
-            function matrixEntry(arch, os, image, variants = []) {
+            function matrixEntry(arch, os, image, march, variants = []) {
               let goarch;
               switch (arch) {
                 case 'x86_64':
@@ -35,14 +35,19 @@ jobs:
                   throw new Error(`Unsupported architecture: ${arch}`);
               }
 
-             const entries = []
+              const entries = []
               const base = {
                 arch,
                 goarch,
                 os,
                 image,
                 binary_suffix: `${arch}-${os}`,
+                rustflags: '',
               };
+              if (march) {
+                base.rustflags = `-Ctarget-cpu=${march}`;
+              }
+
               if (variants.length > 0) {
                 for (const variant of variants) {
                   entries.push({
@@ -58,11 +63,12 @@ jobs:
             }
 
             const matrix = [];
-            const containerMatrix = matrixEntry('x86_64', 'linux', 'ubuntu-latest', ['cuda', 'vulkan']);
+
+            const containerMatrix = matrixEntry('x86_64', 'linux', 'ubuntu-latest', 'skylake', ['cuda', 'vulkan']);
 
             if (context.repo.repo == 'sauropod' && context.repo.owner == 'sauropod-io') {
-              containerMatrix.push(...matrixEntry('aarch64', 'linux', 'ubuntu-24.04-arm', ['cuda', 'vulkan']))
-              matrix.push(...matrixEntry('aarch64', 'macos', 'macos-latest'));
+              containerMatrix.push(...matrixEntry('aarch64', 'linux', 'ubuntu-24.04-arm', "cortex-a76", ['cuda', 'vulkan']))
+              matrix.push(...matrixEntry('aarch64', 'macos', 'macos-latest', null));
             }
 
             core.setOutput('matrix', JSON.stringify(matrix));
@@ -152,8 +158,8 @@ jobs:
             actions_results_url=ACTIONS_RESULTS_URL
             actions_runtime_token=ACTIONS_RUNTIME_TOKEN
           outputs: type=image,push-by-digest=true,name-canonical=true,push=true
-        env:
-          SOURCE_DATE_EPOCH: 0
+          build-args: |
+            RUSTFLAGS=${{ matrix.rustflags }}
 
       - name: Export digest
         run: |

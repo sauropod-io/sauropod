@@ -1,7 +1,2 @@
-[build]
-
-[target.x86_64-unknown-linux-gnu]
-rustflags = ["-Ctarget-cpu=skylake"]
-
-[target.aarch64-unknown-linux-gnu]
-rustflags = ["-Ctarget-cpu=cortex-x925"]
+[target.'cfg(not(target_os = "windows"))']
+rustflags = ["-Clink-arg=-Wl,-rpath,$ORIGIN"]

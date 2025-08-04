@@ -42,7 +42,7 @@ _release:
 	CXXFLAGS="$${CFLAGS}" \
 	CC=$${CC:-clang} CXX=$${CXX:-clang++} \
 	LDFLAGS="-fuse-ld=lld" \
-	RUSTFLAGS="-Clinker-plugin-lto -Clink-arg=-fuse-ld=lld -Clink-arg=-Wl,--threads=4 --remap-path-prefix=$(CURDIR)=." \
+	RUSTFLAGS="$$RUSTFLAGS -Clinker-plugin-lto -Clink-arg=-fuse-ld=lld -Clink-arg=-Wl,-rpath,\$$ORIGIN -Clink-arg=-Wl,--threads=4 --remap-path-prefix=$(CURDIR)=." \
 	cargo build --locked --profile=optimized-release \
 	  --no-default-features \
 	  --package=sauropod-inference-server \
