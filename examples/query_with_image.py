@@ -47,4 +47,4 @@ response = client.responses.create(
 if response.error:
     print(f"Error: {response.error}")
 else:
-    print(f"Model response: {response.output_text}")
+    print(f"Model response:\n{response.output_text}")

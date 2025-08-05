@@ -1,7 +1,7 @@
 # Script header for `uv run`:
 # /// script
 # requires-python = ">=3.9"
-# dependencies = []
+# dependencies = ["openai"]
 # ///
 
 from openai import OpenAI  # Install with `pip install openai`
@@ -19,4 +19,4 @@ response = client.responses.create(
 if response.error:
     print(f"Error: {response.error}")
 else:
-    print(f"Big model response: {response.output_text}\n\n")
+    print(f"Model response:\n{response.output_text}")

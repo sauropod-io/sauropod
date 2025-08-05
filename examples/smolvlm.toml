@@ -1,7 +1,8 @@
 verbose = true
 host = "0.0.0.0"
 
-voices = {}
+voices = {}    # Disable text-to-speech to save memory
+stt_model = "" # Disable speech-to-text to save memory
 
 [authentication]
 type = "api_key"

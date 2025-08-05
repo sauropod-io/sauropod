@@ -6,7 +6,7 @@ use std::path::{Path, PathBuf};
 use flate2::read::GzDecoder;
 use tar::Archive;
 
-const VERSION: &str = "be426425817bc3e6a2d91dae476dba6fa85894be";
+const VERSION: &str = "fd1234cb468935ea087d6929b2487926c3afff4b";
 
 /// Discover the CUDA installation path.
 fn discover_cuda() -> Option<PathBuf> {
