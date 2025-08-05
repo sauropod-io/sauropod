@@ -92,7 +92,12 @@ impl RepositoryInfo {
 
 /// Make an API client for Hugging Face.
 fn make_api_client() -> Result<hf_hub::api::tokio::Api, hf_hub::api::tokio::ApiError> {
-    hf_hub::api::tokio::ApiBuilder::from_env().high().build()
+    let builder = hf_hub::api::tokio::ApiBuilder::from_env().high();
+    if let Ok(token) = std::env::var("HF_TOKEN") {
+        builder.with_token(Some(token)).build()
+    } else {
+        builder.build()
+    }
 }
 
 fn make_hf_repo(repository: String, revision: Option<String>) -> hf_hub::Repo {
