@@ -25,6 +25,28 @@ fn discover_cuda() -> Option<PathBuf> {
     None
 }
 
+fn detect_gpu_arch() -> String {
+    let output = std::process::Command::new("nvidia-smi")
+        .args(["--query-gpu=compute_cap", "--format=csv,noheader"])
+        .output()
+        .expect("Failed to execute nvidia-smi");
+
+    if !output.status.success() {
+        panic!(
+            "nvidia-smi failed: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+    }
+
+    let cap_str = String::from_utf8_lossy(&output.stdout).trim().to_string();
+    let parts: Vec<&str> = cap_str.split('.').collect();
+    if parts.len() != 2 {
+        panic!("Unexpected compute_cap format from nvidia-smi: '{cap_str}'");
+    }
+
+    format!("{}{}", parts[0], parts[1])
+}
+
 fn main() {
     println!("cargo:rerun-if-changed=build.rs");
 
@@ -108,6 +130,16 @@ fn build_llama(source_dir: &Path) -> PathBuf {
         "OFF"
     };
 
+    let detected_gpu_arch: String;
+    let cuda_arch_str: &str;
+
+    if cfg!(feature = "cuda-multiple-arches") {
+        cuda_arch_str = "86;89;120";
+    } else {
+        detected_gpu_arch = detect_gpu_arch();
+        cuda_arch_str = &detected_gpu_arch;
+    }
+
     // Configure CMake build
     cmake_config
         .cxxflag("-std=c++17")
@@ -122,14 +154,7 @@ fn build_llama(source_dir: &Path) -> PathBuf {
         .define("LLAMA_STATIC", "ON")
         .define("GGML_NATIVE", "OFF")
         .define("GGML_LTO", linker_plugin_lto)
-        .define(
-            "CMAKE_CUDA_ARCHITECTURES",
-            if cfg!(feature = "cuda-multiple-arches") {
-                "86;89;120"
-            } else {
-                "native"
-            },
-        );
+        .define("CMAKE_CUDA_ARCHITECTURES", cuda_arch_str);
 
     let target_cpu_regex =
         regex::Regex::new(r#"-Ctarget-cpu=((?:cortex|apple|neoverse)-[a-z0-9_]+|[a-z0-9_]+(?:-[0-9]+)?(?:-avx\d*|-v\d)?)"#)
