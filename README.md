@@ -45,7 +45,7 @@ The built binary will be available at `./target/optimized-release/sauropod-infer
 
 ## Quick start
 
-Now that the code is built run `./target/optimized-release/sauropod-inference-server --verbose --config-file examples/gemma/config.toml`.
+Now that the code is built run `./target/optimized-release/sauropod-inference-server --verbose --config-file examples/gemma.toml`.
 
 For more info see the [`configuration`](./docs/Configuration.md) docs and the [`./examples`](./examples).
 

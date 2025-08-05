@@ -1,9 +1,21 @@
-# Gemma example
+# Examples
 
-## Running the server
+## gpt-oss
 
 ```bash
-sauropod-inference-server --verbose --config-file examples/gemma/config.toml
+sauropod-inference-server --verbose --config-file examples/gpt-oss.toml
+```
+
+## Gemma
+
+```bash
+sauropod-inference-server --verbose --config-file examples/gemma.toml
+```
+
+## SmolVLM 2
+
+```bash
+sauropod-inference-server --verbose --config-file examples/smolvlm.toml
 ```
 
 ## Text client example

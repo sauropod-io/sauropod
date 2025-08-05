@@ -1,0 +1,14 @@
+verbose = true
+host = "0.0.0.0"
+
+[authentication]
+type = "api_key"
+api_key = "hardcoded_api_key"
+
+[models.default]
+model = { repo = "ggml-org/gpt-oss-20b-GGUF", file = "gpt-oss-20b-mxfp4.gguf" }
+temperature = 1.0
+top_k = 64
+top_p = 0.95
+min_p = 0.0
+maximum_tokens = 128000
