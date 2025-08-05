@@ -353,6 +353,12 @@ fn raise_exception(msg: String) -> Result<(), minijinja::Error> {
     ))
 }
 
+fn strftime_now(format_string: String) -> Result<String, minijinja::Error> {
+    let local_time = chrono::Local::now();
+    let formatted_time = local_time.format(&format_string).to_string();
+    Ok(formatted_time)
+}
+
 impl PromptTemplate {
     const DEFAULT_TEMPLATE_NAME: &'static str = "chat_template";
 
@@ -360,7 +366,9 @@ impl PromptTemplate {
     pub fn new(
         template: impl Into<std::borrow::Cow<'static, str>>,
     ) -> Result<Self, minijinja::Error> {
+        let template = template.into();
         let mut environment = minijinja::Environment::new();
+        environment.add_function("strftime_now", strftime_now);
         environment.add_function("raise_exception", raise_exception);
         environment.add_template_owned(Self::DEFAULT_TEMPLATE_NAME, template)?;
         Ok(PromptTemplate {
