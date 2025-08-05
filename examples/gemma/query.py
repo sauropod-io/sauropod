@@ -1,3 +1,9 @@
+# Script header for `uv run`:
+# /// script
+# requires-python = ">=3.9"
+# dependencies = []
+# ///
+
 from openai import OpenAI  # Install with `pip install openai`
 
 client = OpenAI(

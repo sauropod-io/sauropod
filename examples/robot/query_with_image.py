@@ -1,3 +1,9 @@
+# Script header for `uv run`:
+# /// script
+# requires-python = ">=3.9"
+# dependencies = []
+# ///
+
 import base64
 import urllib.request
 from pathlib import Path

@@ -1,3 +1,9 @@
+# Script header for `uv run`:
+# /// script
+# requires-python = ">=3.9"
+# dependencies = ["livekit-agents[openai]"]
+# ///
+
 import logging
 
 import livekit.agents.utils
