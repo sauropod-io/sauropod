@@ -197,38 +197,68 @@ jobs:
         uses: ./.github/actions/set-up-docker
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-      - name: Download container digests
+      - name: Download Vulkan container digests
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
-          path: ${{ runner.temp }}/digests
-          pattern: digests-*
+          path: ${{ runner.temp }}/digests-vulkan
+          pattern: digests-vulkan-*
           merge-multiple: true
-      - name: Docker metadata
-        id: docker-metadata
+      - name: Download CUDA container digests
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          path: ${{ runner.temp }}/digests-cuda
+          pattern: digests-cuda-*
+          merge-multiple: true
+      - name: Docker Vulkan metadata
+        id: docker-metadata-vulkan
         uses: docker/metadata-action@902fa8ec7d6ecbf8d84d538b9b233a880e428804 # v5
         with:
           flavor: |
             latest=false
+            suffix=-vulkan
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
             type=semver,pattern={{version}}
-      - name: Create container manifest list and push
-        working-directory: ${{ runner.temp }}/digests
+      - name: Docker CUDA metadata
+        id: docker-metadata-cuda
+        uses: docker/metadata-action@902fa8ec7d6ecbf8d84d538b9b233a880e428804 # v5
+        with:
+          flavor: |
+            latest=false
+            suffix=-cuda
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=semver,pattern={{version}}
+      - name: Create Vulkan container manifest list and push
+        working-directory: ${{ runner.temp }}/digests-vulkan
         run: |
           docker buildx imagetools create $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
             $(printf '${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@sha256:%s ' *)
-      - name: Get final merged image digest
+      - name: Create CUDA container manifest list and push
+        working-directory: ${{ runner.temp }}/digests-cuda
         run: |
-          echo "IMAGE_DIGEST=$(docker buildx imagetools inspect ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.docker-metadata.outputs.version  }} --format '{{ json .Manifest.Digest }}' | jq -r)" >> $GITHUB_ENV
-      - name: Attestation for Docker image
+          docker buildx imagetools create $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
+            $(printf '${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@sha256:%s ' *)
+      - name: Get final merged image digests
+        run: |
+          echo "IMAGE_DIGEST_VULKAN=$(docker buildx imagetools inspect ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.docker-metadata-vulkan.outputs.version  }} --format '{{ json .Manifest.Digest }}' | jq -r)" >> $GITHUB_ENV
+          echo "IMAGE_DIGEST_CUDA=$(docker buildx imagetools inspect ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.docker-metadata-cuda.outputs.version  }} --format '{{ json .Manifest.Digest }}' | jq -r)" >> $GITHUB_ENV
+      - name: Attestation for Vulkan Docker image
         uses: actions/attest-build-provenance@e8998f949152b193b063cb0ec769d69d929409be # v2
-        id: attest
+        id: attest-vulkan
         with:
           subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          subject-digest: ${{ env.IMAGE_DIGEST }}
+          subject-digest: ${{ env.IMAGE_DIGEST_VULKAN }}
           push-to-registry: true
         if: github.repository == 'sauropod-io/sauropod'
-
+      - name: Attestation for CUDA Docker image
+        uses: actions/attest-build-provenance@e8998f949152b193b063cb0ec769d69d929409be # v2
+        id: attest-cuda
+        with:
+          subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          subject-digest: ${{ env.IMAGE_DIGEST_CUDA }}
+          push-to-registry: true
+        if: github.repository == 'sauropod-io/sauropod'
       - name: Download X86 artifacts
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
