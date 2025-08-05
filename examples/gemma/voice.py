@@ -1,26 +1,15 @@
 import logging
-import sys
-import queue
-import threading
-import time
-from typing import AsyncIterable
-
 
 import livekit.agents.utils
 import livekit.rtc
-import numpy as np
-import serial
-import serial.tools.list_ports
 from livekit.agents import (
     Agent,
     AgentSession,
     JobContext,
     WorkerOptions,
     cli,
-    ModelSettings,
 )
 from livekit.plugins import openai
-from livekit.agents.voice.room_io import RoomInputOptions, RoomOutputOptions
 
 logger = logging.getLogger("voice-agent")
 
