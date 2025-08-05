@@ -138,8 +138,10 @@ pub struct Config {
     #[serde(default)]
     pub trace_output: Option<String>,
     #[serde(default = "Config::default_stt_model")]
+    /// The speech-to-text model to use for voice inputs to models without native audio support.
     pub stt_model: Option<ConfigModelSource>,
     #[serde(default = "Config::default_vad_model")]
+    /// The voice activity detection model to use for voice inputs.
     pub vad_model: Option<ConfigModelSource>,
     #[serde(default)]
     pub authentication: AuthenticationConfig,
