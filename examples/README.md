@@ -18,26 +18,39 @@ sauropod-inference-server --verbose --config-file examples/gemma.toml
 sauropod-inference-server --verbose --config-file examples/smolvlm.toml
 ```
 
-## Text client example
+## Client example
+
+### Text
 
 ```bash
 # Using pip:
 pip install openai
-python3 examples/gemma/query.py
+python3 examples/query.py
 
 # Using Astral uv (will automatically install dependencies):
-uv run examples/gemma/query.py
+uv run examples/query.py
 ```
 
-## Voice client example
+### Image
+
+```bash
+# Using pip:
+pip install openai
+python3 examples/query_with_image.py
+
+# Using Astral uv (will automatically install dependencies):
+uv run examples/query_with_image.py
+```
+
+### Voice
 
 ```bash
 # On Ubuntu: apt-get install libportaudio2
 
 # Using pip:
 pip install "livekit-agents[openai]"
-python3 examples/gemma/voice.py console
+python3 examples/voice.py console
 
 # Using Astral uv (will automatically install dependencies):
-uv run examples/gemma/voice.py console
+uv run examples/voice.py console
 ```
