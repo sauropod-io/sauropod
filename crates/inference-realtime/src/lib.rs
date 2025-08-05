@@ -101,9 +101,9 @@ where
                         };
                         match client_event {
                             RealtimeClientEvent::InputAudioBufferAppend { audio, .. } => {
-                                tracing::debug!(
-                                    "Received client event: InputAudioBufferAppend {{ .. }}"
-                                );
+                                // tracing::debug!(
+                                //     "Received client event: InputAudioBufferAppend {{ .. }}"
+                                // );
 
                                 if audio.is_empty() {
                                     tracing::warn!("Received empty audio data");

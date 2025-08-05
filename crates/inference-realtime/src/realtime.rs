@@ -257,7 +257,7 @@ impl crate::RealtimeFunctionality for RealtimeSessionState {
                 // Send this event to truncate a previous assistant message’s audio. The server will produce audio faster than realtime, so this event is useful when the user interrupts to truncate audio that has already been sent to the client but not yet played. This will synchronize the server's understanding of the audio with the client's playback.
                 // Truncating audio will delete the server-side text transcript to ensure there is not text in the context that hasn't been heard by the user.
                 // If successful, the server will respond with a conversation.item.truncated event.
-                anyhow::bail!("ConversationItemTruncate is not implemented yet");
+                tracing::warn!("ConversationItemTruncate is not implemented yet");
             }
 
             RealtimeClientEvent::ResponseCreate { response, .. } => {
@@ -494,7 +494,7 @@ impl RealtimeSessionState {
                         output_index,
                         ..
                     },
-                )) if text_modality => {
+                )) => {
                     last_output_index = output_index + 1;
                     socket
                         .send_event(RealtimeServerEvent::ResponseOutputItemAdded {
@@ -512,7 +512,7 @@ impl RealtimeSessionState {
                         output_index,
                         ..
                     },
-                )) if text_modality => {
+                )) => {
                     socket
                         .send_event(RealtimeServerEvent::ResponseOutputItemDone {
                             output_index,
@@ -531,17 +531,19 @@ impl RealtimeSessionState {
                         part,
                         ..
                     },
-                )) if text_modality => {
-                    socket
-                        .send_event(RealtimeServerEvent::ResponseContentPartAdded {
-                            content_index,
-                            event_id: make_id(),
-                            item_id,
-                            output_index,
-                            part: part.into(),
-                            response_id: response_id.clone().unwrap_or_default(),
-                        })
-                        .await?;
+                )) => {
+                    if !audio_modality  {
+                        socket
+                            .send_event(RealtimeServerEvent::ResponseContentPartAdded {
+                                content_index,
+                                event_id: make_id(),
+                                item_id,
+                                output_index,
+                                part: part.into(),
+                                response_id: response_id.clone().unwrap_or_default(),
+                            })
+                            .await?;
+                    }
                 }
 
                 Some(Ok(
@@ -552,65 +554,18 @@ impl RealtimeSessionState {
                         part,
                         ..
                     },
-                )) if text_modality => {
-                    socket
-                        .send_event(RealtimeServerEvent::ResponseContentPartDone {
-                            content_index,
-                            event_id: make_id(),
-                            item_id,
-                            output_index,
-                            part: part.into(),
-                            response_id: response_id.clone().unwrap_or_default(),
-                        })
-                        .await?;
-                }
-
-                Some(Ok(sauropod_openai_api::ResponseStreamEvent::ResponseTextDeltaEvent {
-                    content_index,
-                    delta,
-                    item_id,
-                    output_index,
-                    ..
-                })) if text_modality => {
-                    socket
-                        .send_event(RealtimeServerEvent::ResponseTextDelta {
-                            content_index,
-                            event_id: make_id(),
-                            delta,
-                            item_id,
-                            output_index,
-                            response_id: response_id.clone().unwrap_or_default(),
-                        })
-                        .await?;
-                }
-
-                Some(Ok(sauropod_openai_api::ResponseStreamEvent::ResponseTextDoneEvent {
-                    content_index,
-                    item_id,
-                    output_index,
-                    text,
-                    ..
-                })) => {
-                    if text_modality {
-                        socket
-                            .send_event(RealtimeServerEvent::ResponseTextDone {
-                                content_index,
-                                event_id: make_id(),
-                                text: text.clone(),
-                                item_id: item_id.clone(),
-                                output_index,
-                                response_id: response_id.clone().unwrap_or_default(),
-                            })
-                            .await?;
-                    }
-
+                )) => {
                     if audio_modality {
                         let voice_name = self.get_voice_name().await;
                         let Some(tts_model) = self.global_state.get_voice_model(&voice_name).await else {
                             anyhow::bail!("{} is not an available voice", voice_name);
                         };
 
-                        let pcm16_audio = tts_model.enqueue(text.to_string()).await?;
+                        let text = match part.clone() {
+                            sauropod_openai_api::OutputContent::OutputTextContent(text_content) => text_content.text,
+                            sauropod_openai_api::OutputContent::RefusalContent(refusal) => refusal.refusal,
+                        };
+                        let pcm16_audio = tts_model.enqueue(text.clone()).await?;
                         let mut audio_bytes = Vec::with_capacity(pcm16_audio.len() * 2);
                         for sample in pcm16_audio.iter() {
                             audio_bytes.extend_from_slice(&sample.to_le_bytes());
@@ -622,7 +577,7 @@ impl RealtimeSessionState {
                                 event_id: make_id(),
                                 item_id: item_id.clone(),
                                 output_index: last_output_index,
-                                part: sauropod_openai_api::RealtimeServerEventResponseContentPartAddedPart { audio: Some("".to_string()), text: None, transcript: Some(text.clone()), r#type: Some(sauropod_openai_api::Modalities::Audio) },
+                                part: sauropod_openai_api::RealtimeServerEventResponseContentPartAddedPart { audio: Some(base64_audio.clone()), text: None, transcript: Some(text.clone()), r#type: Some(sauropod_openai_api::Modalities::Audio) },
                                 response_id: response_id.clone().unwrap_or_default()
                             })
                             .await?;
@@ -645,18 +600,61 @@ impl RealtimeSessionState {
                                 response_id: response_id.clone().unwrap_or_default(),
                             })
                             .await?;
+                    }
+
+                    if text_modality  {
                         socket
                             .send_event(RealtimeServerEvent::ResponseContentPartDone {
                                 content_index,
                                 event_id: make_id(),
-                                item_id: item_id.clone(),
-                                output_index: last_output_index,
-                                part: sauropod_openai_api::RealtimeServerEventResponseContentPartDonePart { audio: Some(base64_audio), text: None, transcript: Some(text.clone()), r#type: Some(sauropod_openai_api::Modalities::Audio) },
+                                item_id,
+                                output_index,
+                                part: part.into(),
                                 response_id: response_id.clone().unwrap_or_default(),
                             })
                             .await?;
+                    }
+                }
 
-                        }
+                Some(Ok(sauropod_openai_api::ResponseStreamEvent::ResponseTextDeltaEvent {
+                    content_index,
+                    delta,
+                    item_id,
+                    output_index,
+                    ..
+                })) => {
+                    if text_modality  {
+                        socket
+                            .send_event(RealtimeServerEvent::ResponseTextDelta {
+                                content_index,
+                                event_id: make_id(),
+                                delta,
+                                item_id,
+                                output_index,
+                                response_id: response_id.clone().unwrap_or_default(),
+                            })
+                            .await?;
+}                }
+
+                Some(Ok(sauropod_openai_api::ResponseStreamEvent::ResponseTextDoneEvent {
+                    content_index,
+                    item_id,
+                    output_index,
+                    text,
+                    ..
+                })) => {
+                    if text_modality {
+                        socket
+                            .send_event(RealtimeServerEvent::ResponseTextDone {
+                                content_index,
+                                event_id: make_id(),
+                                text: text.clone(),
+                                item_id: item_id.clone(),
+                                output_index,
+                                response_id: response_id.clone().unwrap_or_default(),
+                            })
+                            .await?;
+                    }
                 }
 
                 Some(Ok(sauropod_openai_api::ResponseStreamEvent::ResponseFunctionCallArgumentsDoneEvent {
