@@ -16,9 +16,9 @@ Sauropod's inference platform.
 Either Vulkan, CUDA, or Metal can be used as the inference backend.
 
 - [`libvulkan`](https://www.vulkan.org/) and [glslc](https://github.com/google/shaderc/tree/main/glslc) - required when building with `--features=vulkan`
-  - Debian or Ubuntu: `sudo apt-get install clang lld cmake glslc libssl-dev libvulkan-dev pkg-config`
+  - Debian or Ubuntu: `sudo apt-get install build-essential clang lld cmake glslc libssl-dev libvulkan-dev pkg-config`
 - [CUDA](https://docs.nvidia.com/cuda/cuda-toolkit-release-notes/index.html) - required when building with `--features=cuda`
-  - Debian or Ubuntu: `sudo apt-get install clang lld cmake glslc libssl-dev nvidia-cuda-toolkit pkg-config`
+  - Debian or Ubuntu: `sudo apt-get install build-essential clang lld cmake glslc libssl-dev nvidia-cuda-toolkit pkg-config`
 
 ## Build
 
