@@ -24,7 +24,7 @@ Either Vulkan, CUDA, or Metal can be used as the inference backend.
   - Debian or Ubuntu: `sudo apt-get install build-essential clang lld cmake glslc libssl-dev libvulkan-dev pkg-config`
   - Arch Linux: `sudo pacman -S base-devel clang lld cmake openssl shaderc vulkan-icd-loader`
 - [CUDA](https://docs.nvidia.com/cuda/cuda-toolkit-release-notes/index.html) - required when building with `--features=cuda`
-  - Debian or Ubuntu: `sudo apt-get install build-essential clang lld cmake glslc libssl-dev nvidia-cuda-toolkit pkg-config`
+  - Debian or Ubuntu: `sudo apt-get install build-essential clang lld cmake libssl-dev nvidia-cuda-toolkit pkg-config`
   - Arch Linux: `sudo pacman -S base-devel clang lld cmake openssl cuda`
 
 ## Build
