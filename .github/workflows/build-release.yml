@@ -41,7 +41,7 @@ jobs:
                 goarch,
                 os,
                 image,
-                binary_suffix: `${arch}-${os}`,
+                binary_suffix: `${os}-${arch}`,
                 rustflags: '',
               };
               if (march) {
@@ -98,7 +98,10 @@ jobs:
       - name: Build the release
         run: |
           make release CARGO_FEATURES="${{ matrix.variant }}"
-          mv target/optimized-release/sauropod-inference-server sauropod-inference-server-${{ matrix.binary_suffix }}
+          mkdir sauropod-inference-server-${{ matrix.binary_suffix }}
+          mv target/optimized-release/sauropod-inference-server sauropod-inference-server-${{ matrix.binary_suffix }}/
+          mv target/optimized-release/libonnx* sauropod-inference-server-${{ matrix.binary_suffix }}/
+          tar -czf sauropod-inference-server-${{ matrix.binary_suffix }}.tar.gz sauropod-inference-server-${{ matrix.binary_suffix }}
         env:
           SCCACHE_GHA_ENABLED: "true"
           RUSTC_WRAPPER: "sccache"
@@ -108,12 +111,12 @@ jobs:
         id: upload
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: sauropod-inference-server-${{ matrix.binary_suffix }}
+          name: sauropod-inference-server-${{ matrix.binary_suffix }}.tar.gz
           path: |
-            sauropod-inference-server-${{ matrix.binary_suffix }}
+            sauropod-inference-server-${{ matrix.binary_suffix }}.tar.gz
       - uses: actions/attest-build-provenance@e8998f949152b193b063cb0ec769d69d929409be # v2
         with:
-          subject-name: sauropod-inference-server-${{ matrix.binary_suffix }}
+          subject-name: sauropod-inference-server-${{ matrix.binary_suffix }}.tar.gz
           subject-digest: sha256:${{ steps.upload.outputs.artifact-digest }}
         if: github.repository == 'sauropod-io/sauropod'
 
@@ -232,13 +235,13 @@ jobs:
           path: binaries
           # We don't use `sauropod-inference-server-*` here because it will capture Docker artifacts
           pattern: |
-            sauropod-inference-server-x86_64-*
+            sauropod-inference-server-*-x86_64*
           merge-multiple: true
       - name: Download Aarch64 artifacts
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           path: binaries
-          pattern: sauropod-inference-server-aarch64-*
+          pattern: sauropod-inference-server-*-aarch64*
           merge-multiple: true
         if: github.repository == 'sauropod-io/sauropod'
       - name: Create release
