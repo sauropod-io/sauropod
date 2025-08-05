@@ -22,7 +22,7 @@ fn discover_cuda() -> Option<PathBuf> {
         }
     }
 
-    return None;
+    None
 }
 
 fn main() {
@@ -163,7 +163,7 @@ fn build_llama(source_dir: &Path) -> PathBuf {
             if let Some(cuda_path) = discover_cuda() {
                 let target_dir = cuda_path
                     .join("targets")
-                    .join(format!("{}-linux-gnu", target_arch));
+                    .join(format!("{target_arch}-linux-gnu"));
                 if target_dir.exists() {
                     println!(
                         "cargo:rustc-link-search=native={}/stubs",
