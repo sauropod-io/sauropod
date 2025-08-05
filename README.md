@@ -7,6 +7,7 @@ Sauropod's inference platform.
 ## Dependencies
 
 - [Rust](https://www.rust-lang.org/tools/install) >= 1.85
+  - Debian or Ubuntu: `sudo apt-get install rustup; rustup install stable`
 - [Clang](https://clang.llvm.org/)
 - [CMake](https://cmake.org/)
 - OpenSSL
