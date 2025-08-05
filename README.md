@@ -2,12 +2,12 @@
 
 Sauropod's inference platform.
 
-- Compatible with OpenAI's Responses API and their Realtime WebSocket API
+- Compatible with OpenAI's [Responses API](/home/steph/sauropod-io/sauropod-oss/README.md) and their [Realtime WebSocket API](https://platform.openai.com/docs/guides/realtime)
 
 ## Quick start
 
 ```bash
-docker run --rm -it --gpus=all -v ./examples/gemma:/root/.config/sauropod:ro -v $HOME/.cache:/root/.cache ghcr.io/sauropod-io/sauropod:1.0.0-cuda
+docker run --rm -it --gpus=all -v ./examples/gemma:/root/.config/sauropod:ro -v $HOME/.cache:/root/.cache ghcr.io/sauropod-io/sauropod:latest-cuda
 ```
 
 ## Dependencies
