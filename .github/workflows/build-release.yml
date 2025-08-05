@@ -141,7 +141,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
       - name: Docker metadata
         id: docker-metadata
-        uses: docker/metadata-action@902fa8ec7d6ecbf8d84d538b9b233a880e428804 # v5
+        uses: docker/metadata-action@c1e51972afc2121e065aed6d45c65596fe445f3f # v5
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           labels: |
@@ -211,7 +211,7 @@ jobs:
           merge-multiple: true
       - name: Docker Vulkan metadata
         id: docker-metadata-vulkan
-        uses: docker/metadata-action@902fa8ec7d6ecbf8d84d538b9b233a880e428804 # v5
+        uses: docker/metadata-action@c1e51972afc2121e065aed6d45c65596fe445f3f # v5
         with:
           flavor: |
             latest=false
@@ -221,7 +221,7 @@ jobs:
             type=semver,pattern={{version}}
       - name: Docker CUDA metadata
         id: docker-metadata-cuda
-        uses: docker/metadata-action@902fa8ec7d6ecbf8d84d538b9b233a880e428804 # v5
+        uses: docker/metadata-action@c1e51972afc2121e065aed6d45c65596fe445f3f # v5
         with:
           flavor: |
             latest=false
