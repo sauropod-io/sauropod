@@ -38,13 +38,23 @@ fn detect_gpu_arch() -> String {
         );
     }
 
-    let cap_str = String::from_utf8_lossy(&output.stdout).trim().to_string();
-    let parts: Vec<&str> = cap_str.split('.').collect();
-    if parts.len() != 2 {
-        panic!("Unexpected compute_cap format from nvidia-smi: '{cap_str}'");
-    }
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let mut archs = stdout
+        .lines()
+        .map(|line| {
+            let trimmed = line.trim();
+            let parts: Vec<&str> = trimmed.split('.').collect();
+            if parts.len() != 2 {
+                panic!("Unexpected compute_cap format from nvidia-smi: '{trimmed}'");
+            }
+            format!("{}{}", parts[0], parts[1])
+        })
+        .collect::<std::collections::HashSet<_>>(); // deduplicate
 
-    format!("{}{}", parts[0], parts[1])
+    let mut archs_vec = archs.drain().collect::<Vec<_>>();
+    archs_vec.sort(); // optional: for consistent output order
+
+    archs_vec.join(";")
 }
 
 fn main() {
