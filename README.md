@@ -4,6 +4,12 @@ Sauropod's inference platform.
 
 - Compatible with OpenAI's Responses API and their Realtime WebSocket API
 
+## Quick start
+
+```bash
+docker run --rm -it --gpus=all -v ./examples/gemma:/root/.config/sauropod:ro -v $HOME/.cache:/root/.cache ghcr.io/sauropod-io/sauropod:1.0.0-cuda
+```
+
 ## Dependencies
 
 - [Rust](https://www.rust-lang.org/tools/install) >= 1.85
@@ -39,13 +45,12 @@ cargo build --locked --profile=optimized-release --features=vulkan --package=sau
 
 # For systems with Nvidia GPUs
 cargo build --locked --profile=optimized-release --no-default-features --features=cuda --package=sauropod-inference-server
+
+# Now you can run the server - for example:
+`./target/optimized-release/sauropod-inference-server --verbose --config-file examples/gemma.toml`.
 ```
 
 The built binary will be available at `./target/optimized-release/sauropod-inference-server`.
-
-## Quick start
-
-Now that the code is built run `./target/optimized-release/sauropod-inference-server --verbose --config-file examples/gemma.toml`.
 
 For more info see the [`configuration`](./docs/Configuration.md) docs and the [`./examples`](./examples).
 
