@@ -11,6 +11,8 @@ Sauropod's inference platform.
 - [CMake](https://cmake.org/)
 - OpenSSL
 
+For development dependencies - see [`./CONTRIBUTING.md`](./CONTRIBUTING.md)
+
 ### Backend dependencies
 
 Either Vulkan, CUDA, or Metal can be used as the inference backend.
