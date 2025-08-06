@@ -198,13 +198,13 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
       - name: Download Vulkan container digests
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5
         with:
           path: ${{ runner.temp }}/digests-vulkan
           pattern: digests-vulkan-*
           merge-multiple: true
       - name: Download CUDA container digests
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5
         with:
           path: ${{ runner.temp }}/digests-cuda
           pattern: digests-cuda-*
@@ -260,7 +260,7 @@ jobs:
           push-to-registry: true
         if: github.repository == 'sauropod-io/sauropod'
       - name: Download X86 artifacts
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5
         with:
           path: binaries
           # We don't use `sauropod-inference-server-*` here because it will capture Docker artifacts
@@ -268,7 +268,7 @@ jobs:
             sauropod-inference-server-*-x86_64*
           merge-multiple: true
       - name: Download Aarch64 artifacts
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5
         with:
           path: binaries
           pattern: sauropod-inference-server-*-aarch64*
