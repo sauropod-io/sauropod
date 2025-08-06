@@ -7,6 +7,7 @@ use flate2::read::GzDecoder;
 use tar::Archive;
 
 const VERSION: &str = "fd1234cb468935ea087d6929b2487926c3afff4b";
+const DEFAULT_CUDA_ARCH: &str = "86;89;120"; // Default CUDA architectures to target
 
 /// Discover the CUDA installation path.
 fn discover_cuda() -> Option<PathBuf> {
@@ -26,10 +27,16 @@ fn discover_cuda() -> Option<PathBuf> {
 }
 
 fn detect_gpu_arch() -> String {
-    let output = std::process::Command::new("nvidia-smi")
+    let output = match std::process::Command::new("nvidia-smi")
         .args(["--query-gpu=compute_cap", "--format=csv,noheader"])
         .output()
-        .expect("Failed to execute nvidia-smi");
+    {
+        Ok(output) => output,
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
+            return "native".to_string();
+        }
+        Err(e) => panic!("Failed to execute nvidia-smi: {e}"),
+    };
 
     if !output.status.success() {
         panic!(
@@ -144,7 +151,7 @@ fn build_llama(source_dir: &Path) -> PathBuf {
     let cuda_arch_str: &str;
 
     if cfg!(feature = "cuda-multiple-arches") {
-        cuda_arch_str = "86;89;120";
+        cuda_arch_str = DEFAULT_CUDA_ARCH;
     } else {
         detected_gpu_arch = detect_gpu_arch();
         cuda_arch_str = &detected_gpu_arch;
