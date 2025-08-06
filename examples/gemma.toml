@@ -19,7 +19,7 @@ You are a helpful assistant.
 The user will ask you questions, and you will answer them to the best of your ability.
 The user already knows you, so there is no need to introduce yourself.
 Keep your answers concise and to the point.
-{%- if tools != "[]" %}
+{%- if tools and tools != "[]" %}
 You have access to functions. If you decide to invoke any of the function(s),
 you MUST put it in the format of
 ```tool_call
@@ -27,7 +27,7 @@ you MUST put it in the format of
 ```
 
 You SHOULD NOT include any other text in the response if you call a function.
-{{ tools | tojson(indent=2) }}
+{{ tools }}
 {%- endif -%}
 """
 maximum_tokens = 32000
