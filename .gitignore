@@ -2,4 +2,5 @@
 
 .claude/settings.local.json
 .env.local
+.vscode/settings.json
 tmp.db

@@ -24,7 +24,7 @@ impl GlobalState {
     pub async fn new(config: &sauropod_config::Config) -> anyhow::Result<Self> {
         Self::new_with_database(
             config,
-            sauropod_database::create_database(std::path::Path::new(&config.database_path)).await?,
+            sauropod_database::create_database(std::path::Path::new(&config.database)).await?,
         )
         .await
     }

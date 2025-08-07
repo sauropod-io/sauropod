@@ -17,6 +17,10 @@ cuda-multiple-arches = [ # Enable CUDA targeting multiple compute capabilities
     "cuda",
     "sauropod-inference-engine/cuda-multiple-arches",
 ]
+jetson = [ # Enable CUDA targeting Jetson platforms
+    "cuda",
+    "sauropod-inference-engine/jetson",
+]
 vulkan = ["sauropod-inference-engine/vulkan"]
 profiling = ["sauropod-profiling/profiling"]
 

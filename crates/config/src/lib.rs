@@ -121,7 +121,7 @@ pub struct Config {
     pub verbose: bool,
     /// The path to the SQLite database.
     #[serde(default)]
-    pub database_path: String,
+    pub database: String,
     /// The host address to listen on.
     #[serde(default)]
     pub host: String,
@@ -191,7 +191,7 @@ impl Config {
     ) -> anyhow::Result<Self> {
         let dirs = directories::ProjectDirs::from("io", "sauropod", "sauropod");
         let data_dir = dirs.as_ref().map(|dirs| dirs.data_dir());
-        let default_database_path = data_dir.map(|path: &std::path::Path| {
+        let default_database = data_dir.map(|path: &std::path::Path| {
             path.join("database.sqlite").to_string_lossy().to_string()
         });
 
@@ -199,8 +199,8 @@ impl Config {
             .add_source(config::File::from(file_path))
             .add_source(vec![cli_overrides]);
 
-        let settings_builder = if let Some(default_database_path) = default_database_path {
-            settings_builder.set_default("database_path", default_database_path)?
+        let settings_builder = if let Some(default_database) = default_database {
+            settings_builder.set_default("database", default_database)?
         } else {
             settings_builder
         };
@@ -233,7 +233,7 @@ impl Default for Config {
     fn default() -> Self {
         Self {
             verbose: Self::default_verbose(),
-            database_path: "".to_string(),
+            database: "".to_string(),
             host: "".to_string(),
             port: Self::default_port(),
             models: HashMap::new(),

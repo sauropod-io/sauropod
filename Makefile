@@ -23,7 +23,7 @@ generate-dockerfiles:
 	cargo run -p generate-dockerfiles
 
 # Artifact building targets
-.PHONY: release release-cuda docker-vulkan docker-cuda
+.PHONY: release release-cuda release-jetpack-6-2 docker-vulkan docker-cuda docker-jetpack-6-2
 release:
 	@rust_sysroot=$$(rustc --print sysroot); \
 	rust_lld_wrapper=$$(find $$rust_sysroot -name ld.lld | head -n 1); \
@@ -61,11 +61,17 @@ release-vulkan:
 release-cuda:
 	$(MAKE) release CARGO_FEATURES=cuda-multiple-arches
 
+release-jetpack-6-2:
+	$(MAKE) release CARGO_FEATURES=jetson
+
 docker-vulkan:
 	docker build -t ghcr.io/sauropod-io/sauropod:latest -f docker/Dockerfile.vulkan .
 
 docker-cuda:
 	docker build -t ghcr.io/sauropod-io/sauropod:latest -f docker/Dockerfile.cuda .
+
+docker-jetpack-6-2:
+	docker build -t ghcr.io/sauropod-io/sauropod:latest -f docker/Dockerfile.jetpack_6_2 .
 
 # sqlx-related targets
 .PHONY: sqlx-migrate sqlx-set-up sqlx-reset sqlx-prepare show-current-schema

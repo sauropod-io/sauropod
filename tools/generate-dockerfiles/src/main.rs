@@ -14,8 +14,16 @@ fn repo_root() -> std::path::PathBuf {
 fn main() -> anyhow::Result<()> {
     let root = repo_root();
     let docker_directory = root.join("docker");
-    generate_dockerfiles::generate_code_for_docker(&docker_directory.join("Dockerfile.cuda"))?;
-    generate_dockerfiles::generate_code_for_docker(&docker_directory.join("Dockerfile.vulkan"))?;
+    for docker_file in docker_directory.read_dir()? {
+        let docker_file = docker_file?;
+        if docker_file
+            .file_name()
+            .to_string_lossy()
+            .starts_with("Dockerfile.")
+        {
+            generate_dockerfiles::generate_code_for_docker(&docker_file.path())?;
+        }
+    }
 
     Ok(())
 }

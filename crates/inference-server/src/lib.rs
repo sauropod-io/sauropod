@@ -5,6 +5,9 @@ pub struct Cli {
     /// The path to the TOML config file to load.
     #[arg(short, long, env = "SAUROPOD_CONFIG_FILE")]
     pub config_file: Option<std::path::PathBuf>,
+    /// The path to the SQLite database file.
+    #[arg(short, long, env = "SAUROPOD_DATABASE")]
+    pub database: Option<String>,
     /// The port to listen on.
     #[arg(short, long, default_value = "3000", env = "SAUROPOD_PORT")]
     pub port: u16,
@@ -27,5 +30,8 @@ pub fn make_config_source(cli: &Cli) -> anyhow::Result<sauropod_config::ClapConf
     source.add_value("host".to_string(), cli.host.clone())?;
     source.add_value("verbose".to_string(), cli.verbose)?;
     source.add_value("trace_output".to_string(), cli.trace_output.clone())?;
+    if let Some(database) = &cli.database {
+        source.add_value("database".to_string(), database.clone())?;
+    }
     Ok(source)
 }

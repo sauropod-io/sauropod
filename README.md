@@ -7,7 +7,16 @@ Sauropod's inference platform.
 ## Quick start
 
 ```bash
-docker run --rm -it --gpus=all -v ./examples/gemma:/root/.config/sauropod:ro -v $HOME/.cache:/root/.cache ghcr.io/sauropod-io/sauropod:latest-cuda
+docker run --rm -it --init \
+  --gpus=all \
+  -p 3000:3000 \
+  --user $(id -u):$(id -g) \
+  -e HOME=/home/$(whoami) \
+  -e USER=$(whoami) \
+  -e SAUROPOD_DATABASE=/tmp/sauropod.sqlite \
+  --volume "./examples/gemma.toml:$HOME/.config/sauropod/config.toml:ro" \
+  --volume "$HOME/.cache:$HOME/.cache" \
+  ghcr.io/sauropod-io/sauropod:latest-cuda
 ```
 
 ## Dependencies
