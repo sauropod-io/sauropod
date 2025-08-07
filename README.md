@@ -47,7 +47,7 @@ cargo build --locked --profile=optimized-release --features=vulkan --package=sau
 cargo build --locked --profile=optimized-release --no-default-features --features=cuda --package=sauropod-inference-server
 
 # Now you can run the server - for example:
-`./target/optimized-release/sauropod-inference-server --verbose --config-file examples/gemma.toml`.
+./target/optimized-release/sauropod-inference-server --verbose --config-file examples/gemma.toml
 ```
 
 The built binary will be available at `./target/optimized-release/sauropod-inference-server`.

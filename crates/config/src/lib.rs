@@ -81,7 +81,7 @@ impl VoiceConfig {
 
     fn default_orpheus_model() -> ConfigModelSource {
         ConfigModelSource::from_huggingface(
-            "unsloth/orpheus-3b-0.1-ft-GGUF:",
+            "unsloth/orpheus-3b-0.1-ft-GGUF",
             Some(PathOrQuantization::Quantization {
                 quantization: "Q4_K_M".to_string(),
             }),

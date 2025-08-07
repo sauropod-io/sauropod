@@ -157,18 +157,19 @@ impl LoadedModels {
                             }
                             ConfigModelSource::LocalPath(dir) => std::path::PathBuf::from(dir),
                         };
-                        let model = Arc::new(
+                        let model =
                             sauropod_tts::kokoro::make_tts_thread(&onnxruntime_env, &model_dir)
-                                .await?,
-                        );
-                        model
-                            .enqueue(sauropod_tts::TtsRequest {
-                                text: "Hi.".to_string(),
-                                voice: Some(voice.clone()),
-                            })
+                                .await?;
+                        let mut receiver = model
+                            .enqueue("Hi.".to_string(), Some(voice.clone()))
                             .instrument(tracing::info_span!("Warm up Kokoro TTS"))
                             .await
                             .context("Failed to warm up Kokoro TTS")?;
+                        while let Some(msg) = receiver.recv().await {
+                            if msg.is_err() {
+                                tracing::warn!("Error in Kokoro TTS warm up: {:?}", msg);
+                            }
+                        }
                         Ok(model)
                     })
                     .await?
@@ -178,18 +179,19 @@ impl LoadedModels {
                     ..
                 } => {
                     get_or_create(&mut source_to_tts_pointer, model_source, async || {
-                        let model = Arc::new(
+                        let model =
                             sauropod_tts::orpheus::make_tts_thread(&onnxruntime_env, model_source)
-                                .await?,
-                        );
-                        model
-                            .enqueue(sauropod_tts::TtsRequest {
-                                text: "Hi.".to_string(),
-                                voice: None,
-                            })
+                                .await?;
+                        let mut receiver = model
+                            .enqueue("Hi.".to_string(), None)
                             .instrument(tracing::info_span!("Warm up Orpheus TTS"))
                             .await
                             .context("Failed to warm up Orpheus TTS")?;
+                        while let Some(msg) = receiver.recv().await {
+                            if msg.is_err() {
+                                tracing::warn!("Error in Kokoro TTS warm up: {:?}", msg);
+                            }
+                        }
                         Ok(model)
                     })
                     .await?
