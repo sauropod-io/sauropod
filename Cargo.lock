@@ -3503,6 +3503,7 @@ dependencies = [
  "base64 0.22.1",
  "byteorder",
  "bytes",
+ "chrono",
  "futures",
  "hf-hub",
  "rand 0.9.2",

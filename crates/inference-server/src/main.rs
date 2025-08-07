@@ -16,8 +16,7 @@ fn create_api_router(
     let (router, mut spec) =
         utoipa_axum::router::OpenApiRouter::<Arc<sauropod_global_state::GlobalState>>::new()
             .routes(utoipa_axum::routes!(
-                sauropod_inference_realtime::get_v1_realtime,
-                sauropod_inference_realtime::realtime_webrtc::post_v1_realtime,
+                sauropod_inference_realtime::get_v1_realtime
             ))
             .routes(utoipa_axum::routes!(
                 sauropod_inference_realtime::realtime_webrtc::v1_realtime_sessions
@@ -30,6 +29,14 @@ fn create_api_router(
             .routes(utoipa_axum::routes!(
                 sauropod_inference_responses::get_models
             ))
+            .layer(axum::middleware::from_fn_with_state(
+                global_state.clone(),
+                sauropod_inference_http::auth_middleware,
+            ))
+            // This is an unauthenticated route because it uses a pre-negotiated token
+            .routes(utoipa_axum::routes!(
+                sauropod_inference_realtime::realtime_webrtc::post_v1_realtime
+            ))
             .split_for_parts();
 
     spec.info.title = env!("CARGO_PKG_NAME").to_string();
@@ -39,17 +46,12 @@ fn create_api_router(
     spec.info.version = env!("CARGO_PKG_VERSION").to_string();
 
     (
-        router
-            .layer(axum::middleware::from_fn_with_state(
-                global_state.clone(),
-                sauropod_inference_http::auth_middleware,
-            ))
-            .layer(
-                tower_http::cors::CorsLayer::new()
-                    .allow_origin(tower_http::cors::Any)
-                    .allow_methods(tower_http::cors::Any)
-                    .allow_headers(tower_http::cors::Any),
-            ),
+        router.layer(
+            tower_http::cors::CorsLayer::new()
+                .allow_origin(tower_http::cors::Any)
+                .allow_methods(tower_http::cors::Any)
+                .allow_headers(tower_http::cors::Any),
+        ),
         spec,
     )
 }

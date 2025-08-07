@@ -79,6 +79,19 @@ impl futures::Sink<axum::extract::ws::Message> for WebSocketInterface {
 
 impl crate::SocketLike for WebSocketInterface {}
 
+fn in_memory_tokens() -> &'static tokio::sync::Mutex<
+    std::collections::HashMap<String, sauropod_openai_api::RealtimeSessionCreateResponse>,
+> {
+    // This is a placeholder for the in-memory responses.
+    // In a real application, this would query a database or other storage.
+    static RESPONSES: std::sync::OnceLock<
+        tokio::sync::Mutex<
+            std::collections::HashMap<String, sauropod_openai_api::RealtimeSessionCreateResponse>,
+        >,
+    > = std::sync::OnceLock::new();
+    RESPONSES.get_or_init(|| tokio::sync::Mutex::new(std::collections::HashMap::new()))
+}
+
 /// Model for the WebRTC connection.
 #[derive(serde::Deserialize, utoipa::IntoParams)]
 pub struct ModelParam {
@@ -314,9 +327,47 @@ pub async fn post_v1_realtime_impl(
 )]
 pub async fn post_v1_realtime(
     axum::extract::State(state): sauropod_global_state::AxumGlobalState,
+    headers: axum::http::header::HeaderMap,
     _query: Query<ModelParam>,
     sdp_offer: String,
 ) -> impl IntoResponse {
+    let Some(auth_header) = headers.get(axum::http::header::AUTHORIZATION) else {
+        return sauropod_inference_http::HttpResponse::Unauthorized::<()>(
+            "Missing Authorization header".to_string(),
+        )
+        .into_response();
+    };
+    let Some(token) = auth_header
+        .to_str()
+        .ok()
+        .and_then(|x| x.strip_prefix("Bearer "))
+        .map(|x| x.trim())
+    else {
+        return sauropod_inference_http::HttpResponse::Unauthorized::<()>(
+            "Invalid Authorization header".to_string(),
+        )
+        .into_response();
+    };
+
+    let session = {
+        let mut tokens = in_memory_tokens().lock().await;
+        match tokens.remove(token) {
+            Some(session) => session,
+            None => {
+                return sauropod_inference_http::HttpResponse::Unauthorized::<()>(
+                    "Invalid token".to_string(),
+                )
+                .into_response();
+            }
+        }
+    };
+    if session.client_secret.expires_at < chrono::Utc::now().timestamp() {
+        return sauropod_inference_http::HttpResponse::Unauthorized::<()>(
+            "Token expired".to_string(),
+        )
+        .into_response();
+    }
+
     match post_v1_realtime_impl(sdp_offer, state).await {
         Ok(response) => response,
         Err(err) => {
@@ -347,9 +398,10 @@ pub async fn v1_realtime_sessions(
         sauropod_openai_api::RealtimeSessionCreateRequest,
     >,
 ) -> impl IntoResponse {
-    axum::response::Json(sauropod_openai_api::RealtimeSessionCreateResponse {
+    let now = chrono::Utc::now() + std::time::Duration::from_secs(60);
+    let response = sauropod_openai_api::RealtimeSessionCreateResponse {
         client_secret: sauropod_openai_api::RealtimeSessionCreateResponseClientSecret {
-            expires_at: 0, // TODO
+            expires_at: now.timestamp(),
             value: crate::make_id(),
         },
         input_audio_format: None,
@@ -365,6 +417,8 @@ pub async fn v1_realtime_sessions(
         tracing: None,
         turn_detection: None,
         voice: None,
-    })
-    .into_response()
+    };
+    let mut tokens_map = in_memory_tokens().lock().await;
+    tokens_map.insert(response.client_secret.value.clone(), response.clone());
+    axum::response::Json(response).into_response()
 }
