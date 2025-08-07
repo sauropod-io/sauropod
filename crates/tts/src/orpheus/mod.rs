@@ -60,14 +60,22 @@ impl Orpheus {
             decoder,
         })
     }
+}
 
-    async fn generate_from_request(&self, request: &crate::TtsRequest) -> anyhow::Result<Vec<i16>> {
+#[async_trait::async_trait]
+impl crate::TtsProvider for Orpheus {
+    fn name(&self) -> &'static str {
+        "orpheus"
+    }
+
+    async fn process(
+        &self,
+        text: String,
+        voice: Option<String>,
+        sender: &'async_trait crate::AudioSender,
+    ) -> anyhow::Result<()> {
         // The input format is: <custom_token_3><|begin_of_text|>VOICE: PROMPT<|eot_id|><custom_token_4><custom_token_5><custom_token_1>
-        let text = format!(
-            "{}: {}",
-            request.voice.as_deref().unwrap_or("tara"),
-            request.text
-        );
+        let text = format!("{}: {}", voice.as_deref().unwrap_or("tara"), text);
         let mut tokenized = vec![128259];
         tokenized.extend(
             self.tokenizer
@@ -94,7 +102,6 @@ impl Orpheus {
             )
             .await?;
 
-        let mut audio = Vec::new();
         // We process 7 tokens per batch, 4 batches at a time. The preceeding 3 batches are used for context.
         let mut snac_values = VecDeque::with_capacity(7 * 4);
         while let Some(part) = token_stream.next().await {
@@ -110,31 +117,18 @@ impl Orpheus {
 
             if snac_values.len() % 7 == 0 && snac_values.len() >= 28 {
                 let input = snac_values.make_contiguous();
-                audio.extend(
-                    self.decoder
-                        .decode(input)?
-                        .iter()
-                        .map(|&t| (t * 32767.0) as i16), // Scale float to i16 range
-                );
+                let audio = self
+                    .decoder
+                    .decode(input)?
+                    .iter()
+                    .map(|&t| (t * 32767.0) as i16) // Scale float to i16 range
+                    .collect();
+                if let Err(e) = sender.send(Ok(audio)).await {
+                    tracing::warn!("Failed to send audio data: {e:?}");
+                }
                 snac_values.drain(0..7);
             }
         }
-        Ok(audio)
-    }
-}
-
-impl sauropod_inference_thread::InferenceProvider for Orpheus {
-    type Input = crate::TtsRequest;
-    type Output = Vec<i16>;
-
-    fn process(
-        &self,
-        input: &[Self::Input],
-        output: &mut Vec<anyhow::Result<Self::Output>>,
-    ) -> anyhow::Result<()> {
-        anyhow::ensure!(input.len() == 1, "TTS model expects exactly one input");
-        let result = futures_lite::future::block_on(self.generate_from_request(&input[0]));
-        output.push(result);
         Ok(())
     }
 }
@@ -143,9 +137,9 @@ impl sauropod_inference_thread::InferenceProvider for Orpheus {
 pub async fn make_tts_thread(
     ort_env: &sauropod_onnxruntime::Env,
     model_source: &sauropod_config::ConfigModelSource,
-) -> anyhow::Result<crate::TtsThread> {
-    let provider = Orpheus::new(ort_env, model_source).await?;
-    Ok(crate::TtsThread::new("orpheus".to_string(), 1, provider)?)
+) -> anyhow::Result<std::sync::Arc<crate::TtsThread>> {
+    let provider = Box::new(Orpheus::new(ort_env, model_source).await?);
+    crate::TtsThread::new(provider)
 }
 
 /// Load a tokenizer from a Hugging Face repository asynchronously.

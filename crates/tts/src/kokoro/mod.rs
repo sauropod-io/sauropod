@@ -82,21 +82,21 @@ impl Kokoro {
     }
 }
 
-impl sauropod_inference_thread::InferenceProvider for Kokoro {
-    type Input = crate::TtsRequest;
-    type Output = Vec<i16>;
+#[async_trait::async_trait]
+impl crate::TtsProvider for Kokoro {
+    fn name(&self) -> &'static str {
+        "kokoro"
+    }
 
-    fn process(
+    async fn process(
         &self,
-        input: &[Self::Input],
-        output: &mut Vec<anyhow::Result<Self::Output>>,
+        text: String,
+        _voice: Option<String>,
+        sender: &'async_trait crate::AudioSender,
     ) -> anyhow::Result<()> {
-        anyhow::ensure!(input.len() == 1, "TTS model expects exactly one input");
-
-        let text = &input[0];
         let tokens = self
             .tokenizer
-            .tokenize(&text.text)
+            .tokenize(&text)
             .context("Tokenizing text - is espeak-ng installed?")?;
         let token_count = tokens.len();
         if token_count > 510 {
@@ -137,7 +137,9 @@ impl sauropod_inference_thread::InferenceProvider for Kokoro {
             .map(|&x| (x * 32767.0) as i16)
             .collect();
 
-        output.push(Ok(audio_data));
+        if let Err(e) = sender.send(Ok(audio_data)).await {
+            tracing::warn!("Failed to send audio data: {e:?}");
+        }
         Ok(())
     }
 }
@@ -146,7 +148,7 @@ impl sauropod_inference_thread::InferenceProvider for Kokoro {
 pub async fn make_tts_thread(
     env: &sauropod_onnxruntime::Env,
     model_dir: &std::path::Path,
-) -> anyhow::Result<crate::TtsThread> {
-    let provider = Kokoro::new(env, model_dir).await?;
-    Ok(crate::TtsThread::new("kokoro".to_string(), 1, provider)?)
+) -> anyhow::Result<std::sync::Arc<crate::TtsThread>> {
+    let provider = Box::new(Kokoro::new(env, model_dir).await?);
+    crate::TtsThread::new(provider)
 }

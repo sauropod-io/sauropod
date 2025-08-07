@@ -565,30 +565,50 @@ impl RealtimeSessionState {
                             sauropod_openai_api::OutputContent::OutputTextContent(text_content) => text_content.text,
                             sauropod_openai_api::OutputContent::RefusalContent(refusal) => refusal.refusal,
                         };
-                        let pcm16_audio = tts_model.enqueue(text.clone()).await?;
-                        let mut audio_bytes = Vec::with_capacity(pcm16_audio.len() * 2);
-                        for sample in pcm16_audio.iter() {
-                            audio_bytes.extend_from_slice(&sample.to_le_bytes());
-                        }
-                        let base64_audio = BASE64_STANDARD.encode(&audio_bytes);
+                        let mut pcm16_audio = tts_model.enqueue(text.clone()).await?;
+                        let mut audio_bytes = Vec::with_capacity(512);
+                        let mut recv_buffer = Vec::with_capacity(16);
+                        loop {
+                            let received_count = pcm16_audio.recv_many(&mut recv_buffer, 16).await;
+                            if received_count == 0 {
+                                break;
+                            }
+                            for sample in recv_buffer.drain(..received_count) {
+                                match sample {
+                                    Ok(sample) => {
+                                        let start_offset = audio_bytes.len();
+                                        for &sample in &sample {
+                                            audio_bytes.extend_from_slice(&sample.to_le_bytes());
+                                        }
 
+                                        let base64_audio = BASE64_STANDARD.encode(&audio_bytes[start_offset..]);
+                                        socket
+                                            .send_event(RealtimeServerEvent::ResponseAudioDelta {
+                                                content_index,
+                                                delta: base64_audio.clone(),
+                                                event_id: make_id(),
+                                                item_id: item_id.clone(),
+                                                output_index: last_output_index,
+                                                response_id: response_id.clone().unwrap_or_default(),
+                                            })
+                                            .await?;
+                                    },
+                                    Err(e) => {
+                                        tracing::error!("Error receiving audio sample: {e}");
+                                        return Err(e);
+                                    }
+                                }
+                            }
+                        }
+
+                        let full_audio = BASE64_STANDARD.encode(&audio_bytes);
                         socket
                             .send_event(RealtimeServerEvent::ResponseContentPartAdded { content_index: last_output_index,
                                 event_id: make_id(),
                                 item_id: item_id.clone(),
                                 output_index: last_output_index,
-                                part: sauropod_openai_api::RealtimeServerEventResponseContentPartAddedPart { audio: Some(base64_audio.clone()), text: None, transcript: Some(text.clone()), r#type: Some(sauropod_openai_api::Modalities::Audio) },
+                                part: sauropod_openai_api::RealtimeServerEventResponseContentPartAddedPart { audio: Some(full_audio), text: None, transcript: Some(text.clone()), r#type: Some(sauropod_openai_api::Modalities::Audio) },
                                 response_id: response_id.clone().unwrap_or_default()
-                            })
-                            .await?;
-                        socket
-                            .send_event(RealtimeServerEvent::ResponseAudioDelta {
-                                content_index,
-                                delta: base64_audio.clone(),
-                                event_id: make_id(),
-                                item_id: item_id.clone(),
-                                output_index: last_output_index,
-                                response_id: response_id.clone().unwrap_or_default(),
                             })
                             .await?;
                         socket
@@ -694,7 +714,7 @@ impl RealtimeSessionState {
                 }
 
                 None => {
-                    tracing::info!("Response stream ended");
+                    tracing::debug!("Response stream ended");
                     break;
                 }
                 _ => {
