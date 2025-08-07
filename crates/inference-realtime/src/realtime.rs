@@ -102,10 +102,10 @@ impl crate::RealtimeFunctionality for RealtimeSessionState {
                 update_field!(tools, inner_session, session);
                 update_field!(turn_detection, inner_session, session);
 
-                if let Some(voice) = &inner_session.voice {
-                    if self.global_state.get_voice_model(&voice.0).await.is_none() {
-                        return Err(anyhow::anyhow!("Voice {} is not available", voice.0));
-                    }
+                if let Some(voice) = &inner_session.voice
+                    && self.global_state.get_voice_model(&voice.0).await.is_none()
+                {
+                    return Err(anyhow::anyhow!("Voice {} is not available", voice.0));
                 }
 
                 socket

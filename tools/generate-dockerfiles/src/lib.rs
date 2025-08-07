@@ -42,13 +42,14 @@ pub fn generate_code_for_docker(dockerfile_path: &std::path::Path) -> anyhow::Re
     let mut make_fake_library_files = Vec::with_capacity(cargo_files.len());
     for cargo_file in &cargo_files {
         let path = std::path::Path::new(cargo_file);
-        if let Some(parent) = path.parent() {
-            if parent != path && parent.components().count() > 1 {
-                make_fake_library_files.push(format!(
-                    "    mkdir {0}/src && touch {0}/src/lib.rs && ",
-                    parent.to_string_lossy().to_string()
-                ));
-            }
+        if let Some(parent) = path.parent()
+            && parent != path
+            && parent.components().count() > 1
+        {
+            make_fake_library_files.push(format!(
+                "    mkdir {0}/src && touch {0}/src/lib.rs && ",
+                parent.to_string_lossy().to_string()
+            ));
         }
     }
 

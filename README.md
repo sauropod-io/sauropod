@@ -12,7 +12,7 @@ docker run --rm -it --gpus=all -v ./examples/gemma:/root/.config/sauropod:ro -v 
 
 ## Dependencies
 
-- [Rust](https://www.rust-lang.org/tools/install) >= 1.85
+- [Rust](https://www.rust-lang.org/tools/install) >= 1.89
   - Debian or Ubuntu (>=24.04): `sudo apt-get install rustup; rustup install stable`
   - Arch Linux: `pacman -S rustup; rustup install stable`
   - Mac: run the script from https://www.rust-lang.org/tools/install

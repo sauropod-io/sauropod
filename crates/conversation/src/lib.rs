@@ -147,11 +147,11 @@ impl Conversation {
                 .position(|x| x.get_id() == Some(previous_item_id))
         });
 
-        if let Some(previous_item_id) = previous_item_id {
-            if position.is_none() {
-                tracing::warn!("Previous item ID {previous_item_id} not found in conversation");
-                return Err(Error::NoPreviousItem(previous_item_id));
-            }
+        if let Some(previous_item_id) = previous_item_id
+            && position.is_none()
+        {
+            tracing::warn!("Previous item ID {previous_item_id} not found in conversation");
+            return Err(Error::NoPreviousItem(previous_item_id));
         }
 
         let insert_index = if let Some(index) = position {

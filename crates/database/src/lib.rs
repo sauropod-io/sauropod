@@ -23,15 +23,13 @@ async fn create_database_with_options(
 /// Create a new database instance.
 pub async fn create_database(path: &std::path::Path) -> anyhow::Result<Database> {
     // Create the directory if it doesn't exist
-    if let Some(parent) = path.parent() {
-        if !parent.exists() {
-            if let Err(e) = std::fs::create_dir_all(parent)
-                .with_context(|| format!("creating database parent directory {}", parent.display()))
-            {
-                tracing::error!("Error {:?}", e);
-                return Err(e);
-            }
-        }
+    if let Some(parent) = path.parent()
+        && !parent.exists()
+        && let Err(e) = std::fs::create_dir_all(parent)
+            .with_context(|| format!("creating database parent directory {}", parent.display()))
+    {
+        tracing::error!("Error {:?}", e);
+        return Err(e);
     }
 
     create_database_with_options(

@@ -2,7 +2,7 @@
 
 ## Development dependencies
 
-- [Rust](https://www.rust-lang.org/tools/install) >= 1.85
+- [Rust](https://www.rust-lang.org/tools/install) >= 1.89
 - [Clang](https://clang.llvm.org/) >= 19
 - [CMake](https://cmake.org/)
 - OpenSSL

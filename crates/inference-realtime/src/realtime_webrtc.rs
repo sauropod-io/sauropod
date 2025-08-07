@@ -161,12 +161,11 @@ pub async fn post_v1_realtime_impl(
         move |s: webrtc::peer_connection::peer_connection_state::RTCPeerConnectionState| {
             tracing::info!("Peer Connection State has changed: {s}");
 
-            if s == webrtc::peer_connection::peer_connection_state::RTCPeerConnectionState::Failed {
-                if let Err(e) =
+            if s == webrtc::peer_connection::peer_connection_state::RTCPeerConnectionState::Failed
+                && let Err(e) =
                     incoming_message_tx.blocking_send(axum::extract::ws::Message::Close(None))
-                {
-                    tracing::error!("Failed to send close message: {e}");
-                }
+            {
+                tracing::error!("Failed to send close message: {e}");
             }
 
             Box::pin(async {})
