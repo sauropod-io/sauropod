@@ -1044,7 +1044,7 @@ impl IoBinding {
             output_names.push(
                 string_content
                     .iter()
-                    .map(|x| (*x as u8) as char)
+                    .map(|x| *x as char)
                     .collect::<String>(),
             );
             offset = end;

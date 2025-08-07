@@ -234,39 +234,37 @@ impl ResponseStreamCreator {
         // Get the current message and content part
         if let Some(sauropod_openai_api::OutputItem::OutputMessage { id, content, .. }) =
             self.response.output.get(self.output_index as usize)
+            && let Some(output_content) = content.get(self.content_index as usize)
         {
-            if let Some(output_content) = content.get(self.content_index as usize) {
-                // If this is a text content part with non-empty text, emit ResponseTextDoneEvent first
-                if let sauropod_openai_api::OutputContent::OutputTextContent(text_content) =
-                    output_content
-                {
-                    if !text_content.text.is_empty() {
-                        events.push(
-                            sauropod_openai_api::ResponseStreamEvent::ResponseTextDoneEvent {
-                                sequence_number: get_next_sequence_number(&self.sequence_number),
-                                content_index: self.content_index,
-                                item_id: id.clone(),
-                                output_index: self.output_index,
-                                text: text_content.text.clone(),
-                                logprobs: vec![],
-                            },
-                        );
-                    }
-                }
-
-                // Emit content part done event
+            // If this is a text content part with non-empty text, emit ResponseTextDoneEvent first
+            if let sauropod_openai_api::OutputContent::OutputTextContent(text_content) =
+                output_content
+                && !text_content.text.is_empty()
+            {
                 events.push(
-                    sauropod_openai_api::ResponseStreamEvent::ResponseContentPartDoneEvent {
+                    sauropod_openai_api::ResponseStreamEvent::ResponseTextDoneEvent {
                         sequence_number: get_next_sequence_number(&self.sequence_number),
                         content_index: self.content_index,
                         item_id: id.clone(),
                         output_index: self.output_index,
-                        part: output_content.clone(),
+                        text: text_content.text.clone(),
+                        logprobs: vec![],
                     },
                 );
-
-                self.content_part_open = false;
             }
+
+            // Emit content part done event
+            events.push(
+                sauropod_openai_api::ResponseStreamEvent::ResponseContentPartDoneEvent {
+                    sequence_number: get_next_sequence_number(&self.sequence_number),
+                    content_index: self.content_index,
+                    item_id: id.clone(),
+                    output_index: self.output_index,
+                    part: output_content.clone(),
+                },
+            );
+
+            self.content_part_open = false;
         }
 
         events
@@ -329,10 +327,9 @@ impl ResponseStreamCreator {
         let state = self.reasoning_state.as_ref().unwrap();
         if let Some(sauropod_openai_api::OutputItem::ReasoningItem { summary, .. }) =
             self.response.output.get_mut(self.output_index as usize)
+            && let Some(part) = summary.get_mut(self.content_index as usize)
         {
-            if let Some(part) = summary.get_mut(self.content_index as usize) {
-                part.text.push_str(delta);
-            }
+            part.text.push_str(delta);
         }
         events.push(
             sauropod_openai_api::ResponseStreamEvent::ResponseReasoningSummaryTextDeltaEvent {
@@ -419,14 +416,14 @@ impl ResponseStreamCreator {
 
         let mut args_string = state.buffer.clone();
         let mut name = String::new();
-        if let Ok(val) = serde_json::from_str::<serde_json::Value>(&state.buffer) {
-            if let Some(obj) = val.as_object() {
-                if let Some(n) = obj.get("name").and_then(|v| v.as_str()) {
-                    name = n.to_string();
-                }
-                if let Some(arg) = obj.get("arguments") {
-                    args_string = arg.to_string();
-                }
+        if let Ok(val) = serde_json::from_str::<serde_json::Value>(&state.buffer)
+            && let Some(obj) = val.as_object()
+        {
+            if let Some(n) = obj.get("name").and_then(|v| v.as_str()) {
+                name = n.to_string();
+            }
+            if let Some(arg) = obj.get("arguments") {
+                args_string = arg.to_string();
             }
         }
 

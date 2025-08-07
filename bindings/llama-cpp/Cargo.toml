@@ -12,6 +12,7 @@ homepage.workspace = true
 default = []
 cuda = ["llama-cpp-sys/cuda"]
 cuda-multiple-arches = ["cuda", "llama-cpp-sys/cuda-multiple-arches"]
+jetson = ["cuda", "llama-cpp-sys/jetson"]
 vulkan = ["llama-cpp-sys/vulkan"]
 
 [dependencies]
