@@ -1,0 +1,38 @@
+{
+  "db_name": "SQLite",
+  "query": "WITH RECURSIVE chain(\n  response_id,\n  parent_response_id,\n  response_request,\n  response_output,\n  user_id,\n  depth\n) AS (\n  -- base row (must belong to the user)\n  SELECT r.response_id,\n         r.parent_response_id,\n         r.response_request,\n         r.response_output,\n         r.user_id,\n         0\n  FROM response r\n  WHERE r.response_id = ?1\n    AND r.user_id = ?2\n\n  UNION ALL\n\n  -- walk up parents (also constrained to same user)\n  SELECT p.response_id,\n         p.parent_response_id,\n         p.response_request,\n         p.response_output,\n         p.user_id,\n         chain.depth + 1\n  FROM response p\n  JOIN chain ON chain.parent_response_id = p.response_id\n  WHERE p.user_id = ?2\n)\nSELECT response_id, response_request, response_output, depth AS \"depth: i64\"\nFROM chain\nORDER BY depth DESC; -- closest parent first\n",
+  "describe": {
+    "columns": [
+      {
+        "name": "response_id",
+        "ordinal": 0,
+        "type_info": "Text"
+      },
+      {
+        "name": "response_request",
+        "ordinal": 1,
+        "type_info": "Text"
+      },
+      {
+        "name": "response_output",
+        "ordinal": 2,
+        "type_info": "Text"
+      },
+      {
+        "name": "depth: i64",
+        "ordinal": 3,
+        "type_info": "Null"
+      }
+    ],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": [
+      true,
+      false,
+      false,
+      null
+    ]
+  },
+  "hash": "44ef9c1b27aa2f25c69779f5f0e8556118ae1ede223d5caf10ef4b960a072e6c"
+}

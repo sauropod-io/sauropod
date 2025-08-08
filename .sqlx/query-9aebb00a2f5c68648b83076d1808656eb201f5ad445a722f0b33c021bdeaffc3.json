@@ -1,6 +1,6 @@
 {
   "db_name": "SQLite",
-  "query": "SELECT user_id FROM api_keys WHERE key = $1",
+  "query": "SELECT user_id FROM api_keys WHERE key = ?1",
   "describe": {
     "columns": [
       {
@@ -16,5 +16,5 @@
       false
     ]
   },
-  "hash": "05cc7aa649ea57c12c4948607a668a4ac5ce5427148cc320a8eabdba7bc9d5cc"
+  "hash": "9aebb00a2f5c68648b83076d1808656eb201f5ad445a722f0b33c021bdeaffc3"
 }

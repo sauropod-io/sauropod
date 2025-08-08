@@ -17,7 +17,7 @@ pub async fn get_user_info_by_api_key(
 ) -> Option<UserInfo> {
     sqlx::query_as!(
         UserInfo,
-        r#"SELECT user_id FROM api_keys WHERE key = $1"#,
+        r#"SELECT user_id FROM api_keys WHERE key = ?1"#,
         api_key
     )
     .fetch_optional(database)

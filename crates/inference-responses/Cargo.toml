@@ -15,6 +15,7 @@ sauropod-inference-engine.path = "../inference-engine"
 sauropod-inference-http.path = "../inference-http"
 sauropod-openai-api.path = "../openai-api"
 sauropod-prompt-templates.path = "../prompt-templates"
+sauropod-users.path = "../users"
 
 anyhow.workspace = true
 async-stream.workspace = true
@@ -31,6 +32,7 @@ tokio.workspace = true
 tracing.workspace = true
 utoipa.workspace = true
 uuid.workspace = true
+sqlx.workspace = true
 
 [dev-dependencies]
 assert-json-diff.workspace = true

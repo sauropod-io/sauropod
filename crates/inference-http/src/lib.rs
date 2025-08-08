@@ -18,7 +18,7 @@ impl Authentication {
 }
 
 /// Extension type for the user ID.
-pub type UserIdExtension = axum::Extension<Authentication>;
+pub type UserAuthenticationExtension = axum::Extension<Authentication>;
 
 /// Middleware to extract and validate a user ID from the request.
 pub async fn auth_middleware(

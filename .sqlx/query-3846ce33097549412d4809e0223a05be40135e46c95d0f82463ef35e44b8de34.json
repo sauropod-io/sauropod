@@ -1,0 +1,20 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT response_output FROM response WHERE response_id = ?1 AND user_id = ?2",
+  "describe": {
+    "columns": [
+      {
+        "name": "response_output",
+        "ordinal": 0,
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "3846ce33097549412d4809e0223a05be40135e46c95d0f82463ef35e44b8de34"
+}

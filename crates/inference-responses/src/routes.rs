@@ -1,6 +1,7 @@
 use axum::extract::State;
 use axum::response::IntoResponse;
 
+use sauropod_inference_http::UserAuthenticationExtension;
 use sauropod_openai_api::{CreateResponse, Response};
 
 #[utoipa::path(
@@ -15,6 +16,7 @@ use sauropod_openai_api::{CreateResponse, Response};
 )]
 pub async fn create_response(
     State(loaded_models): sauropod_global_state::AxumGlobalState,
+    axum::Extension(authentication): UserAuthenticationExtension,
     axum::Json(request): axum::Json<serde_json::Value>,
 ) -> axum::response::Response {
     let request = match serde_json::from_value::<CreateResponse>(request.clone()) {
@@ -33,7 +35,7 @@ pub async fn create_response(
                 .into_response();
         }
     };
-    match crate::create_response_impl(loaded_models, request).await {
+    match crate::create_response_impl(loaded_models, request, authentication).await {
         Ok(response) => response,
         Err(e) => {
             tracing::error!("Failed to create response: {e:#?}");
@@ -64,20 +66,37 @@ pub async fn create_response(
 )]
 pub async fn get_response(
     response_id: axum::extract::Path<String>,
-    State(_loaded_models): sauropod_global_state::AxumGlobalState,
+    axum::Extension(authentication): UserAuthenticationExtension,
+    State(global_state): sauropod_global_state::AxumGlobalState,
 ) -> axum::response::Response {
-    let responses = crate::in_memory_responses();
-    let responses_guard = responses.read().await;
+    let user_id = authentication.get_user_id();
+    let result = sqlx::query!(
+        "SELECT response_output FROM response WHERE response_id = ?1 AND user_id = ?2",
+        response_id.0,
+        user_id
+    )
+    .fetch_one(global_state.database())
+    .await;
 
-    match responses_guard.get(&response_id.0) {
-        Some(response_data) => axum::Json(response_data.response.clone()).into_response(),
-        None => (
-            axum::http::StatusCode::NOT_FOUND,
-            axum::Json(sauropod_inference_http::Error {
-                error: format!("Response with ID '{}' not found", response_id.0),
-            }),
-        )
-            .into_response(),
+    match result {
+        Ok(row) => {
+            let mut response = row.response_output.into_response();
+            response.headers_mut().insert(
+                axum::http::header::CONTENT_TYPE,
+                axum::http::HeaderValue::from_static("application/json"),
+            );
+            response
+        }
+        Err(sqlx::Error::RowNotFound) => {
+            sauropod_inference_http::HttpResponse::<()>::NotFound(None).into_response()
+        }
+        Err(e) => {
+            tracing::error!("Error fetching response: {e}");
+            sauropod_inference_http::HttpResponse::<()>::InternalServerError(
+                "Error occured querying database".to_string(),
+            )
+            .into_response()
+        }
     }
 }
 
@@ -97,21 +116,32 @@ pub async fn get_response(
 )]
 pub async fn delete_response(
     response_id: axum::extract::Path<String>,
-    State(_loaded_models): sauropod_global_state::AxumGlobalState,
+    axum::Extension(authentication): UserAuthenticationExtension,
+    State(global_state): sauropod_global_state::AxumGlobalState,
 ) -> axum::response::Response {
-    let responses = crate::in_memory_responses();
-    let mut responses_guard = responses.write().await;
+    let user_id = authentication.get_user_id();
+    let result = sqlx::query!(
+        "DELETE FROM response WHERE response_id = ?1 AND user_id = ?2",
+        response_id.0,
+        user_id
+    )
+    .execute(global_state.database())
+    .await;
 
-    match responses_guard.remove(&response_id.0) {
-        Some(_) => axum::http::StatusCode::OK.into_response(),
-        None => (
-            axum::http::StatusCode::NOT_FOUND,
-            axum::Json(sauropod_inference_http::Error {
-                error: format!("Response with ID '{}' not found", response_id.0),
-            }),
-        )
-            .into_response(),
-    }
+    let response = match result {
+        Ok(user) if user.rows_affected() > 0 => ().into_response(),
+        Err(sqlx::Error::RowNotFound) | Ok(_) => {
+            sauropod_inference_http::HttpResponse::<()>::NotFound(None).into_response()
+        }
+        Err(e) => {
+            tracing::error!("Error deleting response: {e}");
+            sauropod_inference_http::HttpResponse::<()>::InternalServerError(
+                "Error occured querying database".to_string(),
+            )
+            .into_response()
+        }
+    };
+    response.into_response()
 }
 
 #[utoipa::path(

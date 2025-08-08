@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "DELETE FROM response WHERE response_id = ?1 AND user_id = ?2",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "f41f99eece0eedced4e1e5fe83f214f4e03f28b2968ab92ad712456a9f80e0bc"
+}
