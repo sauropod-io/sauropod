@@ -152,6 +152,8 @@ fn build_llama(source_dir: &Path) -> PathBuf {
 
     if cfg!(feature = "cuda-multiple-arches") {
         cuda_arch_str = DEFAULT_CUDA_ARCH;
+    } else if cfg!(feature = "jetson") {
+        cuda_arch_str = "87"
     } else {
         detected_gpu_arch = detect_gpu_arch();
         cuda_arch_str = &detected_gpu_arch;

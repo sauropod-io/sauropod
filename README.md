@@ -6,8 +6,40 @@ Sauropod's inference platform.
 
 ## Quick start
 
+Prepare server config:
 ```bash
-docker run --rm -it --gpus=all -v ./examples/gemma:/root/.config/sauropod:ro -v $HOME/.cache:/root/.cache ghcr.io/sauropod-io/sauropod:latest-cuda
+mkdir ~/.config/sauropod/config
+cp ./examples/gemma/gemma.toml ~/.config/sauropod/config.toml
+```
+
+General Purpose:
+```bash
+docker run --rm -it --init \
+  --gpus=all \
+  --network=host \
+  --user $(id -u):$(id -g) \
+  -e HOME=/home/$(whoami) \
+  -e USER=$(whoami) \
+  -v $HOME/.config/sauropod:/home/$(whoami)/.config/sauropod:ro \
+  -v $HOME/.cache:/home/$(whoami)/.cache \
+  --mount type=tmpfs,destination=/home/$(whoami)/.local/share/sauropod \
+  -w /home/$(whoami) \
+  ghcr.io/sauropod-io/sauropod:latest-cuda
+```
+
+NVIDIA Jetson Jetpack 6.2:
+```bash
+docker run --rm -it --init \
+  --runtime=nvidia \
+  --network=host \
+  --user $(id -u):$(id -g) \
+  -e HOME=/home/$(whoami) \
+  -e USER=$(whoami) \
+  -v $HOME/.config/sauropod:/home/$(whoami)/.config/sauropod:ro \
+  -v $HOME/.cache:/home/$(whoami)/.cache \
+  --mount type=tmpfs,destination=/home/$(whoami)/.local/share/sauropod \
+  -w /home/$(whoami) \
+  ghcr.io/sauropod-io/sauropod:latest-jetson
 ```
 
 ## Dependencies
