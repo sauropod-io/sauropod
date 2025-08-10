@@ -820,7 +820,7 @@ dependencies = [
 
 [[package]]
 name = "create-release-tag"
-version = "0.0.1"
+version = "0.0.2"
 dependencies = [
  "anyhow",
  "clap",
@@ -1444,7 +1444,7 @@ dependencies = [
 
 [[package]]
 name = "generate-dockerfiles"
-version = "0.0.1"
+version = "0.0.2"
 dependencies = [
  "anyhow",
 ]
@@ -2195,7 +2195,7 @@ checksum = "241eaef5fd12c88705a01fc1066c48c4b36e0dd4377dcdc7ec3942cea7a69956"
 
 [[package]]
 name = "llama-cpp-sys"
-version = "0.0.1"
+version = "0.0.2"
 dependencies = [
  "bindgen",
  "cmake",
@@ -3347,7 +3347,7 @@ dependencies = [
 
 [[package]]
 name = "sauropod-audio"
-version = "0.0.1"
+version = "0.0.2"
 dependencies = [
  "anyhow",
  "sauropod-onnxruntime",
@@ -3356,7 +3356,7 @@ dependencies = [
 
 [[package]]
 name = "sauropod-config"
-version = "0.0.1"
+version = "0.0.2"
 dependencies = [
  "anyhow",
  "config",
@@ -3366,7 +3366,7 @@ dependencies = [
 
 [[package]]
 name = "sauropod-conversation"
-version = "0.0.1"
+version = "0.0.2"
 dependencies = [
  "sauropod-openai-api",
  "thiserror 2.0.12",
@@ -3376,7 +3376,7 @@ dependencies = [
 
 [[package]]
 name = "sauropod-database"
-version = "0.0.1"
+version = "0.0.2"
 dependencies = [
  "anyhow",
  "sqlx",
@@ -3385,14 +3385,14 @@ dependencies = [
 
 [[package]]
 name = "sauropod-device-discovery"
-version = "0.0.1"
+version = "0.0.2"
 dependencies = [
  "thiserror 2.0.12",
 ]
 
 [[package]]
 name = "sauropod-gguf"
-version = "0.0.1"
+version = "0.0.2"
 dependencies = [
  "sauropod-config",
  "sauropod-huggingface",
@@ -3402,7 +3402,7 @@ dependencies = [
 
 [[package]]
 name = "sauropod-global-state"
-version = "0.0.1"
+version = "0.0.2"
 dependencies = [
  "anyhow",
  "axum",
@@ -3418,7 +3418,7 @@ dependencies = [
 
 [[package]]
 name = "sauropod-hf-test-helpers"
-version = "0.0.1"
+version = "0.0.2"
 dependencies = [
  "anyhow",
  "hf-hub",
@@ -3427,7 +3427,7 @@ dependencies = [
 
 [[package]]
 name = "sauropod-huggingface"
-version = "0.0.1"
+version = "0.0.2"
 dependencies = [
  "anyhow",
  "futures",
@@ -3438,7 +3438,7 @@ dependencies = [
 
 [[package]]
 name = "sauropod-inference-engine"
-version = "0.0.1"
+version = "0.0.2"
 dependencies = [
  "anyhow",
  "async-stream",
@@ -3463,7 +3463,7 @@ dependencies = [
 
 [[package]]
 name = "sauropod-inference-engine-api"
-version = "0.0.1"
+version = "0.0.2"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -3481,7 +3481,7 @@ dependencies = [
 
 [[package]]
 name = "sauropod-inference-http"
-version = "0.0.1"
+version = "0.0.2"
 dependencies = [
  "anyhow",
  "axum",
@@ -3495,7 +3495,7 @@ dependencies = [
 
 [[package]]
 name = "sauropod-inference-realtime"
-version = "0.0.1"
+version = "0.0.2"
 dependencies = [
  "anyhow",
  "assert-json-diff",
@@ -3534,7 +3534,7 @@ dependencies = [
 
 [[package]]
 name = "sauropod-inference-responses"
-version = "0.0.1"
+version = "0.0.2"
 dependencies = [
  "anyhow",
  "assert-json-diff",
@@ -3564,7 +3564,7 @@ dependencies = [
 
 [[package]]
 name = "sauropod-inference-server"
-version = "0.0.1"
+version = "0.0.2"
 dependencies = [
  "anyhow",
  "axum",
@@ -3599,7 +3599,7 @@ dependencies = [
 
 [[package]]
 name = "sauropod-inference-thread"
-version = "0.0.1"
+version = "0.0.2"
 dependencies = [
  "anyhow",
  "thiserror 2.0.12",
@@ -3609,7 +3609,7 @@ dependencies = [
 
 [[package]]
 name = "sauropod-llama-cpp"
-version = "0.0.1"
+version = "0.0.2"
 dependencies = [
  "anyhow",
  "async-stream",
@@ -3634,7 +3634,7 @@ dependencies = [
 
 [[package]]
 name = "sauropod-model-loading"
-version = "0.0.1"
+version = "0.0.2"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -3659,7 +3659,7 @@ dependencies = [
 
 [[package]]
 name = "sauropod-onnxruntime"
-version = "0.0.1"
+version = "0.0.2"
 dependencies = [
  "onnxruntime-sys",
  "thiserror 2.0.12",
@@ -3669,7 +3669,7 @@ dependencies = [
 
 [[package]]
 name = "sauropod-openai-api"
-version = "0.0.1"
+version = "0.0.2"
 dependencies = [
  "serde",
  "serde_json",
@@ -3678,11 +3678,11 @@ dependencies = [
 
 [[package]]
 name = "sauropod-output-parser"
-version = "0.0.1"
+version = "0.0.2"
 
 [[package]]
 name = "sauropod-profiling"
-version = "0.0.1"
+version = "0.0.2"
 dependencies = [
  "thiserror 2.0.12",
  "tracing-subscriber",
@@ -3692,7 +3692,7 @@ dependencies = [
 
 [[package]]
 name = "sauropod-prompt-templates"
-version = "0.0.1"
+version = "0.0.2"
 dependencies = [
  "anyhow",
  "base64 0.22.1",
@@ -3707,7 +3707,7 @@ dependencies = [
 
 [[package]]
 name = "sauropod-stt"
-version = "0.0.1"
+version = "0.0.2"
 dependencies = [
  "anyhow",
  "sauropod-audio",
@@ -3725,14 +3725,14 @@ dependencies = [
 
 [[package]]
 name = "sauropod-tracing-test-helpers"
-version = "0.0.1"
+version = "0.0.2"
 dependencies = [
  "tracing-subscriber",
 ]
 
 [[package]]
 name = "sauropod-tts"
-version = "0.0.1"
+version = "0.0.2"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -3756,7 +3756,7 @@ dependencies = [
 
 [[package]]
 name = "sauropod-users"
-version = "0.0.1"
+version = "0.0.2"
 dependencies = [
  "anyhow",
  "sauropod-database",
@@ -3767,7 +3767,7 @@ dependencies = [
 
 [[package]]
 name = "sauropod-vad"
-version = "0.0.1"
+version = "0.0.2"
 dependencies = [
  "anyhow",
  "sauropod-audio",
@@ -4308,7 +4308,7 @@ dependencies = [
 
 [[package]]
 name = "sqlx-wrapper"
-version = "0.0.1"
+version = "0.0.2"
 dependencies = [
  "clap",
  "sqlx-cli",
@@ -5180,7 +5180,7 @@ checksum = "8ecb6da28b8a351d773b68d5825ac39017e680750f980f3a1a85cd8dd28a47c1"
 
 [[package]]
 name = "update-latest-image"
-version = "0.0.1"
+version = "0.0.2"
 dependencies = [
  "anyhow",
  "clap",
