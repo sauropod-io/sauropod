@@ -1235,6 +1235,36 @@ fn test_response_created_event() {
 }"#;
     round_trip_test::<crate::ResponseCreatedEvent>(RESPONSE_CREATED_EVENT_EXAMPLE).unwrap();
 }
+/// Test for ResponseCustomToolCallInputDeltaEvent example value
+#[test]
+#[should_panic]
+fn test_response_custom_tool_call_input_delta_event() {
+    const RESPONSE_CUSTOM_TOOL_CALL_INPUT_DELTA_EVENT_EXAMPLE: &str = r#"{
+  "type": "response.custom_tool_call_input.delta",
+  "output_index": 0,
+  "item_id": "ctc_1234567890abcdef",
+  "delta": "partial input text"
+}"#;
+    round_trip_test::<crate::ResponseCustomToolCallInputDeltaEvent>(
+        RESPONSE_CUSTOM_TOOL_CALL_INPUT_DELTA_EVENT_EXAMPLE,
+    )
+    .unwrap();
+}
+/// Test for ResponseCustomToolCallInputDoneEvent example value
+#[test]
+#[should_panic]
+fn test_response_custom_tool_call_input_done_event() {
+    const RESPONSE_CUSTOM_TOOL_CALL_INPUT_DONE_EVENT_EXAMPLE: &str = r#"{
+  "type": "response.custom_tool_call_input.done",
+  "output_index": 0,
+  "item_id": "ctc_1234567890abcdef",
+  "input": "final complete input text"
+}"#;
+    round_trip_test::<crate::ResponseCustomToolCallInputDoneEvent>(
+        RESPONSE_CUSTOM_TOOL_CALL_INPUT_DONE_EVENT_EXAMPLE,
+    )
+    .unwrap();
+}
 /// Test for ResponseErrorEvent example value
 #[test]
 fn test_response_error_event() {
@@ -1678,40 +1708,6 @@ fn test_response_queued_event() {
 }"#;
     round_trip_test::<crate::ResponseQueuedEvent>(RESPONSE_QUEUED_EVENT_EXAMPLE).unwrap();
 }
-/// Test for ResponseReasoningSummaryDeltaEvent example value
-#[test]
-fn test_response_reasoning_summary_delta_event() {
-    const RESPONSE_REASONING_SUMMARY_DELTA_EVENT_EXAMPLE: &str = r#"{
-  "type": "response.reasoning_summary.delta",
-  "item_id": "item-abc",
-  "output_index": 0,
-  "summary_index": 0,
-  "delta": {
-    "text": "delta text"
-  },
-  "sequence_number": 1
-}"#;
-    round_trip_test::<crate::ResponseReasoningSummaryDeltaEvent>(
-        RESPONSE_REASONING_SUMMARY_DELTA_EVENT_EXAMPLE,
-    )
-    .unwrap();
-}
-/// Test for ResponseReasoningSummaryDoneEvent example value
-#[test]
-fn test_response_reasoning_summary_done_event() {
-    const RESPONSE_REASONING_SUMMARY_DONE_EVENT_EXAMPLE: &str = r#"{
-  "type": "response.reasoning_summary.done",
-  "item_id": "item-abc",
-  "output_index": 0,
-  "summary_index": 0,
-  "text": "This is a test reasoning summary",
-  "sequence_number": 1
-}"#;
-    round_trip_test::<crate::ResponseReasoningSummaryDoneEvent>(
-        RESPONSE_REASONING_SUMMARY_DONE_EVENT_EXAMPLE,
-    )
-    .unwrap();
-}
 /// Test for ResponseReasoningSummaryPartAddedEvent example value
 #[test]
 fn test_response_reasoning_summary_part_added_event() {
@@ -1779,6 +1775,38 @@ fn test_response_reasoning_summary_text_done_event() {
 }"#;
     round_trip_test::<crate::ResponseReasoningSummaryTextDoneEvent>(
         RESPONSE_REASONING_SUMMARY_TEXT_DONE_EVENT_EXAMPLE,
+    )
+    .unwrap();
+}
+/// Test for ResponseReasoningTextDeltaEvent example value
+#[test]
+fn test_response_reasoning_text_delta_event() {
+    const RESPONSE_REASONING_TEXT_DELTA_EVENT_EXAMPLE: &str = r#"{
+  "type": "response.reasoning_text.delta",
+  "item_id": "rs_123",
+  "output_index": 0,
+  "content_index": 0,
+  "delta": "The",
+  "sequence_number": 1
+}"#;
+    round_trip_test::<crate::ResponseReasoningTextDeltaEvent>(
+        RESPONSE_REASONING_TEXT_DELTA_EVENT_EXAMPLE,
+    )
+    .unwrap();
+}
+/// Test for ResponseReasoningTextDoneEvent example value
+#[test]
+fn test_response_reasoning_text_done_event() {
+    const RESPONSE_REASONING_TEXT_DONE_EVENT_EXAMPLE: &str = r#"{
+  "type": "response.reasoning_text.done",
+  "item_id": "rs_123",
+  "output_index": 0,
+  "content_index": 0,
+  "text": "The user is asking...",
+  "sequence_number": 4
+}"#;
+    round_trip_test::<crate::ResponseReasoningTextDoneEvent>(
+        RESPONSE_REASONING_TEXT_DONE_EVENT_EXAMPLE,
     )
     .unwrap();
 }

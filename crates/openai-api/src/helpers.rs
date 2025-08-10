@@ -117,19 +117,19 @@ impl From<crate::Response> for crate::RealtimeResponse {
     }
 }
 
-impl From<crate::OutputContent> for crate::RealtimeConversationItemContentItem {
+impl From<crate::OutputContent> for crate::RealtimeConversationItemContent {
     fn from(value: crate::OutputContent) -> Self {
         match value {
-            crate::OutputContent::OutputTextContent(content) => {
-                crate::RealtimeConversationItemContentItem {
+            crate::OutputContent::OutputTextContent { text, .. } => {
+                crate::RealtimeConversationItemContent {
                     audio: None,
                     id: None,
-                    text: Some(content.text),
+                    text: Some(text),
                     transcript: None,
-                    r#type: Some(crate::RealtimeConversationItemContentItemType::Text),
+                    r#type: Some(crate::RealtimeConversationItemContentType::Text),
                 }
             }
-            crate::OutputContent::RefusalContent(_) => {
+            crate::OutputContent::RefusalContent { .. } => {
                 unimplemented!("Refusals are not currently supported")
             }
         }
@@ -139,13 +139,13 @@ impl From<crate::OutputContent> for crate::RealtimeConversationItemContentItem {
 impl From<crate::OutputContent> for crate::RealtimeServerEventResponseContentPartAddedPart {
     fn from(value: crate::OutputContent) -> Self {
         match value {
-            crate::OutputContent::OutputTextContent(content) => Self {
+            crate::OutputContent::OutputTextContent { text, .. } => Self {
                 audio: None,
-                text: Some(content.text),
+                text: Some(text),
                 transcript: None,
                 r#type: Some(crate::Modalities::Text),
             },
-            crate::OutputContent::RefusalContent(_) => {
+            crate::OutputContent::RefusalContent { .. } => {
                 unimplemented!("Refusals are not currently supported")
             }
         }
@@ -154,13 +154,13 @@ impl From<crate::OutputContent> for crate::RealtimeServerEventResponseContentPar
 impl From<crate::OutputContent> for crate::RealtimeServerEventResponseContentPartDonePart {
     fn from(value: crate::OutputContent) -> Self {
         match value {
-            crate::OutputContent::OutputTextContent(content) => Self {
+            crate::OutputContent::OutputTextContent { text, .. } => Self {
                 audio: None,
-                text: Some(content.text),
+                text: Some(text),
                 transcript: None,
                 r#type: Some(crate::Modalities::Text),
             },
-            crate::OutputContent::RefusalContent(_) => {
+            crate::OutputContent::RefusalContent { .. } => {
                 unimplemented!("Refusals are not currently supported")
             }
         }
@@ -185,7 +185,7 @@ impl From<crate::OutputItem> for crate::RealtimeConversationItem {
                 content: Some(
                     content
                         .into_iter()
-                        .map(crate::RealtimeConversationItemContentItem::from)
+                        .map(crate::RealtimeConversationItemContent::from)
                         .collect(),
                 ),
                 name: None,
@@ -274,11 +274,13 @@ impl From<crate::OutputItem> for crate::Item {
                 id,
                 status,
                 summary,
+                content,
             } => crate::Item::ReasoningItem {
                 encrypted_content,
                 id,
                 status,
                 summary,
+                content,
             },
             crate::OutputItem::ImageGenToolCall { id, result, status } => {
                 crate::Item::ImageGenToolCall { id, result, status }
@@ -344,6 +346,17 @@ impl From<crate::OutputItem> for crate::Item {
                 name,
                 server_label,
             },
+            crate::OutputItem::CustomToolCall {
+                call_id,
+                id,
+                input,
+                name,
+            } => crate::Item::CustomToolCall {
+                call_id,
+                id,
+                input,
+                name,
+            },
         }
     }
 }
@@ -401,6 +414,7 @@ impl Default for crate::CreateResponse {
             parallel_tool_calls: None,
             store: None,
             stream: None,
+            stream_options: None,
         }
     }
 }
@@ -424,7 +438,9 @@ impl crate::HasId for crate::Item {
             | crate::Item::MCPToolCall { id, .. } => Some(id.as_str()),
             crate::Item::ComputerCallOutputItemParam { id, .. }
             | crate::Item::FunctionCallOutputItemParam { id, .. }
-            | crate::Item::MCPApprovalResponse { id, .. } => id.as_deref(),
+            | crate::Item::MCPApprovalResponse { id, .. }
+            | crate::Item::CustomToolCall { id, .. }
+            | crate::Item::CustomToolCallOutput { id, .. } => id.as_deref(),
         }
     }
 }
@@ -432,7 +448,7 @@ impl crate::HasId for crate::Item {
 impl crate::HasId for crate::InputItem {
     fn get_id(&self) -> Option<&str> {
         match self {
-            crate::InputItem::EasyInputMessage(_) => None,
+            crate::InputItem::EasyInputMessage { .. } => None,
             crate::InputItem::Item(item) => item.get_id(),
             crate::InputItem::ItemReferenceParam(item_ref_param) => item_ref_param.get_id(),
         }

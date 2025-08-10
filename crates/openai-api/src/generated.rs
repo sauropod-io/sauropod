@@ -264,23 +264,20 @@ impl crate::HasId for CodeInterpreterToolCall {
 }
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize, utoipa::ToSchema)]
+#[serde(tag = "type")]
 pub enum CodeInterpreterToolCallOutputsItem {
-    #[serde(untagged)]
-    CodeInterpreterOutputLogs(CodeInterpreterOutputLogs),
-    #[serde(untagged)]
-    CodeInterpreterOutputImage(CodeInterpreterOutputImage),
+    #[serde(rename = "logs")]
+    CodeInterpreterOutputLogs {
+        /// The logs output from the code interpreter.
+        logs: String,
+    },
+    #[serde(rename = "image")]
+    CodeInterpreterOutputImage {
+        /// The URL of the image output from the code interpreter.
+        url: String,
+    },
 }
 
-impl From<CodeInterpreterOutputImage> for CodeInterpreterToolCallOutputsItem {
-    fn from(value: CodeInterpreterOutputImage) -> Self {
-        CodeInterpreterToolCallOutputsItem::CodeInterpreterOutputImage(value)
-    }
-}
-impl From<CodeInterpreterOutputLogs> for CodeInterpreterToolCallOutputsItem {
-    fn from(value: CodeInterpreterOutputLogs) -> Self {
-        CodeInterpreterToolCallOutputsItem::CodeInterpreterOutputLogs(value)
-    }
-}
 /// The status of the code interpreter tool call. Valid values are `in_progress`, `completed`, `incomplete`, `interpreting`, and `failed`.
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize, utoipa::ToSchema)]
 pub enum CodeInterpreterToolCallStatus {
@@ -493,72 +490,71 @@ impl CompoundFilterType {
 }
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize, utoipa::ToSchema)]
+#[serde(tag = "type")]
 pub enum ComputerAction {
-    #[serde(untagged)]
-    Click(Click),
-    #[serde(untagged)]
-    DoubleClick(DoubleClick),
-    #[serde(untagged)]
-    Drag(Drag),
-    #[serde(untagged)]
-    KeyPress(KeyPress),
-    #[serde(untagged)]
-    Move(Move),
-    #[serde(untagged)]
-    Screenshot(Screenshot),
-    #[serde(untagged)]
-    Scroll(Scroll),
-    #[serde(untagged)]
-    Type(Type),
-    #[serde(untagged)]
-    Wait(Wait),
+    #[serde(rename = "click")]
+    Click {
+        /// Indicates which mouse button was pressed during the click. One of `left`, `right`, `wheel`, `back`, or `forward`.
+        button: ClickButton,
+        /// The x-coordinate where the click occurred.
+        x: i64,
+        /// The y-coordinate where the click occurred.
+        y: i64,
+    },
+    #[serde(rename = "double_click")]
+    DoubleClick {
+        /// The x-coordinate where the double click occurred.
+        x: i64,
+        /// The y-coordinate where the double click occurred.
+        y: i64,
+    },
+    #[serde(rename = "drag")]
+    Drag {
+        /// An array of coordinates representing the path of the drag action. Coordinates will appear as an array
+        /// of objects, eg
+        /// ```txt
+        /// [
+        ///   { x: 100, y: 200 },
+        ///   { x: 200, y: 300 }
+        /// ]
+        /// ```
+        path: Vec<Coordinate>,
+    },
+    #[serde(rename = "keypress")]
+    KeyPress {
+        /// The combination of keys the model is requesting to be pressed. This is an
+        /// array of strings, each representing a key.
+        keys: Vec<String>,
+    },
+    #[serde(rename = "move")]
+    Move {
+        /// The x-coordinate to move to.
+        x: i64,
+        /// The y-coordinate to move to.
+        y: i64,
+    },
+    #[serde(rename = "screenshot")]
+    Screenshot {},
+    #[serde(rename = "scroll")]
+    Scroll {
+        /// The horizontal scroll distance.
+        scroll_x: i64,
+        /// The vertical scroll distance.
+        scroll_y: i64,
+        /// The x-coordinate where the scroll occurred.
+        x: i64,
+        /// The y-coordinate where the scroll occurred.
+        y: i64,
+    },
+    #[serde(rename = "type")]
+    Type {
+        /// The text to type.
+        text: String,
+    },
+    #[serde(rename = "wait")]
+    Wait {},
 }
 
-impl From<Click> for ComputerAction {
-    fn from(value: Click) -> Self {
-        ComputerAction::Click(value)
-    }
-}
-impl From<DoubleClick> for ComputerAction {
-    fn from(value: DoubleClick) -> Self {
-        ComputerAction::DoubleClick(value)
-    }
-}
-impl From<Drag> for ComputerAction {
-    fn from(value: Drag) -> Self {
-        ComputerAction::Drag(value)
-    }
-}
-impl From<KeyPress> for ComputerAction {
-    fn from(value: KeyPress) -> Self {
-        ComputerAction::KeyPress(value)
-    }
-}
-impl From<Move> for ComputerAction {
-    fn from(value: Move) -> Self {
-        ComputerAction::Move(value)
-    }
-}
-impl From<Screenshot> for ComputerAction {
-    fn from(value: Screenshot) -> Self {
-        ComputerAction::Screenshot(value)
-    }
-}
-impl From<Scroll> for ComputerAction {
-    fn from(value: Scroll) -> Self {
-        ComputerAction::Scroll(value)
-    }
-}
-impl From<Type> for ComputerAction {
-    fn from(value: Type) -> Self {
-        ComputerAction::Type(value)
-    }
-}
-impl From<Wait> for ComputerAction {
-    fn from(value: Wait) -> Self {
-        ComputerAction::Wait(value)
-    }
-}
 /// The output of a computer tool call.
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize, utoipa::ToSchema)]
 pub struct ComputerCallOutputItemParam {
@@ -655,7 +651,7 @@ impl ComputerScreenshotImageType {
 }
 
 /// A tool call to a computer use tool. See the
-/// [computer use guide](/docs/guides/tools-computer-use) for more information.
+/// [computer use guide](https://platform.openai.com/docs/guides/tools-computer-use) for more information.
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize, utoipa::ToSchema)]
 pub struct ComputerToolCall {
     pub action: ComputerAction,
@@ -882,11 +878,11 @@ pub struct CreateResponse {
     /// Text, image, or file inputs to the model, used to generate a response.
     ///
     /// Learn more:
-    /// - [Text inputs and outputs](/docs/guides/text)
-    /// - [Image inputs](/docs/guides/images)
-    /// - [File inputs](/docs/guides/pdf-files)
-    /// - [Conversation state](/docs/guides/conversation-state)
-    /// - [Function calling](/docs/guides/function-calling)
+    /// - [Text inputs and outputs](https://platform.openai.com/docs/guides/text)
+    /// - [Image inputs](https://platform.openai.com/docs/guides/images)
+    /// - [File inputs](https://platform.openai.com/docs/guides/pdf-files)
+    /// - [Conversation state](https://platform.openai.com/docs/guides/conversation-state)
+    /// - [Function calling](https://platform.openai.com/docs/guides/function-calling)
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub input: Option<CreateResponseInput>,
     /// A system (or developer) message inserted into the model's context.
@@ -905,10 +901,12 @@ pub struct CreateResponse {
     pub store: Option<bool>,
     /// If set to true, the model response data will be streamed to the client
     /// as it is generated using [server-sent events](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events#Event_stream_format).
-    /// See the [Streaming section below](/docs/api-reference/responses-streaming)
+    /// See the [Streaming section below](https://platform.openai.com/docs/api-reference/responses-streaming)
     /// for more information.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub stream: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub stream_options: Option<ResponseStreamOptions>,
 }
 
 impl AsRef<CreateModelResponseProperties> for CreateResponse {
@@ -934,11 +932,11 @@ impl AsMut<ResponseProperties> for CreateResponse {
 /// Text, image, or file inputs to the model, used to generate a response.
 ///
 /// Learn more:
-/// - [Text inputs and outputs](/docs/guides/text)
-/// - [Image inputs](/docs/guides/images)
-/// - [File inputs](/docs/guides/pdf-files)
-/// - [Conversation state](/docs/guides/conversation-state)
-/// - [Function calling](/docs/guides/function-calling)
+/// - [Text inputs and outputs](https://platform.openai.com/docs/guides/text)
+/// - [Image inputs](https://platform.openai.com/docs/guides/images)
+/// - [File inputs](https://platform.openai.com/docs/guides/pdf-files)
+/// - [Conversation state](https://platform.openai.com/docs/guides/conversation-state)
+/// - [Function calling](https://platform.openai.com/docs/guides/function-calling)
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize, utoipa::ToSchema)]
 pub enum CreateResponseInput {
     #[serde(untagged)]
@@ -957,6 +955,169 @@ impl From<Vec<InputItem>> for CreateResponseInput {
         CreateResponseInput::Variant1(value)
     }
 }
+/// A custom tool that processes input using a specified format. Learn more about
+/// [custom tools](https://platform.openai.com/docs/guides/function-calling#custom-tools).
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, utoipa::ToSchema)]
+pub struct CustomTool {
+    /// Optional description of the custom tool, used to provide more context.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+    /// The input format for the custom tool. Default is unconstrained text.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub format: Option<CustomToolFormat>,
+    /// The name of the custom tool, used to identify it in tool calls.
+    pub name: String,
+    /// The type of the custom tool. Always `custom`.
+    #[serde(rename = "type")]
+    pub r#type: CustomToolType,
+}
+
+/// A call to a custom tool created by the model.
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, utoipa::ToSchema)]
+pub struct CustomToolCall {
+    /// An identifier used to map this custom tool call to a tool call output.
+    pub call_id: String,
+    /// The unique ID of the custom tool call in the OpenAI platform.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub id: Option<String>,
+    /// The input for the custom tool call generated by the model.
+    pub input: String,
+    /// The name of the custom tool being called.
+    pub name: String,
+    /// The type of the custom tool call. Always `custom_tool_call`.
+    #[serde(rename = "type")]
+    pub r#type: CustomToolCallType,
+}
+
+impl crate::HasId for CustomToolCall {
+    fn get_id(&self) -> Option<&str> {
+        self.id.as_deref()
+    }
+}
+
+/// The output of a custom tool call from your code, being sent back to the model.
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, utoipa::ToSchema)]
+pub struct CustomToolCallOutput {
+    /// The call ID, used to map this custom tool call output to a custom tool call.
+    pub call_id: String,
+    /// The unique ID of the custom tool call output in the OpenAI platform.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub id: Option<String>,
+    /// The output from the custom tool call generated by your code.
+    pub output: String,
+    /// The type of the custom tool call output. Always `custom_tool_call_output`.
+    #[serde(rename = "type")]
+    pub r#type: CustomToolCallOutputType,
+}
+
+impl crate::HasId for CustomToolCallOutput {
+    fn get_id(&self) -> Option<&str> {
+        self.id.as_deref()
+    }
+}
+
+/// The type of the custom tool call output. Always `custom_tool_call_output`.
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, utoipa::ToSchema, Default)]
+pub enum CustomToolCallOutputType {
+    #[default]
+    #[serde(rename = "custom_tool_call_output")]
+    CustomToolCallOutput,
+}
+
+impl CustomToolCallOutputType {
+    /// Converts the enum to a string
+    pub fn to_str(&self) -> &str {
+        match self {
+            Self::CustomToolCallOutput => "custom_tool_call_output",
+        }
+    }
+}
+
+/// The type of the custom tool call. Always `custom_tool_call`.
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, utoipa::ToSchema, Default)]
+pub enum CustomToolCallType {
+    #[default]
+    #[serde(rename = "custom_tool_call")]
+    CustomToolCall,
+}
+
+impl CustomToolCallType {
+    /// Converts the enum to a string
+    pub fn to_str(&self) -> &str {
+        match self {
+            Self::CustomToolCall => "custom_tool_call",
+        }
+    }
+}
+
+/// The input format for the custom tool. Default is unconstrained text.
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, utoipa::ToSchema)]
+#[serde(tag = "type")]
+pub enum CustomToolFormat {
+    #[serde(untagged)]
+    Variant0(serde_json::Map<String, serde_json::Value>),
+    #[serde(untagged)]
+    Variant1(serde_json::Map<String, serde_json::Value>),
+}
+
+impl From<serde_json::Map<String, serde_json::Value>> for CustomToolFormat {
+    fn from(value: serde_json::Map<String, serde_json::Value>) -> Self {
+        CustomToolFormat::Variant0(value)
+    }
+}
+/// The syntax of the grammar definition. One of `lark` or `regex`.
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, utoipa::ToSchema)]
+pub enum CustomToolFormatSyntax {
+    #[serde(rename = "lark")]
+    Lark,
+    #[serde(rename = "regex")]
+    Regex,
+}
+
+impl CustomToolFormatSyntax {
+    /// Converts the enum to a string
+    pub fn to_str(&self) -> &str {
+        match self {
+            Self::Lark => "lark",
+            Self::Regex => "regex",
+        }
+    }
+}
+
+/// Grammar format. Always `grammar`.
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, utoipa::ToSchema, Default)]
+pub enum CustomToolFormatType {
+    #[default]
+    #[serde(rename = "grammar")]
+    Grammar,
+}
+
+impl CustomToolFormatType {
+    /// Converts the enum to a string
+    pub fn to_str(&self) -> &str {
+        match self {
+            Self::Grammar => "grammar",
+        }
+    }
+}
+
+/// The type of the custom tool. Always `custom`.
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, utoipa::ToSchema, Default)]
+pub enum CustomToolType {
+    #[default]
+    #[serde(rename = "custom")]
+    Custom,
+}
+
+impl CustomToolType {
+    /// Converts the enum to a string
+    pub fn to_str(&self) -> &str {
+        match self {
+            Self::Custom => "custom",
+        }
+    }
+}
+
 /// A double click action.
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize, utoipa::ToSchema)]
 pub struct DoubleClick {
@@ -1185,7 +1346,7 @@ pub struct FileSearchTool {
 }
 
 /// The results of a file search tool call. See the
-/// [file search guide](/docs/guides/tools-file-search) for more information.
+/// [file search guide](https://platform.openai.com/docs/guides/tools-file-search) for more information.
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize, utoipa::ToSchema)]
 pub struct FileSearchToolCall {
     /// The unique ID of the file search tool call.
@@ -1367,7 +1528,7 @@ pub struct FunctionTool {
 }
 
 /// A tool call to run a function. See the
-/// [function calling guide](/docs/guides/function-calling) for more information.
+/// [function calling guide](https://platform.openai.com/docs/guides/function-calling) for more information.
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize, utoipa::ToSchema)]
 pub struct FunctionToolCall {
     /// A JSON string of the arguments to pass to the function.
@@ -1806,25 +1967,39 @@ impl InputAudioStreamFormatNoiseReductionType {
 }
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize, utoipa::ToSchema)]
+#[serde(tag = "type")]
 pub enum InputContent {
+    #[serde(rename = "input_image")]
+    InputImageContent {
+        /// The detail level of the image to be sent to the model. One of `high`, `low`, or `auto`. Defaults to `auto`.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        detail: Option<InputImageContentDetail>,
+        /// The ID of the file to be sent to the model.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        file_id: Option<String>,
+        /// The URL of the image to be sent to the model. A fully qualified URL or base64 encoded image in a data URL.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        image_url: Option<String>,
+    },
+    #[serde(rename = "input_file")]
+    InputFileContent {
+        /// The content of the file to be sent to the model.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        file_data: Option<String>,
+        /// The ID of the file to be sent to the model.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        file_id: Option<String>,
+        /// The URL of the file to be sent to the model.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        file_url: Option<String>,
+        /// The name of the file to be sent to the model.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        filename: Option<String>,
+    },
     #[serde(untagged)]
     InputTextContent(InputTextContent),
-    #[serde(untagged)]
-    InputImageContent(InputImageContent),
-    #[serde(untagged)]
-    InputFileContent(InputFileContent),
 }
 
-impl From<InputFileContent> for InputContent {
-    fn from(value: InputFileContent) -> Self {
-        InputContent::InputFileContent(value)
-    }
-}
-impl From<InputImageContent> for InputContent {
-    fn from(value: InputImageContent) -> Self {
-        InputContent::InputImageContent(value)
-    }
-}
 impl From<InputTextContent> for InputContent {
     fn from(value: InputTextContent) -> Self {
         InputContent::InputTextContent(value)
@@ -1867,7 +2042,7 @@ impl InputFileContentType {
     }
 }
 
-/// An image input to the model. Learn about [image inputs](/docs/guides/vision).
+/// An image input to the model. Learn about [image inputs](https://platform.openai.com/docs/guides/vision).
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize, utoipa::ToSchema)]
 pub struct InputImageContent {
     /// The detail level of the image to be sent to the model. One of `high`, `low`, or `auto`. Defaults to `auto`.
@@ -2165,6 +2340,9 @@ pub enum Item {
     },
     #[serde(rename = "reasoning")]
     ReasoningItem {
+        /// Reasoning text content.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        content: Option<Vec<ReasoningItemContentItem>>,
         /// The encrypted content of the reasoning item - populated when a response is
         /// generated with `reasoning.encrypted_content` in the `include` parameter.
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -2175,7 +2353,7 @@ pub enum Item {
         /// `incomplete`. Populated when items are returned via API.
         #[serde(default, skip_serializing_if = "Option::is_none")]
         status: Option<Status>,
-        /// Reasoning text contents.
+        /// Reasoning summary content.
         summary: Vec<ReasoningItemSummaryItem>,
     },
     #[serde(rename = "image_generation_call")]
@@ -2273,6 +2451,28 @@ pub enum Item {
         output: Option<String>,
         /// The label of the MCP server running the tool.
         server_label: String,
+    },
+    #[serde(rename = "custom_tool_call_output")]
+    CustomToolCallOutput {
+        /// The call ID, used to map this custom tool call output to a custom tool call.
+        call_id: String,
+        /// The unique ID of the custom tool call output in the OpenAI platform.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        id: Option<String>,
+        /// The output from the custom tool call generated by your code.
+        output: String,
+    },
+    #[serde(rename = "custom_tool_call")]
+    CustomToolCall {
+        /// An identifier used to map this custom tool call to a tool call output.
+        call_id: String,
+        /// The unique ID of the custom tool call in the OpenAI platform.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        id: Option<String>,
+        /// The input for the custom tool call generated by the model.
+        input: String,
+        /// The name of the custom tool being called.
+        name: String,
     },
     #[serde(untagged)]
     InputMessage(InputMessage),
@@ -2663,7 +2863,7 @@ impl MCPListToolsType {
 }
 
 /// Give the model access to additional tools via remote Model Context Protocol
-/// (MCP) servers. [Learn more about MCP](/docs/guides/tools-remote-mcp).
+/// (MCP) servers. [Learn more about MCP](https://platform.openai.com/docs/guides/tools-remote-mcp).
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize, utoipa::ToSchema)]
 pub struct MCPTool {
     /// List of allowed tool names or a filter object.
@@ -2768,6 +2968,22 @@ impl From<serde_json::Map<String, serde_json::Value>> for MCPToolRequireApproval
         MCPToolRequireApproval::Variant0(value)
     }
 }
+/// A list of tools that always require approval.
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, utoipa::ToSchema)]
+pub struct MCPToolRequireApprovalAlways {
+    /// List of tools that require approval.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub tool_names: Option<Vec<String>>,
+}
+
+/// A list of tools that never require approval.
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, utoipa::ToSchema)]
+pub struct MCPToolRequireApprovalNever {
+    /// List of tools that do not require approval.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub tool_names: Option<Vec<String>>,
+}
+
 /// The type of the MCP tool. Always `mcp`.
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize, utoipa::ToSchema, Default)]
 pub enum MCPToolType {
@@ -2882,11 +3098,11 @@ impl ModelObject {
 pub struct ModelResponseProperties {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub metadata: Option<Metadata>,
-    /// Used by OpenAI to cache responses for similar requests to optimize your cache hit rates. Replaces the `user` field. [Learn more](/docs/guides/prompt-caching).
+    /// Used by OpenAI to cache responses for similar requests to optimize your cache hit rates. Replaces the `user` field. [Learn more](https://platform.openai.com/docs/guides/prompt-caching).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub prompt_cache_key: Option<String>,
     /// A stable identifier used to help detect users of your application that may be violating OpenAI's usage policies.
-    /// The IDs should be a string that uniquely identifies each user. We recommend hashing their username or email address, in order to avoid sending us any identifying information. [Learn more](/docs/guides/safety-best-practices#safety-identifiers).
+    /// The IDs should be a string that uniquely identifies each user. We recommend hashing their username or email address, in order to avoid sending us any identifying information. [Learn more](https://platform.openai.com/docs/guides/safety-best-practices#safety-identifiers).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub safety_identifier: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -2909,7 +3125,7 @@ pub struct ModelResponseProperties {
     pub top_p: Option<f64>,
     /// This field is being replaced by `safety_identifier` and `prompt_cache_key`. Use `prompt_cache_key` instead to maintain caching optimizations.
     /// A stable identifier for your end-users.
-    /// Used to boost cache hit rates by better bucketing similar requests and  to help OpenAI detect and prevent abuse. [Learn more](/docs/guides/safety-best-practices#safety-identifiers).
+    /// Used to boost cache hit rates by better bucketing similar requests and  to help OpenAI detect and prevent abuse. [Learn more](https://platform.openai.com/docs/guides/safety-best-practices#safety-identifiers).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub user: Option<String>,
 }
@@ -2946,23 +3162,24 @@ impl MoveType {
 }
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize, utoipa::ToSchema)]
+#[serde(tag = "type")]
 pub enum OutputContent {
-    #[serde(untagged)]
-    OutputTextContent(OutputTextContent),
-    #[serde(untagged)]
-    RefusalContent(RefusalContent),
+    #[serde(rename = "output_text")]
+    OutputTextContent {
+        /// The annotations of the text output.
+        annotations: Vec<Annotation>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        logprobs: Option<Vec<LogProb>>,
+        /// The text output from the model.
+        text: String,
+    },
+    #[serde(rename = "refusal")]
+    RefusalContent {
+        /// The refusal explanation from the model.
+        refusal: String,
+    },
 }
 
-impl From<OutputTextContent> for OutputContent {
-    fn from(value: OutputTextContent) -> Self {
-        OutputContent::OutputTextContent(value)
-    }
-}
-impl From<RefusalContent> for OutputContent {
-    fn from(value: RefusalContent) -> Self {
-        OutputContent::RefusalContent(value)
-    }
-}
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize, utoipa::ToSchema)]
 #[serde(tag = "type")]
 pub enum OutputItem {
@@ -3031,6 +3248,9 @@ pub enum OutputItem {
     },
     #[serde(rename = "reasoning")]
     ReasoningItem {
+        /// Reasoning text content.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        content: Option<Vec<ReasoningItemContentItem>>,
         /// The encrypted content of the reasoning item - populated when a response is
         /// generated with `reasoning.encrypted_content` in the `include` parameter.
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -3041,7 +3261,7 @@ pub enum OutputItem {
         /// `incomplete`. Populated when items are returned via API.
         #[serde(default, skip_serializing_if = "Option::is_none")]
         status: Option<Status>,
-        /// Reasoning text contents.
+        /// Reasoning summary content.
         summary: Vec<ReasoningItemSummaryItem>,
     },
     #[serde(rename = "image_generation_call")]
@@ -3117,6 +3337,18 @@ pub enum OutputItem {
         /// The label of the MCP server making the request.
         server_label: String,
     },
+    #[serde(rename = "custom_tool_call")]
+    CustomToolCall {
+        /// An identifier used to map this custom tool call to a tool call output.
+        call_id: String,
+        /// The unique ID of the custom tool call in the OpenAI platform.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        id: Option<String>,
+        /// The input for the custom tool call generated by the model.
+        input: String,
+        /// The name of the custom tool being called.
+        name: String,
+    },
 }
 
 impl crate::HasId for OutputItem {
@@ -3134,6 +3366,7 @@ impl crate::HasId for OutputItem {
             OutputItem::MCPToolCall { id, .. } => Some(id.as_str()),
             OutputItem::MCPListTools { id, .. } => Some(id.as_str()),
             OutputItem::MCPApprovalRequest { id, .. } => Some(id.as_str()),
+            OutputItem::CustomToolCall { id, .. } => id.as_deref(),
         }
     }
 }
@@ -3226,7 +3459,7 @@ impl OutputTextContentType {
 }
 
 /// Reference to a prompt template and its variables.
-/// [Learn more](/docs/guides/text?api-mode=responses#reusable-prompts).
+/// [Learn more](https://platform.openai.com/docs/guides/text?api-mode=responses#reusable-prompts).
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize, utoipa::ToSchema)]
 pub struct Prompt {
     /// The unique identifier of the prompt template to use.
@@ -3648,7 +3881,7 @@ impl RealtimeClientEventInputAudioBufferCommitType {
 /// stop generating audio and emit a `output_audio_buffer.cleared` event. This
 /// event should be preceded by a `response.cancel` client event to stop the
 /// generation of the current response.
-/// [Learn more](/docs/guides/realtime-conversations#client-and-server-events-for-audio-in-webrtc).
+/// [Learn more](https://platform.openai.com/docs/guides/realtime-conversations#client-and-server-events-for-audio-in-webrtc).
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize, utoipa::ToSchema)]
 pub struct RealtimeClientEventOutputAudioBufferClear {
     /// The unique ID of the client event used for error handling.
@@ -3839,7 +4072,7 @@ pub struct RealtimeConversationItem {
     ///   content
     /// - Message items of role `assistant` support `text` content.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub content: Option<Vec<RealtimeConversationItemContentItem>>,
+    pub content: Option<Vec<RealtimeConversationItemContent>>,
     /// The unique ID of the item, this can be generated by the client to help
     /// manage server-side context, but is not required because the server will
     /// generate one if not provided.
@@ -3875,7 +4108,7 @@ impl crate::HasId for RealtimeConversationItem {
 }
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize, utoipa::ToSchema)]
-pub struct RealtimeConversationItemContentItem {
+pub struct RealtimeConversationItemContent {
     /// Base64-encoded audio bytes, used for `input_audio` content type.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub audio: Option<String>,
@@ -3893,10 +4126,10 @@ pub struct RealtimeConversationItemContentItem {
     pub transcript: Option<String>,
     /// The content type (`input_text`, `input_audio`, `item_reference`, `text`, `audio`).
     #[serde(default, skip_serializing_if = "Option::is_none", rename = "type")]
-    pub r#type: Option<RealtimeConversationItemContentItemType>,
+    pub r#type: Option<RealtimeConversationItemContentType>,
 }
 
-impl crate::HasId for RealtimeConversationItemContentItem {
+impl crate::HasId for RealtimeConversationItemContent {
     fn get_id(&self) -> Option<&str> {
         self.id.as_deref()
     }
@@ -3904,11 +4137,11 @@ impl crate::HasId for RealtimeConversationItemContentItem {
 
 /// The content type (`input_text`, `input_audio`, `item_reference`, `text`, `audio`).
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize, utoipa::ToSchema)]
-pub enum RealtimeConversationItemContentItemType {
-    #[serde(rename = "input_audio")]
-    InputAudio,
+pub enum RealtimeConversationItemContentType {
     #[serde(rename = "input_text")]
     InputText,
+    #[serde(rename = "input_audio")]
+    InputAudio,
     #[serde(rename = "item_reference")]
     ItemReference,
     #[serde(rename = "text")]
@@ -3917,12 +4150,12 @@ pub enum RealtimeConversationItemContentItemType {
     Audio,
 }
 
-impl RealtimeConversationItemContentItemType {
+impl RealtimeConversationItemContentType {
     /// Converts the enum to a string
     pub fn to_str(&self) -> &str {
         match self {
-            Self::InputAudio => "input_audio",
             Self::InputText => "input_text",
+            Self::InputAudio => "input_audio",
             Self::ItemReference => "item_reference",
             Self::Text => "text",
             Self::Audio => "audio",
@@ -4055,10 +4288,10 @@ impl crate::HasId for RealtimeConversationItemWithReferenceContentItem {
 /// The content type (`input_text`, `input_audio`, `item_reference`, `text`).
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize, utoipa::ToSchema)]
 pub enum RealtimeConversationItemWithReferenceContentItemType {
-    #[serde(rename = "input_audio")]
-    InputAudio,
     #[serde(rename = "input_text")]
     InputText,
+    #[serde(rename = "input_audio")]
+    InputAudio,
     #[serde(rename = "item_reference")]
     ItemReference,
     #[serde(rename = "text")]
@@ -4069,8 +4302,8 @@ impl RealtimeConversationItemWithReferenceContentItemType {
     /// Converts the enum to a string
     pub fn to_str(&self) -> &str {
         match self {
-            Self::InputAudio => "input_audio",
             Self::InputText => "input_text",
+            Self::InputAudio => "input_audio",
             Self::ItemReference => "item_reference",
             Self::Text => "text",
         }
@@ -4103,6 +4336,8 @@ pub enum RealtimeConversationItemWithReferenceType {
     FunctionCall,
     #[serde(rename = "function_call_output")]
     FunctionCallOutput,
+    #[serde(rename = "item_reference")]
+    ItemReference,
 }
 
 impl RealtimeConversationItemWithReferenceType {
@@ -4112,6 +4347,7 @@ impl RealtimeConversationItemWithReferenceType {
             Self::Message => "message",
             Self::FunctionCall => "function_call",
             Self::FunctionCallOutput => "function_call_output",
+            Self::ItemReference => "item_reference",
         }
     }
 }
@@ -4447,10 +4683,10 @@ pub enum RealtimeResponseStatusDetailsType {
     Completed,
     #[serde(rename = "cancelled")]
     Cancelled,
-    #[serde(rename = "failed")]
-    Failed,
     #[serde(rename = "incomplete")]
     Incomplete,
+    #[serde(rename = "failed")]
+    Failed,
 }
 
 impl RealtimeResponseStatusDetailsType {
@@ -4459,8 +4695,8 @@ impl RealtimeResponseStatusDetailsType {
         match self {
             Self::Completed => "completed",
             Self::Cancelled => "cancelled",
-            Self::Failed => "failed",
             Self::Incomplete => "incomplete",
+            Self::Failed => "failed",
         }
     }
 }
@@ -4905,12 +5141,29 @@ pub struct RealtimeServerEventConversationCreatedConversation {
     pub id: Option<String>,
     /// The object type, must be `realtime.conversation`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub object: Option<String>,
+    pub object: Option<RealtimeServerEventConversationCreatedConversationObject>,
 }
 
 impl crate::HasId for RealtimeServerEventConversationCreatedConversation {
     fn get_id(&self) -> Option<&str> {
         self.id.as_deref()
+    }
+}
+
+/// The object type, must be `realtime.conversation`.
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, utoipa::ToSchema, Default)]
+pub enum RealtimeServerEventConversationCreatedConversationObject {
+    #[default]
+    #[serde(rename = "realtime.conversation")]
+    RealtimeConversation,
+}
+
+impl RealtimeServerEventConversationCreatedConversationObject {
+    /// Converts the enum to a string
+    pub fn to_str(&self) -> &str {
+        match self {
+            Self::RealtimeConversation => "realtime.conversation",
+        }
     }
 }
 
@@ -5435,7 +5688,7 @@ impl RealtimeServerEventInputAudioBufferSpeechStoppedType {
 /// mode when the user has interrupted (`input_audio_buffer.speech_started`),
 /// or when the client has emitted the `output_audio_buffer.clear` event to manually
 /// cut off the current audio response.
-/// [Learn more](/docs/guides/realtime-conversations#client-and-server-events-for-audio-in-webrtc).
+/// [Learn more](https://platform.openai.com/docs/guides/realtime-conversations#client-and-server-events-for-audio-in-webrtc).
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize, utoipa::ToSchema)]
 pub struct RealtimeServerEventOutputAudioBufferCleared {
     /// The unique ID of the server event.
@@ -5467,7 +5720,7 @@ impl RealtimeServerEventOutputAudioBufferClearedType {
 /// **WebRTC Only:** Emitted when the server begins streaming audio to the client. This event is
 /// emitted after an audio content part has been added (`response.content_part.added`)
 /// to the response.
-/// [Learn more](/docs/guides/realtime-conversations#client-and-server-events-for-audio-in-webrtc).
+/// [Learn more](https://platform.openai.com/docs/guides/realtime-conversations#client-and-server-events-for-audio-in-webrtc).
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize, utoipa::ToSchema)]
 pub struct RealtimeServerEventOutputAudioBufferStarted {
     /// The unique ID of the server event.
@@ -5499,7 +5752,7 @@ impl RealtimeServerEventOutputAudioBufferStartedType {
 /// **WebRTC Only:** Emitted when the output audio buffer has been completely drained on the server,
 /// and no more audio is forthcoming. This event is emitted after the full response
 /// data has been sent to the client (`response.done`).
-/// [Learn more](/docs/guides/realtime-conversations#client-and-server-events-for-audio-in-webrtc).
+/// [Learn more](https://platform.openai.com/docs/guides/realtime-conversations#client-and-server-events-for-audio-in-webrtc).
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize, utoipa::ToSchema)]
 pub struct RealtimeServerEventOutputAudioBufferStopped {
     /// The unique ID of the server event.
@@ -6625,7 +6878,7 @@ pub struct RealtimeSessionInputAudioTranscription {
     pub model: Option<TranscriptionModel>,
     /// An optional text to guide the model's style or continue a previous audio
     /// segment.
-    /// For `whisper-1`, the [prompt is a list of keywords](/docs/guides/speech-to-text#prompting).
+    /// For `whisper-1`, the [prompt is a list of keywords](https://platform.openai.com/docs/guides/speech-to-text#prompting).
     /// For `gpt-4o-transcribe` models, the prompt is a free text string, for example "expect words related to technology".
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub prompt: Option<String>,
@@ -6872,15 +7125,15 @@ pub struct Reasoning {
     pub summary: Option<ReasoningSummary>,
 }
 
-/// **o-series models only**
-///
 /// Constrains effort on reasoning for
 /// [reasoning models](https://platform.openai.com/docs/guides/reasoning).
-/// Currently supported values are `low`, `medium`, and `high`. Reducing
+/// Currently supported values are `minimal`, `low`, `medium`, and `high`. Reducing
 /// reasoning effort can result in faster responses and fewer tokens used
 /// on reasoning in a response.
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize, utoipa::ToSchema, Default)]
 pub enum ReasoningEffort {
+    #[serde(rename = "minimal")]
+    Minimal,
     #[serde(rename = "low")]
     Low,
     #[default]
@@ -6894,6 +7147,7 @@ impl ReasoningEffort {
     /// Converts the enum to a string
     pub fn to_str(&self) -> &str {
         match self {
+            Self::Minimal => "minimal",
             Self::Low => "low",
             Self::Medium => "medium",
             Self::High => "high",
@@ -6930,9 +7184,12 @@ impl ReasoningGenerateSummary {
 /// A description of the chain of thought used by a reasoning model while generating
 /// a response. Be sure to include these items in your `input` to the Responses API
 /// for subsequent turns of a conversation if you are manually
-/// [managing context](/docs/guides/conversation-state).
+/// [managing context](https://platform.openai.com/docs/guides/conversation-state).
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize, utoipa::ToSchema)]
 pub struct ReasoningItem {
+    /// Reasoning text content.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub content: Option<Vec<ReasoningItemContentItem>>,
     /// The encrypted content of the reasoning item - populated when a response is
     /// generated with `reasoning.encrypted_content` in the `include` parameter.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -6943,7 +7200,7 @@ pub struct ReasoningItem {
     /// `incomplete`. Populated when items are returned via API.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub status: Option<Status>,
-    /// Reasoning text contents.
+    /// Reasoning summary content.
     pub summary: Vec<ReasoningItemSummaryItem>,
     /// The type of the object. Always `reasoning`.
     #[serde(rename = "type")]
@@ -6957,9 +7214,34 @@ impl crate::HasId for ReasoningItem {
 }
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize, utoipa::ToSchema)]
+pub struct ReasoningItemContentItem {
+    /// Reasoning text output from the model.
+    pub text: String,
+    /// The type of the object. Always `reasoning_text`.
+    #[serde(rename = "type")]
+    pub r#type: ReasoningItemContentItemType,
+}
+
+/// The type of the object. Always `reasoning_text`.
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, utoipa::ToSchema, Default)]
+pub enum ReasoningItemContentItemType {
+    #[default]
+    #[serde(rename = "reasoning_text")]
+    ReasoningText,
+}
+
+impl ReasoningItemContentItemType {
+    /// Converts the enum to a string
+    pub fn to_str(&self) -> &str {
+        match self {
+            Self::ReasoningText => "reasoning_text",
+        }
+    }
+}
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, utoipa::ToSchema)]
 pub struct ReasoningItemSummaryItem {
-    /// A short summary of the reasoning used by the model when generating
-    /// the response.
+    /// A summary of the reasoning output from the model so far.
     pub text: String,
     /// The type of the object. Always `summary_text`.
     #[serde(rename = "type")]
@@ -7518,6 +7800,72 @@ impl ResponseCreatedEventType {
     pub fn to_str(&self) -> &str {
         match self {
             Self::ResponseCreated => "response.created",
+        }
+    }
+}
+
+/// Event representing a delta (partial update) to the input of a custom tool call.
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, utoipa::ToSchema)]
+pub struct ResponseCustomToolCallInputDeltaEvent {
+    /// The incremental input data (delta) for the custom tool call.
+    pub delta: String,
+    /// Unique identifier for the API item associated with this event.
+    pub item_id: String,
+    /// The index of the output this delta applies to.
+    pub output_index: i64,
+    /// The sequence number of this event.
+    pub sequence_number: i64,
+    /// The event type identifier.
+    #[serde(rename = "type")]
+    pub r#type: ResponseCustomToolCallInputDeltaEventType,
+}
+
+/// The event type identifier.
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, utoipa::ToSchema, Default)]
+pub enum ResponseCustomToolCallInputDeltaEventType {
+    #[default]
+    #[serde(rename = "response.custom_tool_call_input.delta")]
+    ResponseCustomToolCallInputDelta,
+}
+
+impl ResponseCustomToolCallInputDeltaEventType {
+    /// Converts the enum to a string
+    pub fn to_str(&self) -> &str {
+        match self {
+            Self::ResponseCustomToolCallInputDelta => "response.custom_tool_call_input.delta",
+        }
+    }
+}
+
+/// Event indicating that input for a custom tool call is complete.
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, utoipa::ToSchema)]
+pub struct ResponseCustomToolCallInputDoneEvent {
+    /// The complete input data for the custom tool call.
+    pub input: String,
+    /// Unique identifier for the API item associated with this event.
+    pub item_id: String,
+    /// The index of the output this event applies to.
+    pub output_index: i64,
+    /// The sequence number of this event.
+    pub sequence_number: i64,
+    /// The event type identifier.
+    #[serde(rename = "type")]
+    pub r#type: ResponseCustomToolCallInputDoneEventType,
+}
+
+/// The event type identifier.
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, utoipa::ToSchema, Default)]
+pub enum ResponseCustomToolCallInputDoneEventType {
+    #[default]
+    #[serde(rename = "response.custom_tool_call_input.done")]
+    ResponseCustomToolCallInputDone,
+}
+
+impl ResponseCustomToolCallInputDoneEventType {
+    /// Converts the enum to a string
+    pub fn to_str(&self) -> &str {
+        match self {
+            Self::ResponseCustomToolCallInputDone => "response.custom_tool_call_input.done",
         }
     }
 }
@@ -8519,16 +8867,49 @@ impl ResponseOutputTextAnnotationAddedEventType {
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize, utoipa::ToSchema)]
 pub struct ResponsePromptVariables {
     #[serde(flatten)]
-    pub extra_fields: std::collections::HashMap<String, serde_json::Value>,
+    pub extra_fields:
+        std::collections::HashMap<String, ResponsePromptVariablesAdditionalproperties>,
 }
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize, utoipa::ToSchema)]
+pub enum ResponsePromptVariablesAdditionalproperties {
+    #[serde(untagged)]
+    Variant0(String),
+    #[serde(untagged)]
+    InputTextContent(InputTextContent),
+    #[serde(untagged)]
+    InputImageContent(InputImageContent),
+    #[serde(untagged)]
+    InputFileContent(InputFileContent),
+}
+
+impl From<InputFileContent> for ResponsePromptVariablesAdditionalproperties {
+    fn from(value: InputFileContent) -> Self {
+        ResponsePromptVariablesAdditionalproperties::InputFileContent(value)
+    }
+}
+impl From<InputImageContent> for ResponsePromptVariablesAdditionalproperties {
+    fn from(value: InputImageContent) -> Self {
+        ResponsePromptVariablesAdditionalproperties::InputImageContent(value)
+    }
+}
+impl From<InputTextContent> for ResponsePromptVariablesAdditionalproperties {
+    fn from(value: InputTextContent) -> Self {
+        ResponsePromptVariablesAdditionalproperties::InputTextContent(value)
+    }
+}
+impl From<String> for ResponsePromptVariablesAdditionalproperties {
+    fn from(value: String) -> Self {
+        ResponsePromptVariablesAdditionalproperties::Variant0(value)
+    }
+}
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, utoipa::ToSchema)]
 pub struct ResponseProperties {
     /// Whether to run the model response in the background.
-    /// [Learn more](/docs/guides/background).
+    /// [Learn more](https://platform.openai.com/docs/guides/background).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub background: Option<bool>,
-    /// An upper bound for the number of tokens that can be generated for a response, including visible output tokens and [reasoning tokens](/docs/guides/reasoning).
+    /// An upper bound for the number of tokens that can be generated for a response, including visible output tokens and [reasoning tokens](https://platform.openai.com/docs/guides/reasoning).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub max_output_tokens: Option<i64>,
     /// The maximum number of total calls to built-in tools that can be processed in a response. This maximum number applies across all built-in tool calls, not per individual tool. Any further attempts to call a tool by the model will be ignored.
@@ -8536,13 +8917,13 @@ pub struct ResponseProperties {
     pub max_tool_calls: Option<i64>,
     /// Model ID used to generate the response, like `gpt-4o` or `o3`. OpenAI
     /// offers a wide range of models with different capabilities, performance
-    /// characteristics, and price points. Refer to the [model guide](/docs/models)
+    /// characteristics, and price points. Refer to the [model guide](https://platform.openai.com/docs/models)
     /// to browse and compare available models.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub model: Option<ModelId>,
     /// The unique ID of the previous response to the model. Use this to
     /// create multi-turn conversations. Learn more about
-    /// [conversation state](/docs/guides/conversation-state).
+    /// [conversation state](https://platform.openai.com/docs/guides/conversation-state).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub previous_response_id: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -8551,8 +8932,8 @@ pub struct ResponseProperties {
     pub reasoning: Option<Reasoning>,
     /// Configuration options for a text response from the model. Can be plain
     /// text or structured JSON data. Learn more:
-    /// - [Text inputs and outputs](/docs/guides/text)
-    /// - [Structured Outputs](/docs/guides/structured-outputs)
+    /// - [Text inputs and outputs](https://platform.openai.com/docs/guides/text)
+    /// - [Structured Outputs](https://platform.openai.com/docs/guides/structured-outputs)
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub text: Option<ResponsePropertiesText>,
     /// How the model should select which tool (or tools) to use when generating
@@ -8566,12 +8947,14 @@ pub struct ResponseProperties {
     /// The two categories of tools you can provide the model are:
     ///
     /// - **Built-in tools**: Tools that are provided by OpenAI that extend the
-    ///   model's capabilities, like [web search](/docs/guides/tools-web-search)
-    ///   or [file search](/docs/guides/tools-file-search). Learn more about
-    ///   [built-in tools](/docs/guides/tools).
+    ///   model's capabilities, like [web search](https://platform.openai.com/docs/guides/tools-web-search)
+    ///   or [file search](https://platform.openai.com/docs/guides/tools-file-search). Learn more about
+    ///   [built-in tools](https://platform.openai.com/docs/guides/tools).
     /// - **Function calls (custom tools)**: Functions that are defined by you,
-    ///   enabling the model to call your own code. Learn more about
-    ///   [function calling](/docs/guides/function-calling).
+    ///   enabling the model to call your own code with strongly typed arguments
+    ///   and outputs. Learn more about
+    ///   [function calling](https://platform.openai.com/docs/guides/function-calling). You can also use
+    ///   custom tools to call your own code.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub tools: Option<Vec<Tool>>,
     /// The truncation strategy to use for the model response.
@@ -8587,12 +8970,14 @@ pub struct ResponseProperties {
 
 /// Configuration options for a text response from the model. Can be plain
 /// text or structured JSON data. Learn more:
-/// - [Text inputs and outputs](/docs/guides/text)
-/// - [Structured Outputs](/docs/guides/structured-outputs)
+/// - [Text inputs and outputs](https://platform.openai.com/docs/guides/text)
+/// - [Structured Outputs](https://platform.openai.com/docs/guides/structured-outputs)
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize, utoipa::ToSchema)]
 pub struct ResponsePropertiesText {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub format: Option<TextResponseFormatConfiguration>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub verbosity: Option<Verbosity>,
 }
 
 /// How the model should select which tool (or tools) to use when generating
@@ -8603,13 +8988,27 @@ pub enum ResponsePropertiesToolChoice {
     #[serde(untagged)]
     ToolChoiceOptions(ToolChoiceOptions),
     #[serde(untagged)]
+    ToolChoiceAllowed(ToolChoiceAllowed),
+    #[serde(untagged)]
     ToolChoiceTypes(ToolChoiceTypes),
     #[serde(untagged)]
     ToolChoiceFunction(ToolChoiceFunction),
     #[serde(untagged)]
     ToolChoiceMCP(ToolChoiceMCP),
+    #[serde(untagged)]
+    ToolChoiceCustom(ToolChoiceCustom),
 }
 
+impl From<ToolChoiceAllowed> for ResponsePropertiesToolChoice {
+    fn from(value: ToolChoiceAllowed) -> Self {
+        ResponsePropertiesToolChoice::ToolChoiceAllowed(value)
+    }
+}
+impl From<ToolChoiceCustom> for ResponsePropertiesToolChoice {
+    fn from(value: ToolChoiceCustom) -> Self {
+        ResponsePropertiesToolChoice::ToolChoiceCustom(value)
+    }
+}
 impl From<ToolChoiceFunction> for ResponsePropertiesToolChoice {
     fn from(value: ToolChoiceFunction) -> Self {
         ResponsePropertiesToolChoice::ToolChoiceFunction(value)
@@ -8681,76 +9080,6 @@ impl ResponseQueuedEventType {
     pub fn to_str(&self) -> &str {
         match self {
             Self::ResponseQueued => "response.queued",
-        }
-    }
-}
-
-/// Emitted when there is a delta (partial update) to the reasoning summary content.
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, utoipa::ToSchema)]
-pub struct ResponseReasoningSummaryDeltaEvent {
-    /// The partial update to the reasoning summary content.
-    pub delta: serde_json::Map<String, serde_json::Value>,
-    /// The unique identifier of the item for which the reasoning summary is being updated.
-    pub item_id: String,
-    /// The index of the output item in the response's output array.
-    pub output_index: i64,
-    /// The sequence number of this event.
-    pub sequence_number: i64,
-    /// The index of the summary part within the output item.
-    pub summary_index: i64,
-    /// The type of the event. Always 'response.reasoning_summary.delta'.
-    #[serde(rename = "type")]
-    pub r#type: ResponseReasoningSummaryDeltaEventType,
-}
-
-/// The type of the event. Always 'response.reasoning_summary.delta'.
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, utoipa::ToSchema, Default)]
-pub enum ResponseReasoningSummaryDeltaEventType {
-    #[default]
-    #[serde(rename = "response.reasoning_summary.delta")]
-    ResponseReasoningSummaryDelta,
-}
-
-impl ResponseReasoningSummaryDeltaEventType {
-    /// Converts the enum to a string
-    pub fn to_str(&self) -> &str {
-        match self {
-            Self::ResponseReasoningSummaryDelta => "response.reasoning_summary.delta",
-        }
-    }
-}
-
-/// Emitted when the reasoning summary content is finalized for an item.
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, utoipa::ToSchema)]
-pub struct ResponseReasoningSummaryDoneEvent {
-    /// The unique identifier of the item for which the reasoning summary is finalized.
-    pub item_id: String,
-    /// The index of the output item in the response's output array.
-    pub output_index: i64,
-    /// The sequence number of this event.
-    pub sequence_number: i64,
-    /// The index of the summary part within the output item.
-    pub summary_index: i64,
-    /// The finalized reasoning summary text.
-    pub text: String,
-    /// The type of the event. Always 'response.reasoning_summary.done'.
-    #[serde(rename = "type")]
-    pub r#type: ResponseReasoningSummaryDoneEventType,
-}
-
-/// The type of the event. Always 'response.reasoning_summary.done'.
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, utoipa::ToSchema, Default)]
-pub enum ResponseReasoningSummaryDoneEventType {
-    #[default]
-    #[serde(rename = "response.reasoning_summary.done")]
-    ResponseReasoningSummaryDone,
-}
-
-impl ResponseReasoningSummaryDoneEventType {
-    /// Converts the enum to a string
-    pub fn to_str(&self) -> &str {
-        match self {
-            Self::ResponseReasoningSummaryDone => "response.reasoning_summary.done",
         }
     }
 }
@@ -8945,6 +9274,76 @@ impl ResponseReasoningSummaryTextDoneEventType {
     pub fn to_str(&self) -> &str {
         match self {
             Self::ResponseReasoningSummaryTextDone => "response.reasoning_summary_text.done",
+        }
+    }
+}
+
+/// Emitted when a delta is added to a reasoning text.
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, utoipa::ToSchema)]
+pub struct ResponseReasoningTextDeltaEvent {
+    /// The index of the reasoning content part this delta is associated with.
+    pub content_index: i64,
+    /// The text delta that was added to the reasoning content.
+    pub delta: String,
+    /// The ID of the item this reasoning text delta is associated with.
+    pub item_id: String,
+    /// The index of the output item this reasoning text delta is associated with.
+    pub output_index: i64,
+    /// The sequence number of this event.
+    pub sequence_number: i64,
+    /// The type of the event. Always `response.reasoning_text.delta`.
+    #[serde(rename = "type")]
+    pub r#type: ResponseReasoningTextDeltaEventType,
+}
+
+/// The type of the event. Always `response.reasoning_text.delta`.
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, utoipa::ToSchema, Default)]
+pub enum ResponseReasoningTextDeltaEventType {
+    #[default]
+    #[serde(rename = "response.reasoning_text.delta")]
+    ResponseReasoningTextDelta,
+}
+
+impl ResponseReasoningTextDeltaEventType {
+    /// Converts the enum to a string
+    pub fn to_str(&self) -> &str {
+        match self {
+            Self::ResponseReasoningTextDelta => "response.reasoning_text.delta",
+        }
+    }
+}
+
+/// Emitted when a reasoning text is completed.
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, utoipa::ToSchema)]
+pub struct ResponseReasoningTextDoneEvent {
+    /// The index of the reasoning content part.
+    pub content_index: i64,
+    /// The ID of the item this reasoning text is associated with.
+    pub item_id: String,
+    /// The index of the output item this reasoning text is associated with.
+    pub output_index: i64,
+    /// The sequence number of this event.
+    pub sequence_number: i64,
+    /// The full text of the completed reasoning content.
+    pub text: String,
+    /// The type of the event. Always `response.reasoning_text.done`.
+    #[serde(rename = "type")]
+    pub r#type: ResponseReasoningTextDoneEventType,
+}
+
+/// The type of the event. Always `response.reasoning_text.done`.
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, utoipa::ToSchema, Default)]
+pub enum ResponseReasoningTextDoneEventType {
+    #[default]
+    #[serde(rename = "response.reasoning_text.done")]
+    ResponseReasoningTextDone,
+}
+
+impl ResponseReasoningTextDoneEventType {
+    /// Converts the enum to a string
+    pub fn to_str(&self) -> &str {
+        match self {
+            Self::ResponseReasoningTextDone => "response.reasoning_text.done",
         }
     }
 }
@@ -9322,6 +9721,32 @@ pub enum ResponseStreamEvent {
         /// The full text of the completed reasoning summary.
         text: String,
     },
+    #[serde(rename = "response.reasoning_text.delta")]
+    ResponseReasoningTextDeltaEvent {
+        /// The index of the reasoning content part this delta is associated with.
+        content_index: i64,
+        /// The text delta that was added to the reasoning content.
+        delta: String,
+        /// The ID of the item this reasoning text delta is associated with.
+        item_id: String,
+        /// The index of the output item this reasoning text delta is associated with.
+        output_index: i64,
+        /// The sequence number of this event.
+        sequence_number: i64,
+    },
+    #[serde(rename = "response.reasoning_text.done")]
+    ResponseReasoningTextDoneEvent {
+        /// The index of the reasoning content part.
+        content_index: i64,
+        /// The ID of the item this reasoning text is associated with.
+        item_id: String,
+        /// The index of the output item this reasoning text is associated with.
+        output_index: i64,
+        /// The sequence number of this event.
+        sequence_number: i64,
+        /// The full text of the completed reasoning content.
+        text: String,
+    },
     #[serde(rename = "response.refusal.delta")]
     ResponseRefusalDeltaEvent {
         /// The index of the content part that the refusal text is added to.
@@ -9543,32 +9968,42 @@ pub enum ResponseStreamEvent {
         /// The sequence number for this event.
         sequence_number: i64,
     },
-    #[serde(rename = "response.reasoning_summary.delta")]
-    ResponseReasoningSummaryDeltaEvent {
-        /// The partial update to the reasoning summary content.
-        delta: serde_json::Map<String, serde_json::Value>,
-        /// The unique identifier of the item for which the reasoning summary is being updated.
+    #[serde(rename = "response.custom_tool_call_input.delta")]
+    ResponseCustomToolCallInputDeltaEvent {
+        /// The incremental input data (delta) for the custom tool call.
+        delta: String,
+        /// Unique identifier for the API item associated with this event.
         item_id: String,
-        /// The index of the output item in the response's output array.
+        /// The index of the output this delta applies to.
         output_index: i64,
         /// The sequence number of this event.
         sequence_number: i64,
-        /// The index of the summary part within the output item.
-        summary_index: i64,
     },
-    #[serde(rename = "response.reasoning_summary.done")]
-    ResponseReasoningSummaryDoneEvent {
-        /// The unique identifier of the item for which the reasoning summary is finalized.
+    #[serde(rename = "response.custom_tool_call_input.done")]
+    ResponseCustomToolCallInputDoneEvent {
+        /// The complete input data for the custom tool call.
+        input: String,
+        /// Unique identifier for the API item associated with this event.
         item_id: String,
-        /// The index of the output item in the response's output array.
+        /// The index of the output this event applies to.
         output_index: i64,
         /// The sequence number of this event.
         sequence_number: i64,
-        /// The index of the summary part within the output item.
-        summary_index: i64,
-        /// The finalized reasoning summary text.
-        text: String,
     },
+}
+
+/// Options for streaming responses. Only set this when you set `stream: true`.
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, utoipa::ToSchema)]
+pub struct ResponseStreamOptions {
+    /// When true, stream obfuscation will be enabled. Stream obfuscation adds
+    /// random characters to an `obfuscation` field on streaming delta events to
+    /// normalize payload sizes as a mitigation to certain side-channel attacks.
+    /// These obfuscation fields are included by default, but add a small amount
+    /// of overhead to the data stream. You can set `include_obfuscation` to
+    /// false to optimize for bandwidth if you trust the network links between
+    /// your application and the OpenAI API.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub include_obfuscation: Option<bool>,
 }
 
 /// Emitted when there is an additional text delta.
@@ -9665,7 +10100,7 @@ pub struct ResponseUsage {
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize, utoipa::ToSchema)]
 pub struct ResponseUsageInputTokensDetails {
     /// The number of tokens that were retrieved from the cache.
-    /// [More on prompt caching](/docs/guides/prompt-caching).
+    /// [More on prompt caching](https://platform.openai.com/docs/guides/prompt-caching).
     pub cached_tokens: i64,
 }
 
@@ -9834,7 +10269,7 @@ impl ScrollType {
 /// Specifies the processing type used for serving the request.
 ///   - If set to 'auto', then the request will be processed with the service tier configured in the Project settings. Unless otherwise configured, the Project will use 'default'.
 ///   - If set to 'default', then the request will be processed with the standard pricing and performance for the selected model.
-///   - If set to '[flex](/docs/guides/flex-processing)' or 'priority', then the request will be processed with the corresponding service tier. [Contact sales](https://openai.com/contact-sales) to learn more about Priority processing.
+///   - If set to '[flex](https://platform.openai.com/docs/guides/flex-processing)' or 'priority', then the request will be processed with the corresponding service tier. [Contact sales](https://openai.com/contact-sales) to learn more about Priority processing.
 ///   - When not set, the default behavior is 'auto'.
 ///
 ///   When the `service_tier` parameter is set, the response body will include the `service_tier` value based on the processing mode actually used to serve the request. This response value may be different from the value set in the parameter.
@@ -9891,7 +10326,7 @@ impl Status {
 ///
 /// Configuring `{ "type": "json_schema" }` enables Structured Outputs,
 /// which ensures the model will match your supplied JSON schema. Learn more in the
-/// [Structured Outputs guide](/docs/guides/structured-outputs).
+/// [Structured Outputs guide](https://platform.openai.com/docs/guides/structured-outputs).
 ///
 /// The default format is `{ "type": "text" }` with no additional options.
 ///
@@ -9901,32 +10336,34 @@ impl Status {
 /// ensures the message the model generates is valid JSON. Using `json_schema`
 /// is preferred for models that support it.
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize, utoipa::ToSchema)]
+#[serde(tag = "type")]
 pub enum TextResponseFormatConfiguration {
-    #[serde(untagged)]
-    ResponseFormatText(ResponseFormatText),
-    #[serde(untagged)]
-    TextResponseFormatJsonSchema(TextResponseFormatJsonSchema),
-    #[serde(untagged)]
-    ResponseFormatJsonObject(ResponseFormatJsonObject),
+    #[serde(rename = "text")]
+    ResponseFormatText {},
+    #[serde(rename = "json_schema")]
+    TextResponseFormatJsonSchema {
+        /// A description of what the response format is for, used by the model to
+        /// determine how to respond in the format.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        description: Option<String>,
+        /// The name of the response format. Must be a-z, A-Z, 0-9, or contain
+        /// underscores and dashes, with a maximum length of 64.
+        name: String,
+        schema: ResponseFormatJsonSchemaSchema,
+        /// Whether to enable strict schema adherence when generating the output.
+        /// If set to true, the model will always follow the exact schema defined
+        /// in the `schema` field. Only a subset of JSON Schema is supported when
+        /// `strict` is `true`. To learn more, read the [Structured Outputs
+        /// guide](https://platform.openai.com/docs/guides/structured-outputs).
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        strict: Option<bool>,
+    },
+    #[serde(rename = "json_object")]
+    ResponseFormatJsonObject {},
 }
 
-impl From<ResponseFormatJsonObject> for TextResponseFormatConfiguration {
-    fn from(value: ResponseFormatJsonObject) -> Self {
-        TextResponseFormatConfiguration::ResponseFormatJsonObject(value)
-    }
-}
-impl From<ResponseFormatText> for TextResponseFormatConfiguration {
-    fn from(value: ResponseFormatText) -> Self {
-        TextResponseFormatConfiguration::ResponseFormatText(value)
-    }
-}
-impl From<TextResponseFormatJsonSchema> for TextResponseFormatConfiguration {
-    fn from(value: TextResponseFormatJsonSchema) -> Self {
-        TextResponseFormatConfiguration::TextResponseFormatJsonSchema(value)
-    }
-}
 /// JSON Schema response format. Used to generate structured JSON responses.
-/// Learn more about [Structured Outputs](/docs/guides/structured-outputs).
+/// Learn more about [Structured Outputs](https://platform.openai.com/docs/guides/structured-outputs).
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize, utoipa::ToSchema)]
 pub struct TextResponseFormatJsonSchema {
     /// A description of what the response format is for, used by the model to
@@ -9941,7 +10378,7 @@ pub struct TextResponseFormatJsonSchema {
     /// If set to true, the model will always follow the exact schema defined
     /// in the `schema` field. Only a subset of JSON Schema is supported when
     /// `strict` is `true`. To learn more, read the [Structured Outputs
-    /// guide](/docs/guides/structured-outputs).
+    /// guide](https://platform.openai.com/docs/guides/structured-outputs).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub strict: Option<bool>,
     /// The type of response format being defined. Always `json_schema`.
@@ -10070,6 +10507,17 @@ pub enum Tool {
     },
     #[serde(rename = "local_shell")]
     LocalShellTool {},
+    #[serde(rename = "custom")]
+    CustomTool {
+        /// Optional description of the custom tool, used to provide more context.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        description: Option<String>,
+        /// The input format for the custom tool. Default is unconstrained text.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        format: Option<CustomToolFormat>,
+        /// The name of the custom tool, used to identify it in tool calls.
+        name: String,
+    },
     #[serde(untagged)]
     WebSearchPreviewTool(WebSearchPreviewTool),
 }
@@ -10079,6 +10527,100 @@ impl From<WebSearchPreviewTool> for Tool {
         Tool::WebSearchPreviewTool(value)
     }
 }
+/// Constrains the tools available to the model to a pre-defined set.
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, utoipa::ToSchema)]
+pub struct ToolChoiceAllowed {
+    /// Constrains the tools available to the model to a pre-defined set.
+    ///
+    /// `auto` allows the model to pick from among the allowed tools and generate a
+    /// message.
+    ///
+    /// `required` requires the model to call one or more of the allowed tools.
+    pub mode: ToolChoiceAllowedMode,
+    /// A list of tool definitions that the model should be allowed to call.
+    ///
+    /// For the Responses API, the list of tool definitions might look like:
+    /// ```json
+    /// [
+    ///   { "type": "function", "name": "get_weather" },
+    ///   { "type": "mcp", "server_label": "deepwiki" },
+    ///   { "type": "image_generation" }
+    /// ]
+    /// ```txt
+    pub tools: Vec<serde_json::Map<String, serde_json::Value>>,
+    /// Allowed tool configuration type. Always `allowed_tools`.
+    #[serde(rename = "type")]
+    pub r#type: ToolChoiceAllowedType,
+}
+
+/// Constrains the tools available to the model to a pre-defined set.
+///
+/// `auto` allows the model to pick from among the allowed tools and generate a
+/// message.
+///
+/// `required` requires the model to call one or more of the allowed tools.
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, utoipa::ToSchema)]
+pub enum ToolChoiceAllowedMode {
+    #[serde(rename = "auto")]
+    Auto,
+    #[serde(rename = "required")]
+    Required,
+}
+
+impl ToolChoiceAllowedMode {
+    /// Converts the enum to a string
+    pub fn to_str(&self) -> &str {
+        match self {
+            Self::Auto => "auto",
+            Self::Required => "required",
+        }
+    }
+}
+
+/// Allowed tool configuration type. Always `allowed_tools`.
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, utoipa::ToSchema, Default)]
+pub enum ToolChoiceAllowedType {
+    #[default]
+    #[serde(rename = "allowed_tools")]
+    AllowedTools,
+}
+
+impl ToolChoiceAllowedType {
+    /// Converts the enum to a string
+    pub fn to_str(&self) -> &str {
+        match self {
+            Self::AllowedTools => "allowed_tools",
+        }
+    }
+}
+
+/// Use this option to force the model to call a specific custom tool.
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, utoipa::ToSchema)]
+pub struct ToolChoiceCustom {
+    /// The name of the custom tool to call.
+    pub name: String,
+    /// For custom tool calling, the type is always `custom`.
+    #[serde(rename = "type")]
+    pub r#type: ToolChoiceCustomType,
+}
+
+/// For custom tool calling, the type is always `custom`.
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, utoipa::ToSchema, Default)]
+pub enum ToolChoiceCustomType {
+    #[default]
+    #[serde(rename = "custom")]
+    Custom,
+}
+
+impl ToolChoiceCustomType {
+    /// Converts the enum to a string
+    pub fn to_str(&self) -> &str {
+        match self {
+            Self::Custom => "custom",
+        }
+    }
+}
+
 /// Use this option to force the model to call a specific function.
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize, utoipa::ToSchema)]
 pub struct ToolChoiceFunction {
@@ -10166,11 +10708,11 @@ impl ToolChoiceOptions {
 }
 
 /// Indicates that the model should use a built-in tool to generate a response.
-/// [Learn more about built-in tools](/docs/guides/tools).
+/// [Learn more about built-in tools](https://platform.openai.com/docs/guides/tools).
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize, utoipa::ToSchema)]
 pub struct ToolChoiceTypes {
     /// The type of hosted tool the model should to use. Learn more about
-    /// [built-in tools](/docs/guides/tools).
+    /// [built-in tools](https://platform.openai.com/docs/guides/tools).
     ///
     /// Allowed values are:
     /// - `file_search`
@@ -10183,7 +10725,7 @@ pub struct ToolChoiceTypes {
 }
 
 /// The type of hosted tool the model should to use. Learn more about
-/// [built-in tools](/docs/guides/tools).
+/// [built-in tools](https://platform.openai.com/docs/guides/tools).
 ///
 /// Allowed values are:
 /// - `file_search`
@@ -10424,7 +10966,58 @@ impl UrlCitationBodyType {
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize, utoipa::ToSchema)]
 pub struct VectorStoreFileAttributes {
     #[serde(flatten)]
-    pub extra_fields: std::collections::HashMap<String, serde_json::Value>,
+    pub extra_fields:
+        std::collections::HashMap<String, VectorStoreFileAttributesAdditionalproperties>,
+}
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, utoipa::ToSchema)]
+pub enum VectorStoreFileAttributesAdditionalproperties {
+    #[serde(untagged)]
+    Variant0(String),
+    #[serde(untagged)]
+    Variant1(f64),
+    #[serde(untagged)]
+    Variant2(bool),
+}
+
+impl From<String> for VectorStoreFileAttributesAdditionalproperties {
+    fn from(value: String) -> Self {
+        VectorStoreFileAttributesAdditionalproperties::Variant0(value)
+    }
+}
+impl From<f64> for VectorStoreFileAttributesAdditionalproperties {
+    fn from(value: f64) -> Self {
+        VectorStoreFileAttributesAdditionalproperties::Variant1(value)
+    }
+}
+impl From<bool> for VectorStoreFileAttributesAdditionalproperties {
+    fn from(value: bool) -> Self {
+        VectorStoreFileAttributesAdditionalproperties::Variant2(value)
+    }
+}
+/// Constrains the verbosity of the model's response. Lower values will result in
+/// more concise responses, while higher values will result in more verbose responses.
+/// Currently supported values are `low`, `medium`, and `high`.
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, utoipa::ToSchema, Default)]
+pub enum Verbosity {
+    #[serde(rename = "low")]
+    Low,
+    #[default]
+    #[serde(rename = "medium")]
+    Medium,
+    #[serde(rename = "high")]
+    High,
+}
+
+impl Verbosity {
+    /// Converts the enum to a string
+    pub fn to_str(&self) -> &str {
+        match self {
+            Self::Low => "low",
+            Self::Medium => "medium",
+            Self::High => "high",
+        }
+    }
 }
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize, utoipa::ToSchema)]
@@ -10621,7 +11214,7 @@ impl WebSearchPreviewToolType {
 }
 
 /// The results of a web search tool call. See the
-/// [web search guide](/docs/guides/tools-web-search) for more information.
+/// [web search guide](https://platform.openai.com/docs/guides/tools-web-search) for more information.
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize, utoipa::ToSchema)]
 pub struct WebSearchToolCall {
     /// An object describing the specific action taken in this web search call.
@@ -10645,30 +11238,27 @@ impl crate::HasId for WebSearchToolCall {
 /// An object describing the specific action taken in this web search call.
 /// Includes details on how the model used the web (search, open_page, find).
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize, utoipa::ToSchema)]
+#[serde(tag = "type")]
 pub enum WebSearchToolCallAction {
-    #[serde(untagged)]
-    WebSearchActionSearch(WebSearchActionSearch),
-    #[serde(untagged)]
-    WebSearchActionOpenPage(WebSearchActionOpenPage),
-    #[serde(untagged)]
-    WebSearchActionFind(WebSearchActionFind),
+    #[serde(rename = "search")]
+    WebSearchActionSearch {
+        /// The search query.
+        query: String,
+    },
+    #[serde(rename = "open_page")]
+    WebSearchActionOpenPage {
+        /// The URL opened by the model.
+        url: String,
+    },
+    #[serde(rename = "find")]
+    WebSearchActionFind {
+        /// The pattern or text to search for within the page.
+        pattern: String,
+        /// The URL of the page searched for the pattern.
+        url: String,
+    },
 }
 
-impl From<WebSearchActionFind> for WebSearchToolCallAction {
-    fn from(value: WebSearchActionFind) -> Self {
-        WebSearchToolCallAction::WebSearchActionFind(value)
-    }
-}
-impl From<WebSearchActionOpenPage> for WebSearchToolCallAction {
-    fn from(value: WebSearchActionOpenPage) -> Self {
-        WebSearchToolCallAction::WebSearchActionOpenPage(value)
-    }
-}
-impl From<WebSearchActionSearch> for WebSearchToolCallAction {
-    fn from(value: WebSearchActionSearch) -> Self {
-        WebSearchToolCallAction::WebSearchActionSearch(value)
-    }
-}
 /// The status of the web search tool call.
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize, utoipa::ToSchema)]
 pub enum WebSearchToolCallStatus {

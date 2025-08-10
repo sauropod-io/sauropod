@@ -90,14 +90,11 @@ impl Conversation {
 
     /// Add an assistant text message to the conversation.
     pub fn add_assistant_message(&mut self, message: &str) {
-        let content = sauropod_openai_api::OutputContent::OutputTextContent(
-            sauropod_openai_api::OutputTextContent {
-                annotations: Vec::new(),
-                logprobs: None,
-                text: message.to_string(),
-                r#type: sauropod_openai_api::OutputTextContentType::OutputText,
-            },
-        );
+        let content = sauropod_openai_api::OutputContent::OutputTextContent {
+            annotations: Vec::new(),
+            logprobs: None,
+            text: message.to_string(),
+        };
         self.messages.push(Message::OutputItem(
             sauropod_openai_api::OutputItem::OutputMessage {
                 content: vec![content],

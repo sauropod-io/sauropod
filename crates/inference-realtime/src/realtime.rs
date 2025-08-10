@@ -172,18 +172,18 @@ impl crate::RealtimeFunctionality for RealtimeSessionState {
                         if let Some(conversation_items) = item.content {
                             for item in conversation_items {
                                 match item.r#type {
-                                    None | Some(sauropod_openai_api::RealtimeConversationItemContentItemType::Text) | Some(sauropod_openai_api::RealtimeConversationItemContentItemType::InputText) => {
+                                    None | Some(sauropod_openai_api::RealtimeConversationItemContentType::Text) | Some(sauropod_openai_api::RealtimeConversationItemContentType::InputText) => {
                                         content.push(sauropod_openai_api::InputTextContent{
                                             text: item.text.unwrap_or_default(),
                                             r#type: sauropod_openai_api::InputTextContentType::InputText,
                                         }.into());
                                     }
-                                    Some(sauropod_openai_api::RealtimeConversationItemContentItemType::ItemReference) => {
+                                    Some(sauropod_openai_api::RealtimeConversationItemContentType::ItemReference) => {
                                         anyhow::bail!(
                                             "ItemReference is not supported yet"
                                         );
                                     }
-                                    Some(sauropod_openai_api::RealtimeConversationItemContentItemType::Audio) | Some(sauropod_openai_api::RealtimeConversationItemContentItemType::InputAudio) => {
+                                    Some(sauropod_openai_api::RealtimeConversationItemContentType::Audio) | Some(sauropod_openai_api::RealtimeConversationItemContentType::InputAudio) => {
                                         tracing::warn!(
                                             "Received conversation item with InputAudio content type, this is not implemented yet"
                                         );
@@ -562,8 +562,8 @@ impl RealtimeSessionState {
                         };
 
                         let text = match part.clone() {
-                            sauropod_openai_api::OutputContent::OutputTextContent(text_content) => text_content.text,
-                            sauropod_openai_api::OutputContent::RefusalContent(refusal) => refusal.refusal,
+                            sauropod_openai_api::OutputContent::OutputTextContent{text, ..} => text,
+                            sauropod_openai_api::OutputContent::RefusalContent { refusal, .. } => refusal,
                         };
                         let mut pcm16_audio = tts_model.enqueue(text.clone()).await?;
                         let mut audio_bytes = Vec::with_capacity(512);

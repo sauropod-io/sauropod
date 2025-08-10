@@ -123,14 +123,11 @@ impl ResponseStreamCreator {
             sauropod_openai_api::OutputItem::OutputMessage { id, content, .. } => {
                 // Ensure we have a text content part at the current index
                 if content.len() <= self.content_index as usize {
-                    let text_content = sauropod_openai_api::OutputTextContent {
+                    let output_content = sauropod_openai_api::OutputContent::OutputTextContent {
                         logprobs: None,
                         text: String::new(),
                         annotations: Vec::new(),
-                        r#type: sauropod_openai_api::OutputTextContentType::OutputText,
                     };
-                    let output_content =
-                        sauropod_openai_api::OutputContent::OutputTextContent(text_content);
                     content.push(output_content.clone());
 
                     // Emit content part added event
@@ -149,10 +146,12 @@ impl ResponseStreamCreator {
                 }
 
                 // Append the text to the existing content
-                if let Some(sauropod_openai_api::OutputContent::OutputTextContent(text_content)) =
-                    content.get_mut(self.content_index as usize)
+                if let Some(sauropod_openai_api::OutputContent::OutputTextContent {
+                    text: existing_text,
+                    ..
+                }) = content.get_mut(self.content_index as usize)
                 {
-                    text_content.text.push_str(&text);
+                    existing_text.push_str(&text);
                 }
 
                 id.clone()
@@ -237,9 +236,9 @@ impl ResponseStreamCreator {
             && let Some(output_content) = content.get(self.content_index as usize)
         {
             // If this is a text content part with non-empty text, emit ResponseTextDoneEvent first
-            if let sauropod_openai_api::OutputContent::OutputTextContent(text_content) =
+            if let sauropod_openai_api::OutputContent::OutputTextContent { text, .. } =
                 output_content
-                && !text_content.text.is_empty()
+                && !text.is_empty()
             {
                 events.push(
                     sauropod_openai_api::ResponseStreamEvent::ResponseTextDoneEvent {
@@ -247,7 +246,7 @@ impl ResponseStreamCreator {
                         content_index: self.content_index,
                         item_id: id.clone(),
                         output_index: self.output_index,
-                        text: text_content.text.clone(),
+                        text: text.clone(),
                         logprobs: vec![],
                     },
                 );
@@ -463,6 +462,7 @@ impl ResponseStreamCreator {
         let reasoning_item = sauropod_openai_api::OutputItem::ReasoningItem {
             encrypted_content: None,
             id: item_id.clone(),
+            content: None, // TODO
             status: Some(sauropod_openai_api::Status::InProgress),
             summary: vec![sauropod_openai_api::ReasoningItemSummaryItem {
                 text: String::new(),
@@ -674,8 +674,8 @@ mod tests {
             OutputItem::OutputMessage { content, .. } => {
                 assert_eq!(content.len(), 1);
                 match &content[0] {
-                    sauropod_openai_api::OutputContent::OutputTextContent(text_content) => {
-                        assert_eq!(text_content.text, "Hello World");
+                    sauropod_openai_api::OutputContent::OutputTextContent { text, .. } => {
+                        assert_eq!(text, "Hello World");
                     }
                     _ => panic!("Expected OutputTextContent"),
                 }
@@ -725,8 +725,8 @@ mod tests {
                 assert_eq!(*content_index, 0);
                 assert_eq!(*output_index, 0);
                 match part {
-                    sauropod_openai_api::OutputContent::OutputTextContent(text_content) => {
-                        assert_eq!(text_content.text, "Hello");
+                    sauropod_openai_api::OutputContent::OutputTextContent { text, .. } => {
+                        assert_eq!(text, "Hello");
                     }
                     _ => panic!("Expected OutputTextContent"),
                 }
@@ -820,8 +820,8 @@ mod tests {
                 assert_eq!(*content_index, 0);
                 assert_eq!(*output_index, 0);
                 match part {
-                    sauropod_openai_api::OutputContent::OutputTextContent(text_content) => {
-                        assert_eq!(text_content.text, "");
+                    sauropod_openai_api::OutputContent::OutputTextContent { text, .. } => {
+                        assert_eq!(text, "");
                     }
                     _ => panic!("Expected OutputTextContent"),
                 }

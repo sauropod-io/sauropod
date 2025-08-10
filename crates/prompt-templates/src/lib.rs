@@ -50,13 +50,12 @@ pub enum MultimodalData {
 
 impl MultimodalData {
     /// Create a new `MultimodalData::Image` from an image.
-    pub fn from_image(image: &sauropod_openai_api::InputImageContent) -> anyhow::Result<Self> {
+    pub fn from_image(
+        image_url: &str,
+        _detail: &Option<sauropod_openai_api::InputImageContentDetail>,
+    ) -> anyhow::Result<Self> {
         use base64::prelude::*;
 
-        let _detail = image.detail.clone().unwrap_or_default();
-        let Some(image_url) = &image.image_url else {
-            return Err(anyhow::anyhow!("Image content must have an image URL"));
-        };
         let Some(image_data) = image_url.strip_prefix("data:") else {
             return Err(anyhow::anyhow!(
                 "Image URL must be a base64-encoded data URL"
@@ -211,17 +210,27 @@ impl RenderContext {
                                 .content
                                 .push_str(&text_content.text);
                         }
-                        sauropod_openai_api::InputContent::InputImageContent(image_content) => {
+                        sauropod_openai_api::InputContent::InputImageContent {
+                            image_url: Some(image_url),
+                            detail,
+                            ..
+                        } => {
                             let message = get_last_user_message(&mut messages);
                             message.content.push_str("<__media__>");
-                            match MultimodalData::from_image(image_content) {
+                            match MultimodalData::from_image(image_url, detail) {
                                 Ok(data) => multimodal_data.push(data),
                                 Err(e) => {
                                     result = Err(e);
                                 }
                             }
                         }
-                        sauropod_openai_api::InputContent::InputFileContent(_) => {
+                        sauropod_openai_api::InputContent::InputImageContent {
+                            image_url: None,
+                            ..
+                        } => {
+                            result = Err(anyhow::anyhow!("Image content must have an image URL"));
+                        }
+                        sauropod_openai_api::InputContent::InputFileContent { .. } => {
                             result = Err(anyhow::anyhow!("InputFileContent not handled"));
                         }
                     });
@@ -250,10 +259,10 @@ impl RenderContext {
                                 tools: None,
                             })
                         }
-                        sauropod_openai_api::InputContent::InputImageContent(_) => {
+                        sauropod_openai_api::InputContent::InputImageContent { .. } => {
                             result = Err(anyhow::anyhow!("InputImageContent not handled"));
                         }
-                        sauropod_openai_api::InputContent::InputFileContent(_) => {
+                        sauropod_openai_api::InputContent::InputFileContent { .. } => {
                             result = Err(anyhow::anyhow!("InputFileContent not handled"));
                         }
                     });
@@ -263,14 +272,14 @@ impl RenderContext {
                 ) => {
                     for item in content {
                         match item {
-                            sauropod_openai_api::OutputContent::OutputTextContent(text_content) => {
-                                messages.push(crate::RenderContextMessage {
-                                    role: crate::RenderContextRole::Assistant,
-                                    content: text_content.text.to_string(),
-                                    tools: None,
-                                })
-                            }
-                            sauropod_openai_api::OutputContent::RefusalContent(_) => {
+                            sauropod_openai_api::OutputContent::OutputTextContent {
+                                text, ..
+                            } => messages.push(crate::RenderContextMessage {
+                                role: crate::RenderContextRole::Assistant,
+                                content: text.to_string(),
+                                tools: None,
+                            }),
+                            sauropod_openai_api::OutputContent::RefusalContent { .. } => {
                                 result = Err(anyhow::anyhow!("RefusalContent not handled"));
                             }
                         }
