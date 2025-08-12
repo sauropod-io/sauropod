@@ -9,14 +9,14 @@ pub(crate) const ONNX_SUFFIX: &str = ".onnx";
 
 const DEFAULT_PREFERRED_QUANTIZATION: &str = "Q4_K_M";
 
-pub(crate) fn select_file<'a>(
-    files: &'a [String],
+pub(crate) fn select_file(
+    files: &[String],
     preferred_quantization: Option<&str>,
-) -> Option<&'a str> {
+) -> Option<String> {
     // First priority: TensorRT engine files
     for file in files {
         if file.ends_with(ENGINE_SUFFIX) {
-            return Some(file);
+            return Some(file.to_string());
         }
     }
 
@@ -48,16 +48,22 @@ pub(crate) fn select_file<'a>(
         let gguf_file = gguf_files[0];
         if chunk_pattern.is_match(gguf_file) {
             // If it's a chunk file, return the parent directory
-            return Some(gguf_file.rsplit_once('/').map(|x| x.0).unwrap_or("."));
+            return Some(
+                gguf_file
+                    .rsplit_once('/')
+                    .map(|x| x.0)
+                    .unwrap_or(".")
+                    .to_string(),
+            );
         }
 
-        return Some(gguf_file);
+        return Some(gguf_file.to_string());
     }
 
     // Third priority: ONNX files
     files.iter().find_map(|file| {
         if file.ends_with(ONNX_SUFFIX) {
-            Some(file.as_str())
+            Some(file.to_string())
         } else {
             None
         }
@@ -76,7 +82,7 @@ mod test {
             "model.onnx".to_string(),
         ];
 
-        assert_eq!(select_file(&files, None), Some("model.engine"));
+        assert_eq!(select_file(&files, None).as_deref(), Some("model.engine"));
     }
 
     #[test]
@@ -136,7 +142,7 @@ mod test {
             "mmproj-F32.gguf".to_string(),
         ];
 
-        assert_eq!(select_file(&files, None), Some("Q4_K_M"));
+        assert_eq!(select_file(&files, None).as_deref(), Some("Q4_K_M"));
     }
 
     #[test]
@@ -147,7 +153,7 @@ mod test {
             "config.json".to_string(),
         ];
 
-        assert_eq!(select_file(&files, None), Some("."));
+        assert_eq!(select_file(&files, None).as_deref(), Some("."));
     }
 
     #[test]
@@ -158,28 +164,31 @@ mod test {
             "model-Q4_K_M-00003-of-00003.gguf".to_string(),
         ];
 
-        assert_eq!(select_file(&files, None), Some("."));
+        assert_eq!(select_file(&files, None).as_deref(), Some("."));
     }
 
     #[test]
     fn test_chunk_pattern_detection() {
         let files = vec!["some-model-12345-of-67890.gguf".to_string()];
 
-        assert_eq!(select_file(&files, None), Some("."));
+        assert_eq!(select_file(&files, None).as_deref(), Some("."));
     }
 
     #[test]
     fn test_select_gguf_fallback() {
         let files = vec!["model-Q8_0.gguf".to_string(), "model.onnx".to_string()];
 
-        assert_eq!(select_file(&files, None), Some("model-Q8_0.gguf"));
+        assert_eq!(
+            select_file(&files, None).as_deref(),
+            Some("model-Q8_0.gguf")
+        );
     }
 
     #[test]
     fn test_select_onnx_fallback() {
         let files = vec!["model.onnx".to_string(), "other.txt".to_string()];
 
-        assert_eq!(select_file(&files, None), Some("model.onnx"));
+        assert_eq!(select_file(&files, None).as_deref(), Some("model.onnx"));
     }
 
     #[test]

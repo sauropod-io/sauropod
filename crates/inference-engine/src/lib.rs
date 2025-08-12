@@ -167,27 +167,27 @@ pub async fn get_model_path(
             let interface = sauropod_huggingface::RepositoryInterface::new()?;
             let metadata = interface.get_repository_metadata(hf_repo).await?;
             let selected_file = match &hf_repo.path_or_quantization {
+                Some(sauropod_config::PathOrQuantization::FilePath { file }) => file.to_string(),
                 Some(sauropod_config::PathOrQuantization::Quantization { quantization }) => {
-                    model_file_selector::select_file(&metadata.files, Some(quantization.as_str()))
-                        .unwrap_or(".")
+                    let all_files = metadata.get_all_files().await?;
+                    model_file_selector::select_file(&all_files, Some(quantization.as_str()))
+                        .ok_or_else(|| {
+                            anyhow::anyhow!("Failed to select a model file for {hf_repo}")
+                        })?
                 }
-                Some(sauropod_config::PathOrQuantization::FilePath { file }) => file.as_str(),
-                None => model_file_selector::select_file(&metadata.files, None).unwrap_or("."),
+                None => {
+                    let all_files = metadata.get_all_files().await?;
+                    model_file_selector::select_file(&all_files, None).ok_or_else(|| {
+                        anyhow::anyhow!("Failed to select a model file for {hf_repo}")
+                    })?
+                }
             };
-            let mut files_to_download = Vec::with_capacity(1);
+            let _downloaded_files = metadata.download(&[&selected_file]).await?;
 
-            for file in &metadata.files {
-                if file.starts_with(selected_file)
-                    || file.ends_with(".json")
-                    || selected_file == "."
-                {
-                    files_to_download.push(file.as_str());
-                }
-            }
-            let _downloaded_files = metadata.download(&files_to_download).await?;
-
-            let Some(file_path) = metadata.get_path(selected_file) else {
-                anyhow::bail!("Failed to get path for selected file: {}", selected_file);
+            let Some(file_path) = metadata.get_path(&selected_file) else {
+                anyhow::bail!(
+                    "Failed to get path for selected file {selected_file} in the repo {hf_repo}"
+                );
             };
             file_path
         }

@@ -3434,6 +3434,7 @@ dependencies = [
  "hf-hub",
  "sauropod-config",
  "serde",
+ "tokio",
 ]
 
 [[package]]
