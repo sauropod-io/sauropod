@@ -169,11 +169,40 @@ pub async fn get_model_path(
             let selected_file = match &hf_repo.path_or_quantization {
                 Some(sauropod_config::PathOrQuantization::FilePath { file }) => file.to_string(),
                 Some(sauropod_config::PathOrQuantization::Quantization { quantization }) => {
-                    let all_files = metadata.get_all_files().await?;
-                    model_file_selector::select_file(&all_files, Some(quantization.as_str()))
-                        .ok_or_else(|| {
-                            anyhow::anyhow!("Failed to select a model file for {hf_repo}")
-                        })?
+                    let repo_name = if let Some(pair) = hf_repo.repo.rsplit_once('/') {
+                        pair.1
+                    } else {
+                        hf_repo.repo.as_str()
+                    };
+
+                    let mut search_paths = Vec::with_capacity(3);
+                    search_paths.push(format!("{repo_name}-{quantization}.gguf"));
+                    if let Some(repo_name_without_suffix) = repo_name.strip_suffix("-GGUF") {
+                        search_paths
+                            .push(format!("{repo_name_without_suffix}-{quantization}.gguf"));
+                    }
+                    search_paths.push(format!("{quantization}.gguf"));
+
+                    let mut maybe_local_file = None;
+                    // Check for an already cached file
+                    for file_name in search_paths {
+                        tracing::error!("Looking for {file_name}");
+                        if metadata.get_path(&file_name).is_some() {
+                            maybe_local_file = Some(file_name);
+                            break;
+                        }
+                    }
+
+                    if let Some(local_file) = maybe_local_file {
+                        local_file
+                    } else {
+                        // If we can't find a pre-cached file then fetch the list of files in the repository and try to find a match
+                        let all_files = metadata.get_all_files().await?;
+                        model_file_selector::select_file(&all_files, Some(quantization.as_str()))
+                            .ok_or_else(|| {
+                                anyhow::anyhow!("Failed to select a model file for {hf_repo}")
+                            })?
+                    }
                 }
                 None => {
                     let all_files = metadata.get_all_files().await?;

@@ -50,7 +50,9 @@ impl RepositoryInfo {
         futures::future::try_join_all(file_download_coroutines.into_iter()).await
     }
 
-    /// Get the directory the repository is downloaded to.
+    /// Get the path to a downloaded file.
+    ///
+    /// IF the file is not present on the host then `None` is returned.
     pub fn get_path(&self, filename: &str) -> Option<PathBuf> {
         self.model_cache.get(filename)
     }
