@@ -1,0 +1,35 @@
+verbose = true
+host = "0.0.0.0"
+
+[voices.default]
+type = "kokoro"
+voice = "af_heart"
+
+[authentication]
+type = "api_key"
+api_key = "hardcoded_api_key"
+
+[models.default]
+model = { repo = "unsloth/gemma-3-270m-it-qat-GGUF", quantization = "Q4_K_M" }
+temperature = 1.0
+top_k = 64
+top_p = 0.95
+min_p = 0.0
+system_prompt = """
+You are a helpful assistant.
+
+The user will ask you questions, and you will answer them to the best of your ability.
+The user already knows you, so there is no need to introduce yourself.
+Keep your answers concise and to the point.
+{%- if tools and tools != "[]" %}
+You have access to functions. If you decide to invoke any of the function(s),
+you MUST put it in the format of
+```tool_call
+{"name": function name, "parameters": dictionary of argument name and its value}
+```
+
+You SHOULD NOT include any other text in the response if you call a function.
+{{ tools }}
+{%- endif -%}
+"""
+maximum_tokens = 32000

@@ -12,6 +12,15 @@ sauropod-inference-server --verbose --config-file examples/gpt-oss.toml
 sauropod-inference-server --verbose --config-file examples/gemma.toml
 ```
 
+### Memory efficienct gemma
+
+To run a very small Gemma model.
+
+```bash
+sauropod-inference-server --verbose --config-file examples/memory-efficient.toml
+```
+
+
 ## SmolVLM 2
 
 ```bash
