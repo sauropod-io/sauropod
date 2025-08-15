@@ -6,10 +6,12 @@ use anyhow::Context as _;
 type TokenReceiver =
     tokio::sync::mpsc::Receiver<anyhow::Result<sauropod_inference_engine_api::Token>>;
 type TokenSender = tokio::sync::mpsc::Sender<anyhow::Result<sauropod_inference_engine_api::Token>>;
+type InputTokenCountOneshot = tokio::sync::oneshot::Sender<i64>;
 
 /// The minimum batch size for llama.cpp.
 const MIN_BATCH_SIZE: i32 = llama_cpp_sys::ggml_kq_mask_pad as i32;
 
+#[derive(Debug)]
 pub enum GenerationRequestInput {
     Tokens(sauropod_inference_engine_api::TokenSequence),
     Text {
@@ -26,7 +28,9 @@ pub struct GenerationRequest {
     /// A sender to return the output.
     ///
     /// The output is streamed back to the caller token by token.
-    pub sender: TokenSender,
+    pub token_sender: TokenSender,
+    /// A sender to return the count of input tokens.
+    pub input_token_count_oneshot: InputTokenCountOneshot,
     /// Parent span ID.
     pub parent_span_id: Option<tracing::Id>,
 }
@@ -73,11 +77,13 @@ impl ModelInferenceThread {
         &self,
         sampler_properties: sauropod_inference_engine_api::SamplerProperties,
         input: GenerationRequestInput,
-    ) -> anyhow::Result<TokenReceiver> {
+    ) -> anyhow::Result<(i64, TokenReceiver)> {
         let (tx, rx) = tokio::sync::mpsc::channel(5);
+        let (input_token_count_tx, input_token_count_rx) = tokio::sync::oneshot::channel();
         let request = GenerationRequest {
             sampler_properties,
-            sender: tx,
+            token_sender: tx,
+            input_token_count_oneshot: input_token_count_tx,
             input,
             parent_span_id: tracing::Span::current().id(),
         };
@@ -85,7 +91,8 @@ impl ModelInferenceThread {
             .send(request)
             .await
             .context("Failed to enqueue llama.cpp request")?;
-        Ok(rx)
+        let input_tokens = input_token_count_rx.await?;
+        Ok((input_tokens, rx))
     }
 
     async fn generate_from_string_impl(
@@ -93,9 +100,12 @@ impl ModelInferenceThread {
         sampler_properties: sauropod_inference_engine_api::SamplerProperties,
         text: String,
         multimodal_data: Vec<sauropod_prompt_templates::MultimodalData>,
-    ) -> anyhow::Result<impl tokio_stream::Stream<Item = anyhow::Result<String>>> {
+    ) -> anyhow::Result<(
+        i64,
+        impl tokio_stream::Stream<Item = anyhow::Result<String>>,
+    )> {
         let vocab = self.model.get_vocab()?;
-        let mut receiver = self
+        let (input_token_count, mut receiver) = self
             .generate_impl(
                 sampler_properties,
                 GenerationRequestInput::Text {
@@ -137,7 +147,7 @@ impl ModelInferenceThread {
                 };
             }
         };
-        Ok(stream)
+        Ok((input_token_count, stream))
     }
 }
 
@@ -148,7 +158,7 @@ impl sauropod_inference_engine_api::LlmModel for ModelInferenceThread {
         sampler_properties: sauropod_inference_engine_api::SamplerProperties,
         tokens: sauropod_inference_engine_api::TokenSequence,
     ) -> anyhow::Result<sauropod_inference_engine_api::TokenStream> {
-        let receiver = self
+        let (_, receiver) = self
             .generate_impl(sampler_properties, GenerationRequestInput::Tokens(tokens))
             .await?;
         Ok(
@@ -162,11 +172,14 @@ impl sauropod_inference_engine_api::LlmModel for ModelInferenceThread {
         sampler_properties: sauropod_inference_engine_api::SamplerProperties,
         text: String,
         multimodal_data: Vec<sauropod_prompt_templates::MultimodalData>,
-    ) -> anyhow::Result<sauropod_inference_engine_api::PartStream> {
-        let stream = self
+    ) -> anyhow::Result<sauropod_inference_engine_api::GenerateFromTextResponse> {
+        let (input_token_count, stream) = self
             .generate_from_string_impl(sampler_properties, text, multimodal_data)
             .await?;
-        Ok(Box::pin(stream) as sauropod_inference_engine_api::PartStream)
+        Ok(sauropod_inference_engine_api::GenerateFromTextResponse {
+            stream: Box::pin(stream) as sauropod_inference_engine_api::PartStream,
+            input_token_count,
+        })
     }
 
     fn get_model_chat_template(&self) -> &str {
@@ -196,8 +209,13 @@ fn run_for_tokens(
     model: &Arc<crate::Model>,
     mut tokens: sauropod_inference_engine_api::TokenSequence,
     sampler_properties: &sauropod_inference_engine_api::SamplerProperties,
+    token_count_sender: InputTokenCountOneshot,
     sender: &TokenSender,
 ) -> anyhow::Result<()> {
+    if let Err(e) = token_count_sender.send(tokens.len() as i64) {
+        tracing::error!("Failed to send token count: {:#?}", e);
+    }
+
     let vocab = model.get_vocab()?;
     let sampler = crate::Sampler::new(sampler_properties)?;
     let mut generated_token_count = 0usize;
@@ -256,6 +274,7 @@ fn run_for_multimodal(
     content: String,
     multimodal_data: Vec<sauropod_prompt_templates::MultimodalData>,
     sampler_properties: &sauropod_inference_engine_api::SamplerProperties,
+    token_count_sender: InputTokenCountOneshot,
     sender: &TokenSender,
 ) -> anyhow::Result<()> {
     let Some(mtmd_context) = model.mtmd_context.as_ref() else {
@@ -288,6 +307,9 @@ fn run_for_multimodal(
     let n_tokens: usize = (0..chunks.len())
         .map(|i| unsafe { llama_cpp_sys::mtmd_input_chunk_get_n_tokens(chunks.get(i)) })
         .sum();
+    if let Err(e) = token_count_sender.send(n_tokens as i64) {
+        tracing::error!("Failed to send token count: {:#?}", e);
+    }
 
     let context = model.llama_context(n_tokens as i64, sampler_properties.max_predict as i64)?;
 
@@ -449,16 +471,24 @@ fn inference_thread(
         span.follows_from(request.parent_span_id);
         let _guard = span.enter();
         let maybe_error = match request.input {
-            GenerationRequestInput::Tokens(tokens) => {
-                run_for_tokens(&model, tokens, &request.sampler_properties, &request.sender)
-            }
+            GenerationRequestInput::Tokens(tokens) => run_for_tokens(
+                &model,
+                tokens,
+                &request.sampler_properties,
+                request.input_token_count_oneshot,
+                &request.token_sender,
+            ),
             GenerationRequestInput::Text {
                 content,
                 multimodal_data,
             } if multimodal_data.is_empty() => match model.tokenize(&content) {
-                Ok(tokens) => {
-                    run_for_tokens(&model, tokens, &request.sampler_properties, &request.sender)
-                }
+                Ok(tokens) => run_for_tokens(
+                    &model,
+                    tokens,
+                    &request.sampler_properties,
+                    request.input_token_count_oneshot,
+                    &request.token_sender,
+                ),
                 Err(e) => Err(e.into()),
             },
             GenerationRequestInput::Text {
@@ -469,14 +499,15 @@ fn inference_thread(
                 content,
                 multimodal_data,
                 &request.sampler_properties,
-                &request.sender,
+                request.input_token_count_oneshot,
+                &request.token_sender,
             ),
         };
 
         if let Err(decode_error) = maybe_error {
             tracing::error!("Error during inference: {:#?}", decode_error);
             // Send an error back to the sender
-            if let Err(send_error) = request.sender.blocking_send(Err(decode_error)) {
+            if let Err(send_error) = request.token_sender.blocking_send(Err(decode_error)) {
                 tracing::error!("Failed to send error back to sender: {:#?}", send_error);
             }
         }

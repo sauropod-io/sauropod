@@ -39,8 +39,20 @@ impl ResponseStreamCreator {
     /// Creates a new instance of the response stream creator.
     pub fn new(
         output_parser: Box<dyn sauropod_output_parser::ModelOutputParser>,
-        initial_response: sauropod_openai_api::Response,
+        mut initial_response: sauropod_openai_api::Response,
     ) -> Self {
+        initial_response.usage = Some(sauropod_openai_api::ResponseUsage {
+            input_tokens: 0,
+            input_tokens_details: sauropod_openai_api::ResponseUsageInputTokensDetails {
+                cached_tokens: 0,
+            },
+            output_tokens: 0,
+            output_tokens_details: sauropod_openai_api::ResponseUsageOutputTokensDetails {
+                reasoning_tokens: 0,
+            },
+            total_tokens: 0,
+        });
+
         Self {
             response: initial_response,
             output_index: 0,
@@ -219,6 +231,16 @@ impl ResponseStreamCreator {
             }
         }
         events
+    }
+
+    /// Call push text and update the token content in the internal response state.
+    pub fn push_part(&mut self, part: String) -> Vec<sauropod_openai_api::ResponseStreamEvent> {
+        let Some(usage) = self.response.usage.as_mut() else {
+            unreachable!()
+        };
+        usage.output_tokens += 1;
+        usage.total_tokens += 1;
+        self.push_text(part)
     }
 
     /// Closes the current content part if one is open and emits a ResponseContentPartDoneEvent.

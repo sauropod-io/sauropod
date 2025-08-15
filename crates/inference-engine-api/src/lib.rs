@@ -66,6 +66,14 @@ pub type Token = u32;
 /// A sequence of tokens.
 pub type TokenSequence = Vec<Token>;
 
+/// The result of a `generate_from_text` call.
+pub struct GenerateFromTextResponse {
+    /// The number of input tokens.
+    pub input_token_count: i64,
+    /// The output stream from the LLM.
+    pub stream: PartStream,
+}
+
 /// An LLM model.
 #[async_trait::async_trait]
 pub trait LlmModel: Send + Sync {
@@ -82,7 +90,7 @@ pub trait LlmModel: Send + Sync {
         sampler_properties: SamplerProperties,
         text: String,
         multimodal_data: Vec<sauropod_prompt_templates::MultimodalData>,
-    ) -> anyhow::Result<PartStream>;
+    ) -> anyhow::Result<GenerateFromTextResponse>;
 
     /// Get the Jinja template for the model.
     fn get_model_chat_template(&self) -> &str;

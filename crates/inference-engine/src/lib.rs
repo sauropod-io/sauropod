@@ -69,7 +69,10 @@ impl Model {
             sauropod_output_parser::get_model_parser(model.get_model_type()),
             response,
         );
-        let stream = model
+        let sauropod_inference_engine_api::GenerateFromTextResponse {
+            stream,
+            input_token_count,
+        } = model
             .generate_from_text(
                 sampler_properties,
                 rendered_prompt,
@@ -78,11 +81,17 @@ impl Model {
             .await
             .context("Generating token stream")?;
 
+        response_stream_creator
+            .response
+            .usage
+            .as_mut()
+            .unwrap()
+            .input_tokens = input_token_count;
         let stream = async_stream::stream! {
             for await part in stream {
                 match part {
                     Ok(part) => {
-                        for event in response_stream_creator.push_text(part) {
+                        for event in response_stream_creator.push_part(part) {
                             yield Ok(event);
                         }
                     }
