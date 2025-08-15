@@ -186,7 +186,7 @@ pub async fn get_model_path(
                     let mut maybe_local_file = None;
                     // Check for an already cached file
                     for file_name in search_paths {
-                        tracing::error!("Looking for {file_name}");
+                        tracing::debug!("Looking for {file_name} in the cache");
                         if metadata.get_path(&file_name).is_some() {
                             maybe_local_file = Some(file_name);
                             break;
