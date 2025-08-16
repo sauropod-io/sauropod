@@ -1908,3 +1908,25 @@ fn test_response_web_search_call_searching_event() {
     )
     .unwrap();
 }
+/// Test for SpeechAudioDeltaEvent example value
+#[test]
+fn test_speech_audio_delta_event() {
+    const SPEECH_AUDIO_DELTA_EVENT_EXAMPLE: &str = r#"{
+  "type": "speech.audio.delta",
+  "audio": "base64-encoded-audio-data"
+}"#;
+    round_trip_test::<crate::SpeechAudioDeltaEvent>(SPEECH_AUDIO_DELTA_EVENT_EXAMPLE).unwrap();
+}
+/// Test for SpeechAudioDoneEvent example value
+#[test]
+fn test_speech_audio_done_event() {
+    const SPEECH_AUDIO_DONE_EVENT_EXAMPLE: &str = r#"{
+  "type": "speech.audio.done",
+  "usage": {
+    "input_tokens": 14,
+    "output_tokens": 101,
+    "total_tokens": 115
+  }
+}"#;
+    round_trip_test::<crate::SpeechAudioDoneEvent>(SPEECH_AUDIO_DONE_EVENT_EXAMPLE).unwrap();
+}

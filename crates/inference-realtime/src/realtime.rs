@@ -720,24 +720,18 @@ impl RealtimeSessionState {
             .range(audio_range.clone())
             .copied()
             .collect::<Vec<_>>();
+
+        let model_name = self.get_model_name().await;
+        let model = self.global_state.get_model(&model_name).await;
+        if let Some(model) = model.as_ref()
+            && model.supports_audio_input
+        {
+            tracing::debug!("TODO: support direct speech input to models");
+        }
+
         let text =
             crate::model_calling::call_speech_to_text_model(audio_data.clone(), &self.global_state)
                 .await?;
-
-        // TODO populate logprobs and content_index
-        // let avg_logprob = if self
-        //     .session
-        //     .include
-        //     .as_ref()
-        //     .map(|includes| {
-        //         includes.contains(&"item.input_audio_transcription.logprobs".to_string())
-        //     })
-        //     .unwrap_or(false)
-        // {
-        //     Some(segment.decoding_result.avg_logprob)
-        // } else {
-        //     None
-        // };
 
         socket
             .send_event(

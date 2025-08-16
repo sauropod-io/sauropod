@@ -51,7 +51,19 @@ python3 examples/query_with_image.py
 uv run examples/query_with_image.py
 ```
 
-### Voice
+### Text to speech
+
+```bash
+# Using pip:
+pip install openai
+python3 examples/text_to_speech.py
+
+# Using Astral uv (will automatically install dependencies):
+uv run examples/text_to_speech.py
+```
+
+
+### Voice to voice
 
 ```bash
 # On Ubuntu: apt-get install libportaudio2

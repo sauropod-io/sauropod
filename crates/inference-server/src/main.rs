@@ -27,6 +27,9 @@ fn create_api_router(
                 sauropod_inference_responses::delete_response
             ))
             .routes(utoipa_axum::routes!(
+                sauropod_inference_audio::create_speech,
+            ))
+            .routes(utoipa_axum::routes!(
                 sauropod_inference_responses::get_models
             ))
             .layer(axum::middleware::from_fn_with_state(

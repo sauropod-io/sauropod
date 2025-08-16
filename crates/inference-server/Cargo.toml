@@ -27,6 +27,7 @@ profiling = ["sauropod-profiling/profiling"]
 [dependencies]
 sauropod-global-state.path = "../global-state"
 sauropod-config.path = "../config"
+sauropod-inference-audio.path = "../inference-audio"
 sauropod-inference-engine.path = "../inference-engine"
 sauropod-inference-http.path = "../inference-http"
 sauropod-inference-realtime.path = "../inference-realtime"

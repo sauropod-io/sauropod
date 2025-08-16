@@ -955,6 +955,113 @@ impl From<Vec<InputItem>> for CreateResponseInput {
         CreateResponseInput::Variant1(value)
     }
 }
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, utoipa::ToSchema)]
+pub struct CreateSpeechRequest {
+    /// The text to generate audio for. The maximum length is 4096 characters.
+    pub input: String,
+    /// Control the voice of your generated audio with additional instructions. Does not work with `tts-1` or `tts-1-hd`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub instructions: Option<String>,
+    /// One of the available [TTS models](https://platform.openai.com/docs/models#tts): `tts-1`, `tts-1-hd` or `gpt-4o-mini-tts`.
+    pub model: CreateSpeechRequestModel,
+    /// The format to audio in. Supported formats are `mp3`, `opus`, `aac`, `flac`, `wav`, and `pcm`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub response_format: Option<CreateSpeechRequestResponseFormat>,
+    /// The speed of the generated audio. Select a value from `0.25` to `4.0`. `1.0` is the default.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub speed: Option<f64>,
+    /// The format to stream the audio in. Supported formats are `sse` and `audio`. `sse` is not supported for `tts-1` or `tts-1-hd`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub stream_format: Option<CreateSpeechRequestStreamFormat>,
+    /// The voice to use when generating the audio. Supported voices are `alloy`, `ash`, `ballad`, `coral`, `echo`, `fable`, `onyx`, `nova`, `sage`, `shimmer`, and `verse`. Previews of the voices are available in the [Text to speech guide](https://platform.openai.com/docs/guides/text-to-speech#voice-options).
+    pub voice: VoiceId,
+}
+
+/// One of the available [TTS models](https://platform.openai.com/docs/models#tts): `tts-1`, `tts-1-hd` or `gpt-4o-mini-tts`.
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, utoipa::ToSchema)]
+pub enum CreateSpeechRequestModel {
+    #[serde(rename = "tts-1")]
+    Tts1,
+    #[serde(rename = "tts-1-hd")]
+    Tts1Hd,
+    #[serde(rename = "gpt-4o-mini-tts")]
+    Gpt4oMiniTts,
+    #[serde(untagged)]
+    Variant0(String),
+}
+
+impl From<String> for CreateSpeechRequestModel {
+    fn from(value: String) -> Self {
+        CreateSpeechRequestModel::Variant0(value)
+    }
+}
+/// The format to audio in. Supported formats are `mp3`, `opus`, `aac`, `flac`, `wav`, and `pcm`.
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, utoipa::ToSchema, Default)]
+pub enum CreateSpeechRequestResponseFormat {
+    #[default]
+    #[serde(rename = "mp3")]
+    Mp3,
+    #[serde(rename = "opus")]
+    Opus,
+    #[serde(rename = "aac")]
+    Aac,
+    #[serde(rename = "flac")]
+    Flac,
+    #[serde(rename = "wav")]
+    Wav,
+    #[serde(rename = "pcm")]
+    Pcm,
+}
+
+impl CreateSpeechRequestResponseFormat {
+    /// Converts the enum to a string
+    pub fn to_str(&self) -> &str {
+        match self {
+            Self::Mp3 => "mp3",
+            Self::Opus => "opus",
+            Self::Aac => "aac",
+            Self::Flac => "flac",
+            Self::Wav => "wav",
+            Self::Pcm => "pcm",
+        }
+    }
+}
+
+/// The format to stream the audio in. Supported formats are `sse` and `audio`. `sse` is not supported for `tts-1` or `tts-1-hd`.
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, utoipa::ToSchema, Default)]
+pub enum CreateSpeechRequestStreamFormat {
+    #[serde(rename = "sse")]
+    Sse,
+    #[default]
+    #[serde(rename = "audio")]
+    Audio,
+}
+
+impl CreateSpeechRequestStreamFormat {
+    /// Converts the enum to a string
+    pub fn to_str(&self) -> &str {
+        match self {
+            Self::Sse => "sse",
+            Self::Audio => "audio",
+        }
+    }
+}
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, utoipa::ToSchema)]
+#[serde(tag = "type")]
+pub enum CreateSpeechResponseStreamEvent {
+    #[serde(rename = "speech.audio.delta")]
+    SpeechAudioDeltaEvent {
+        /// A chunk of Base64-encoded audio data.
+        audio: String,
+    },
+    #[serde(rename = "speech.audio.done")]
+    SpeechAudioDoneEvent {
+        /// Token usage statistics for the request.
+        usage: SpeechAudioDoneEventUsage,
+    },
+}
+
 /// A custom tool that processes input using a specified format. Learn more about
 /// [custom tools](https://platform.openai.com/docs/guides/function-calling#custom-tools).
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize, utoipa::ToSchema)]
@@ -1065,6 +1172,7 @@ impl From<serde_json::Map<String, serde_json::Value>> for CustomToolFormat {
         CustomToolFormat::Variant0(value)
     }
 }
+
 /// The syntax of the grammar definition. One of `lark` or `regex`.
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize, utoipa::ToSchema)]
 pub enum CustomToolFormatSyntax {
@@ -10299,6 +10407,71 @@ impl ServiceTier {
             Self::Priority => "priority",
         }
     }
+}
+
+/// Emitted for each chunk of audio data generated during speech synthesis.
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, utoipa::ToSchema)]
+pub struct SpeechAudioDeltaEvent {
+    /// A chunk of Base64-encoded audio data.
+    pub audio: String,
+    /// The type of the event. Always `speech.audio.delta`.
+    #[serde(rename = "type")]
+    pub r#type: SpeechAudioDeltaEventType,
+}
+
+/// The type of the event. Always `speech.audio.delta`.
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, utoipa::ToSchema, Default)]
+pub enum SpeechAudioDeltaEventType {
+    #[default]
+    #[serde(rename = "speech.audio.delta")]
+    SpeechAudioDelta,
+}
+
+impl SpeechAudioDeltaEventType {
+    /// Converts the enum to a string
+    pub fn to_str(&self) -> &str {
+        match self {
+            Self::SpeechAudioDelta => "speech.audio.delta",
+        }
+    }
+}
+
+/// Emitted when the speech synthesis is complete and all audio has been streamed.
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, utoipa::ToSchema)]
+pub struct SpeechAudioDoneEvent {
+    /// The type of the event. Always `speech.audio.done`.
+    #[serde(rename = "type")]
+    pub r#type: SpeechAudioDoneEventType,
+    /// Token usage statistics for the request.
+    pub usage: SpeechAudioDoneEventUsage,
+}
+
+/// The type of the event. Always `speech.audio.done`.
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, utoipa::ToSchema, Default)]
+pub enum SpeechAudioDoneEventType {
+    #[default]
+    #[serde(rename = "speech.audio.done")]
+    SpeechAudioDone,
+}
+
+impl SpeechAudioDoneEventType {
+    /// Converts the enum to a string
+    pub fn to_str(&self) -> &str {
+        match self {
+            Self::SpeechAudioDone => "speech.audio.done",
+        }
+    }
+}
+
+/// Token usage statistics for the request.
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, utoipa::ToSchema)]
+pub struct SpeechAudioDoneEventUsage {
+    /// Number of input tokens in the prompt.
+    pub input_tokens: i64,
+    /// Number of output tokens generated.
+    pub output_tokens: i64,
+    /// Total number of tokens used (input + output).
+    pub total_tokens: i64,
 }
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize, utoipa::ToSchema)]

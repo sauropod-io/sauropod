@@ -3438,6 +3438,31 @@ dependencies = [
 ]
 
 [[package]]
+name = "sauropod-inference-audio"
+version = "0.0.2"
+dependencies = [
+ "anyhow",
+ "async-stream",
+ "axum",
+ "base64 0.22.1",
+ "futures-core",
+ "sauropod-global-state",
+ "sauropod-inference-engine",
+ "sauropod-inference-engine-api",
+ "sauropod-inference-http",
+ "sauropod-openai-api",
+ "sauropod-prompt-templates",
+ "sauropod-tts",
+ "sauropod-users",
+ "serde",
+ "serde_json",
+ "tokio",
+ "tokio-stream",
+ "tracing",
+ "utoipa",
+]
+
+[[package]]
 name = "sauropod-inference-engine"
 version = "0.0.2"
 dependencies = [
@@ -3578,6 +3603,7 @@ dependencies = [
  "sauropod-config",
  "sauropod-device-discovery",
  "sauropod-global-state",
+ "sauropod-inference-audio",
  "sauropod-inference-engine",
  "sauropod-inference-http",
  "sauropod-inference-realtime",

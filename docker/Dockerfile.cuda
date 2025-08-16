@@ -41,6 +41,7 @@ COPY crates/device-discovery/Cargo.toml crates/device-discovery/Cargo.toml
 COPY crates/gguf/Cargo.toml crates/gguf/Cargo.toml
 COPY crates/global-state/Cargo.toml crates/global-state/Cargo.toml
 COPY crates/huggingface/Cargo.toml crates/huggingface/Cargo.toml
+COPY crates/inference-audio/Cargo.toml crates/inference-audio/Cargo.toml
 COPY crates/inference-engine-api/Cargo.toml crates/inference-engine-api/Cargo.toml
 COPY crates/inference-engine/Cargo.toml crates/inference-engine/Cargo.toml
 COPY crates/inference-http/Cargo.toml crates/inference-http/Cargo.toml
@@ -75,6 +76,7 @@ RUN mkdir bindings/llama-cpp-sys/src && touch bindings/llama-cpp-sys/src/lib.rs 
     mkdir crates/gguf/src && touch crates/gguf/src/lib.rs && \
     mkdir crates/global-state/src && touch crates/global-state/src/lib.rs && \
     mkdir crates/huggingface/src && touch crates/huggingface/src/lib.rs && \
+    mkdir crates/inference-audio/src && touch crates/inference-audio/src/lib.rs && \
     mkdir crates/inference-engine-api/src && touch crates/inference-engine-api/src/lib.rs && \
     mkdir crates/inference-engine/src && touch crates/inference-engine/src/lib.rs && \
     mkdir crates/inference-http/src && touch crates/inference-http/src/lib.rs && \
