@@ -60,10 +60,7 @@ impl LoadedModels {
 
         // Load STT
         let stt_model = if let Some(stt_model) = config.stt_model.as_ref() {
-            let stt_model_dir = sauropod_stt::download_from_huggingface(stt_model)
-                .instrument(tracing::info_span!("download STT model"))
-                .await?;
-            let stt_model = sauropod_stt::make_stt_thread(&onnxruntime_env, &stt_model_dir)
+            let stt_model = sauropod_stt::make_stt_thread(&onnxruntime_env, stt_model)
                 .instrument(tracing::info_span!("load STT model"))
                 .await?;
             if let Err(e) = stt_model

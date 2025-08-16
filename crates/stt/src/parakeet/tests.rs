@@ -1,6 +1,6 @@
 use sauropod_inference_thread::InferenceProvider as _;
 
-use crate::Stt;
+use super::Parakeet;
 
 const TEST_FILE: &str = "weather.wav";
 
@@ -9,14 +9,11 @@ async fn test_stt() -> anyhow::Result<()> {
     sauropod_tracing_test_helpers::init_tracing();
 
     let ort_env = sauropod_onnxruntime::Env::new("unit-test")?;
-    let model_dir = crate::download_from_huggingface(
-        sauropod_config::Config::default()
-            .stt_model
-            .as_ref()
-            .unwrap(),
+    let model_dir = super::download_from_huggingface(
+        &sauropod_config::SpeechToTextConfig::default_parakeet_model(),
     )
     .await?;
-    let stt = Stt::new(&ort_env, &model_dir).await?;
+    let stt = Parakeet::new(&ort_env, &model_dir).await?;
 
     let (audio_data, _) = sauropod_hf_test_helpers::get_audio_file_content(TEST_FILE)?;
 

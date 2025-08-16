@@ -97,6 +97,41 @@ impl VoiceConfig {
     }
 }
 
+/// Speech to text model configuration.
+#[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
+#[serde(deny_unknown_fields, tag = "type", rename_all = "snake_case")]
+pub enum SpeechToTextConfig {
+    Parakeet {
+        #[serde(default = "SpeechToTextConfig::default_parakeet_model")]
+        model: ConfigModelSource,
+    },
+    Voxstral {
+        #[serde(default = "SpeechToTextConfig::default_voxstral_model")]
+        model: ConfigModelSource,
+        #[serde(default = "SpeechToTextConfig::default_voxstral_projector")]
+        multimodal_projector: ConfigModelSource,
+    },
+}
+
+impl SpeechToTextConfig {
+    pub fn default_parakeet_model() -> ConfigModelSource {
+        ConfigModelSource::from_huggingface("sauropod/parakeet-tdt-0.6b-v2", None)
+    }
+
+    pub fn default_voxstral_model() -> ConfigModelSource {
+        ConfigModelSource::from_huggingface("ggml-org/Voxtral-Mini-3B-2507-GGUF", None)
+    }
+
+    fn default_voxstral_projector() -> ConfigModelSource {
+        ConfigModelSource::from_huggingface(
+            "ggml-org/Voxtral-Mini-3B-2507-GGUF",
+            Some(PathOrQuantization::FilePath {
+                file: "mmproj-Voxtral-Mini-3B-2507-Q8_0.gguf".to_string(),
+            }),
+        )
+    }
+}
+
 /// Configuration for authentication.
 #[derive(Clone, Default, Debug, serde::Deserialize, serde::Serialize)]
 #[serde(deny_unknown_fields, tag = "type", rename_all = "snake_case")]
@@ -139,7 +174,7 @@ pub struct Config {
     pub trace_output: Option<String>,
     #[serde(default = "Config::default_stt_model")]
     /// The speech-to-text model to use for voice inputs to models without native audio support.
-    pub stt_model: Option<ConfigModelSource>,
+    pub stt_model: Option<SpeechToTextConfig>,
     #[serde(default = "Config::default_vad_model")]
     /// The voice activity detection model to use for voice inputs.
     pub vad_model: Option<ConfigModelSource>,
@@ -175,11 +210,10 @@ impl Config {
         ))
     }
 
-    fn default_stt_model() -> Option<ConfigModelSource> {
-        Some(ConfigModelSource::from_huggingface(
-            "sauropod/parakeet-tdt-0.6b-v2",
-            None,
-        ))
+    fn default_stt_model() -> Option<SpeechToTextConfig> {
+        Some(SpeechToTextConfig::Parakeet {
+            model: SpeechToTextConfig::default_parakeet_model(),
+        })
     }
 }
 

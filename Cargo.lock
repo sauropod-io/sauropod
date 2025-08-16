@@ -3741,6 +3741,8 @@ dependencies = [
  "sauropod-config",
  "sauropod-hf-test-helpers",
  "sauropod-huggingface",
+ "sauropod-inference-engine",
+ "sauropod-inference-engine-api",
  "sauropod-inference-thread",
  "sauropod-onnxruntime",
  "sauropod-tracing-test-helpers",
