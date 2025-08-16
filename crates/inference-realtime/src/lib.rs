@@ -23,6 +23,7 @@ pub mod realtime_webrtc;
 mod socket;
 mod transcription;
 use socket::*;
+mod model_calling;
 pub(crate) use transcription::Transcription;
 
 fn make_id() -> String {

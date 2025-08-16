@@ -24,7 +24,7 @@ pub struct LoadedModels {
     /// VAD model.
     pub vad_model: Arc<sauropod_vad::VadThread>,
     /// STT model.
-    pub stt_model: Arc<sauropod_stt::SttThread>,
+    pub stt_model: Option<Arc<sauropod_stt::SttThread>>,
 }
 
 impl LoadedModels {
@@ -37,12 +37,10 @@ impl LoadedModels {
         let onnxruntime_env = Arc::new(sauropod_onnxruntime::Env::new("sauropod")?);
 
         // Download VAD, STT, and TTS models
-        let (vad_model_dir, stt_model_dir) = tokio::try_join!(
+        let vad_model_dir =
             sauropod_vad::download_from_huggingface(config.vad_model.as_ref().unwrap())
-                .instrument(tracing::info_span!("download VAD model")),
-            sauropod_stt::download_from_huggingface(config.stt_model.as_ref().unwrap())
-                .instrument(tracing::info_span!("download STT model")),
-        )?;
+                .instrument(tracing::info_span!("download VAD model"))
+                .await?;
 
         // Load VAD model
         let vad_model = sauropod_vad::make_vad_thread(&onnxruntime_env, &vad_model_dir)
@@ -60,17 +58,25 @@ impl LoadedModels {
             tracing::warn!("Failed to warm up VAD model: {e:?}");
         }
 
-        // Load STT model
-        let stt_model = sauropod_stt::make_stt_thread(&onnxruntime_env, &stt_model_dir)
-            .instrument(tracing::info_span!("load STT model"))
-            .await?;
-        if let Err(e) = stt_model
-            .enqueue(vec![0.0f32; 16000])
-            .instrument(tracing::info_span!("Warm up STT"))
-            .await
-        {
-            tracing::warn!("Failed to warm up STT model: {e:?}");
-        }
+        // Load STT
+        let stt_model = if let Some(stt_model) = config.stt_model.as_ref() {
+            let stt_model_dir = sauropod_stt::download_from_huggingface(stt_model)
+                .instrument(tracing::info_span!("download STT model"))
+                .await?;
+            let stt_model = sauropod_stt::make_stt_thread(&onnxruntime_env, &stt_model_dir)
+                .instrument(tracing::info_span!("load STT model"))
+                .await?;
+            if let Err(e) = stt_model
+                .enqueue(vec![0.0f32; 16000])
+                .instrument(tracing::info_span!("Warm up STT"))
+                .await
+            {
+                tracing::warn!("Failed to warm up STT model: {e:?}");
+            }
+            Some(Arc::new(stt_model))
+        } else {
+            None
+        };
 
         // Load LLM models
         let mut source_to_model_pointer =
@@ -214,7 +220,7 @@ impl LoadedModels {
             internal,
             onnxruntime_env,
             vad_model: Arc::new(vad_model),
-            stt_model: Arc::new(stt_model),
+            stt_model,
         })
     }
 

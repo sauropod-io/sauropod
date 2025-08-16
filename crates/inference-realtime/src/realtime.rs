@@ -366,29 +366,6 @@ impl RealtimeSessionState {
         Ok(())
     }
 
-    async fn process_audio(
-        self: &Arc<Self>,
-        audio_buffer: &mut AudioBuffer,
-        audio_range: Range<usize>,
-    ) -> anyhow::Result<String> {
-        // Get the STT model from the inner lock
-        let stt_model = self.global_state.get_loaded_models().stt_model.clone();
-
-        // Get the audio data from the audio buffer lock
-        let audio_data = audio_buffer.range(audio_range).copied().collect::<Vec<_>>();
-
-        // Process the audio with the STT model
-        let text = match stt_model.enqueue(audio_data.clone()).await {
-            Ok(text) => text,
-            Err(e) => {
-                tracing::warn!("Speech to text transcription failed: {e}");
-                anyhow::bail!("Speech to text transcription failed: {e}")
-            }
-        };
-
-        Ok(text)
-    }
-
     async fn create_response(
         &self,
         conversation_state: &mut sauropod_conversation::Conversation,
@@ -738,9 +715,14 @@ impl RealtimeSessionState {
         item_id: String,
         socket: &SocketWrapper,
     ) -> anyhow::Result<()> {
-        let text = self
-            .process_audio(audio_buffer, audio_range.clone())
-            .await?;
+        // Get the audio data from the audio buffer lock
+        let audio_data = audio_buffer
+            .range(audio_range.clone())
+            .copied()
+            .collect::<Vec<_>>();
+        let text =
+            crate::model_calling::call_speech_to_text_model(audio_data.clone(), &self.global_state)
+                .await?;
 
         // TODO populate logprobs and content_index
         // let avg_logprob = if self

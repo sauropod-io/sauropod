@@ -67,14 +67,9 @@ impl Transcription {
                 .range(vad_result.range)
                 .copied()
                 .collect::<Vec<_>>();
-            let stt_model = self.global_state.get_loaded_models().stt_model.clone();
-            let text = match stt_model.enqueue(audio_data.clone()).await {
-                Ok(text) => text,
-                Err(e) => {
-                    tracing::warn!("Speech to text transcription failed: {e}");
-                    anyhow::bail!("Speech to text transcription failed: {e}")
-                }
-            };
+            let text =
+                crate::model_calling::call_speech_to_text_model(audio_data, &self.global_state)
+                    .await?;
 
             tracing::info!(
                 "Transcription completed for item_id: {}, text: {text}",
