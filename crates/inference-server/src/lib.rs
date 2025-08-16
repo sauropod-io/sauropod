@@ -12,8 +12,8 @@ pub struct Cli {
     #[arg(short, long, default_value = "3000", env = "SAUROPOD_PORT")]
     pub port: u16,
     /// The host to listen on.
-    #[arg(long, default_value = "127.0.0.1", env = "SAUROPOD_HOST")]
-    pub host: String,
+    #[arg(long, env = "SAUROPOD_HOST")]
+    pub host: Option<String>,
     #[arg(long, default_value = "false", env = "SAUROPOD_VERBOSE")]
     /// Whether to log verbosely.
     ///
@@ -27,9 +27,11 @@ pub struct Cli {
 pub fn make_config_source(cli: &Cli) -> anyhow::Result<sauropod_config::ClapConfigSource> {
     let mut source = sauropod_config::ClapConfigSource::default();
     source.add_value("port".to_string(), cli.port)?;
-    source.add_value("host".to_string(), cli.host.clone())?;
     source.add_value("verbose".to_string(), cli.verbose)?;
     source.add_value("trace_output".to_string(), cli.trace_output.clone())?;
+    if let Some(host) = &cli.host {
+        source.add_value("host".to_string(), host.clone())?;
+    }
     if let Some(database) = &cli.database {
         source.add_value("database".to_string(), database.clone())?;
     }
