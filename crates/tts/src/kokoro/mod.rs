@@ -94,51 +94,62 @@ impl crate::TtsProvider for Kokoro {
         _voice: Option<String>,
         sender: &'async_trait crate::AudioSender,
     ) -> anyhow::Result<()> {
+        const MAX_KOKORO_TOKENS: usize = 510;
         let tokens = self
             .tokenizer
             .tokenize(&text)
             .context("Tokenizing text - is espeak-ng installed?")?;
         let token_count = tokens.len();
-        if token_count > 510 {
-            return Err(anyhow::anyhow!(
-                "Input text is too long, maximum length is 510 tokens, got {}",
+        let mut start = 0;
+        while start < token_count {
+            let end = if token_count - start > MAX_KOKORO_TOKENS {
+                tokens[start..]
+                    .iter()
+                    .take(MAX_KOKORO_TOKENS)
+                    .position(|&x| x == '.' as u32 || x == '?' as u32 || x == '!' as u32)
+                    .unwrap_or(start + MAX_KOKORO_TOKENS)
+            } else {
                 token_count
-            ));
-        }
-        // Pad start and end with zeros
-        let tokens: Vec<i64> = std::iter::once(0i64)
-            .chain(tokens.into_iter().map(|x| x as i64))
-            .chain(std::iter::once(0))
-            .collect::<Vec<_>>();
+            };
 
-        let text_input = self
-            .input_memory_info
-            .create_tensor_with_data_as_ort_value(&tokens, &[1, tokens.len() as i64])?;
+            let tokens = &tokens[start..end];
+            start += tokens.len();
 
-        let style = self.style_data[token_count].as_slice();
-        let style = self
-            .input_memory_info
-            .create_tensor_with_data_as_ort_value(style, &[1, 256])?;
-        let io_binding = self.session.create_io_binding()?;
-        io_binding.bind_input("input_ids", &text_input)?;
-        io_binding.bind_input("style", &style)?;
-        io_binding.bind_input("speed", &self.speed_tensor)?;
-        io_binding.bind_output_with_memory_info("waveform", &self.output_memory_info)?;
+            // Pad start and end with zeros
+            let tokens: Vec<i64> = std::iter::once(0i64)
+                .chain(tokens.iter().map(|&x| x as i64))
+                .chain(std::iter::once(0))
+                .collect::<Vec<_>>();
 
-        let io_bindings = self.session.run_with_io_binding(io_binding)?;
-        let mut outputs_iter = io_bindings
-            .get_bound_output_values(&self.session.allocator)?
-            .into_iter();
-        let mut waveform_output = outputs_iter.next().unwrap();
-        let waveform_data = waveform_output.get_tensor_mutable_data::<f32>()?;
+            let text_input = self
+                .input_memory_info
+                .create_tensor_with_data_as_ort_value(&tokens, &[1, tokens.len() as i64])?;
 
-        let audio_data: Vec<i16> = waveform_data
-            .iter()
-            .map(|&x| (x * 32767.0) as i16)
-            .collect();
+            let style = self.style_data[token_count].as_slice();
+            let style = self
+                .input_memory_info
+                .create_tensor_with_data_as_ort_value(style, &[1, 256])?;
+            let io_binding = self.session.create_io_binding()?;
+            io_binding.bind_input("input_ids", &text_input)?;
+            io_binding.bind_input("style", &style)?;
+            io_binding.bind_input("speed", &self.speed_tensor)?;
+            io_binding.bind_output_with_memory_info("waveform", &self.output_memory_info)?;
 
-        if let Err(e) = sender.send(Ok(audio_data)).await {
-            tracing::warn!("Failed to send audio data: {e:?}");
+            let io_bindings = self.session.run_with_io_binding(io_binding)?;
+            let mut outputs_iter = io_bindings
+                .get_bound_output_values(&self.session.allocator)?
+                .into_iter();
+            let mut waveform_output = outputs_iter.next().unwrap();
+            let waveform_data = waveform_output.get_tensor_mutable_data::<f32>()?;
+
+            let audio_data: Vec<i16> = waveform_data
+                .iter()
+                .map(|&x| (x * 32767.0) as i16)
+                .collect();
+
+            if let Err(e) = sender.send(Ok(audio_data)).await {
+                tracing::warn!("Failed to send audio data: {e:?}");
+            }
         }
         Ok(())
     }
