@@ -97,6 +97,9 @@ pub trait LlmModel: Send + Sync {
 
     /// Get the model type.
     fn get_model_type(&self) -> sauropod_output_parser::ModelType;
+
+    fn supports_audio(&self) -> bool;
+    fn supports_vision(&self) -> bool;
 }
 
 /// Boxed stream of tokens.

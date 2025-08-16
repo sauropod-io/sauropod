@@ -33,12 +33,14 @@ impl Model {
                 .unwrap_or_else(|| underlying_model.get_model_chat_template().to_string()),
         )?;
 
+        let supports_audio_input = underlying_model.supports_audio();
+        let supports_image_input = underlying_model.supports_vision();
         Ok(Self {
             underlying_model,
             chat_template,
             model_config,
-            supports_audio_input: false,
-            supports_image_input: false,
+            supports_audio_input,
+            supports_image_input,
         })
     }
 

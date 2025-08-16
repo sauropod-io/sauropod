@@ -189,6 +189,14 @@ impl sauropod_inference_engine_api::LlmModel for ModelInferenceThread {
     fn get_model_type(&self) -> sauropod_output_parser::ModelType {
         self.model.model_type
     }
+
+    fn supports_vision(&self) -> bool {
+        self.model.supports_vision()
+    }
+
+    fn supports_audio(&self) -> bool {
+        self.model.supports_audio()
+    }
 }
 
 /// Decode a batch of tokens in the llama.cpp context.
