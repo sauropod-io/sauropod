@@ -94,26 +94,30 @@ impl crate::TtsProvider for Kokoro {
         _voice: Option<String>,
         sender: &'async_trait crate::AudioSender,
     ) -> anyhow::Result<()> {
-        const MAX_KOKORO_TOKENS: usize = 510;
-        let tokens = self
+        const MAX_KOKORO_TOKENS: usize = 509;
+
+        let all_tokens = self
             .tokenizer
             .tokenize(&text)
             .context("Tokenizing text - is espeak-ng installed?")?;
-        let token_count = tokens.len();
+        let token_count = all_tokens.len();
         let mut start = 0;
         while start < token_count {
             let end = if token_count - start > MAX_KOKORO_TOKENS {
-                tokens[start..]
+                let token_set = &all_tokens[start..MAX_KOKORO_TOKENS];
+
+                token_set
                     .iter()
-                    .take(MAX_KOKORO_TOKENS)
-                    .position(|&x| x == '.' as u32 || x == '?' as u32 || x == '!' as u32)
+                    .rposition(|x| (4..=5).contains(x)) // Break sentence endings
+                    .or_else(|| token_set.iter().rposition(|&x| x == 16) /* Fall back to just breaking at a space */)
                     .unwrap_or(start + MAX_KOKORO_TOKENS)
             } else {
                 token_count
             };
 
-            let tokens = &tokens[start..end];
-            start += tokens.len();
+            let tokens = &all_tokens[start..end];
+            let chunk_length = tokens.len();
+            start = end;
 
             // Pad start and end with zeros
             let tokens: Vec<i64> = std::iter::once(0i64)
@@ -125,7 +129,7 @@ impl crate::TtsProvider for Kokoro {
                 .input_memory_info
                 .create_tensor_with_data_as_ort_value(&tokens, &[1, tokens.len() as i64])?;
 
-            let style = self.style_data[token_count].as_slice();
+            let style = self.style_data[chunk_length].as_slice();
             let style = self
                 .input_memory_info
                 .create_tensor_with_data_as_ort_value(style, &[1, 256])?;
