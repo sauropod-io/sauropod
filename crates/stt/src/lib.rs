@@ -27,8 +27,16 @@ pub async fn make_stt_thread(
                 provider,
             )?)
         }
-        sauropod_config::SpeechToTextConfig::Voxstral { .. } => {
-            todo!("Implement Voxstral STT thread creation")
+        sauropod_config::SpeechToTextConfig::Voxtral {
+            model,
+            multimodal_projector,
+        } => {
+            let provider = voxtral::Voxtral::new(model, multimodal_projector).await?;
+            Ok(BatchInferenceThread::new(
+                "voxtral".to_string(),
+                1,
+                provider,
+            )?)
         }
     }
 }

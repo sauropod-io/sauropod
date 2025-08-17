@@ -16,10 +16,13 @@ sauropod-inference-engine-api.path = "../inference-engine-api"
 sauropod-inference-engine.path = "../inference-engine"
 sauropod-inference-thread.path = "../inference-thread"
 sauropod-onnxruntime.path = "../../bindings/onnxruntime"
+sauropod-prompt-templates.path = "../prompt-templates"
 
 anyhow.workspace = true
+futures.workspace = true
 serde_json.workspace = true
 serde.workspace = true
+tokio-stream.workspace = true
 tracing.workspace = true
 
 [dev-dependencies]
