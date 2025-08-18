@@ -2316,6 +2316,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "minijinja-contrib"
+version = "2.11.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f93e5bfa889f16d8c10ec92ac964074a68a7206c0fd9748ff23a31942c85d97c"
+dependencies = [
+ "minijinja",
+ "serde",
+]
+
+[[package]]
 name = "minimal-lexical"
 version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3726,6 +3736,7 @@ dependencies = [
  "chrono",
  "image",
  "minijinja",
+ "minijinja-contrib",
  "sauropod-openai-api",
  "serde",
  "serde_json",

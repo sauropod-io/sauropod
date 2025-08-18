@@ -379,6 +379,8 @@ impl PromptTemplate {
         let mut environment = minijinja::Environment::new();
         environment.add_function("strftime_now", strftime_now);
         environment.add_function("raise_exception", raise_exception);
+        environment
+            .set_unknown_method_callback(minijinja_contrib::pycompat::unknown_method_callback);
         environment.add_template_owned(Self::DEFAULT_TEMPLATE_NAME, template)?;
         Ok(PromptTemplate {
             template_name: Self::DEFAULT_TEMPLATE_NAME,
