@@ -24,7 +24,7 @@ impl Voxtral {
 
     async fn transcribe(&self, audio_input: Vec<f32>) -> anyhow::Result<String> {
         let sampler_properties = sauropod_inference_engine_api::SamplerProperties {
-            temperature: 0.0, // Recommended by Mistral when transcribing,
+            temperature: 0.0, // Recommended by Mistral when transcribing
             max_predict: (audio_input.len() / 400).clamp(1024, 32_000), // Allow 40 tokens per second of audio
             min_p: None,
             top_k: None,
