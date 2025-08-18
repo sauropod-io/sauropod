@@ -27,6 +27,13 @@ sauropod-inference-server --verbose --config-file examples/memory-efficient.toml
 sauropod-inference-server --verbose --config-file examples/smolvlm.toml
 ```
 
+
+## Voxtral
+
+```bash
+sauropod-inference-server --verbose --config-file examples/voxtral.toml
+```
+
 ## Client example
 
 ### Text
