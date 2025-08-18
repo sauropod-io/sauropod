@@ -105,10 +105,10 @@ pub enum SpeechToTextConfig {
         #[serde(default = "SpeechToTextConfig::default_parakeet_model")]
         model: ConfigModelSource,
     },
-    Voxstral {
-        #[serde(default = "SpeechToTextConfig::default_voxstral_model")]
+    Voxtral {
+        #[serde(default = "SpeechToTextConfig::default_voxtral_model")]
         model: ConfigModelSource,
-        #[serde(default = "SpeechToTextConfig::default_voxstral_projector")]
+        #[serde(default = "SpeechToTextConfig::default_voxtral_projector")]
         multimodal_projector: ConfigModelSource,
     },
 }
@@ -118,11 +118,16 @@ impl SpeechToTextConfig {
         ConfigModelSource::from_huggingface("sauropod/parakeet-tdt-0.6b-v2", None)
     }
 
-    pub fn default_voxstral_model() -> ConfigModelSource {
-        ConfigModelSource::from_huggingface("ggml-org/Voxtral-Mini-3B-2507-GGUF", None)
+    pub fn default_voxtral_model() -> ConfigModelSource {
+        ConfigModelSource::from_huggingface(
+            "ggml-org/Voxtral-Mini-3B-2507-GGUF",
+            Some(PathOrQuantization::Quantization {
+                quantization: "Q4_K_M".to_string(),
+            }),
+        )
     }
 
-    fn default_voxstral_projector() -> ConfigModelSource {
+    fn default_voxtral_projector() -> ConfigModelSource {
         ConfigModelSource::from_huggingface(
             "ggml-org/Voxtral-Mini-3B-2507-GGUF",
             Some(PathOrQuantization::FilePath {

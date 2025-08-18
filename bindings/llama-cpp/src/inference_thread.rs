@@ -60,11 +60,13 @@ impl ModelInferenceThread {
     pub fn new(name: String, model: Arc<crate::Model>) -> anyhow::Result<Self> {
         let (input_tx, input_rx) = tokio::sync::mpsc::channel(32);
         let model_clone = model.clone();
-        let thread_handle = std::thread::Builder::new().name(name).spawn(move || {
-            if let Err(error) = inference_thread(model_clone, input_rx) {
-                tracing::error!("Inference thread encountered an error: {:#?}", error);
-            }
-        })?;
+        let thread_handle = std::thread::Builder::new()
+            .name(name.clone())
+            .spawn(move || {
+                if let Err(error) = inference_thread(name, model_clone, input_rx) {
+                    tracing::error!("Inference thread encountered an error: {:#?}", error);
+                }
+            })?;
 
         Ok(Self {
             model,
@@ -268,7 +270,10 @@ fn run_for_tokens(
         }
 
         if let Err(send_error) = sender.blocking_send(Ok(new_token_id as u32)) {
-            tracing::error!("Failed to send token back to sender: {:#?}", send_error);
+            tracing::error!(
+                "Failed to send token {new_token_id} back to sender: {:#?}",
+                send_error
+            );
             return Ok(()); // We break with `Ok` since we already know the sender is erroring
         }
 
@@ -466,6 +471,7 @@ fn run_for_multimodal(
 
 /// The inference loop.
 fn inference_thread(
+    name: String,
     model: Arc<crate::Model>,
     mut input_rx: tokio::sync::mpsc::Receiver<GenerationRequest>,
 ) -> anyhow::Result<()> {
@@ -475,7 +481,7 @@ fn inference_thread(
             break;
         };
 
-        let span = tracing::info_span!(parent: None, "llama.cpp inference");
+        let span = tracing::info_span!(parent: None, "llama.cpp inference", model = %name);
         span.follows_from(request.parent_span_id);
         let _guard = span.enter();
         let maybe_error = match request.input {

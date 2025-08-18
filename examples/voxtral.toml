@@ -1,0 +1,16 @@
+verbose = true
+host = "0.0.0.0"
+
+[authentication]
+type = "api_key"
+api_key = "hardcoded_api_key"
+
+[stt_model]
+type = "voxtral"
+
+[models.default]
+multimodal_projector = { repo = "ggml-org/Voxtral-Mini-3B-2507-GGUF", file = "mmproj-Voxtral-Mini-3B-2507-Q8_0.gguf" }
+model = { repo = "ggml-org/Voxtral-Mini-3B-2507-GGUF", quantization = "Q4_K_M" }
+temperature = 0.15
+top_p = 1.0
+maximum_tokens = 128_000

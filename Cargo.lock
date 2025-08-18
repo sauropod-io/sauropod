@@ -3737,6 +3737,7 @@ name = "sauropod-stt"
 version = "0.0.2"
 dependencies = [
  "anyhow",
+ "futures",
  "sauropod-audio",
  "sauropod-config",
  "sauropod-hf-test-helpers",
@@ -3745,10 +3746,12 @@ dependencies = [
  "sauropod-inference-engine-api",
  "sauropod-inference-thread",
  "sauropod-onnxruntime",
+ "sauropod-prompt-templates",
  "sauropod-tracing-test-helpers",
  "serde",
  "serde_json",
  "tokio",
+ "tokio-stream",
  "tracing",
 ]
 
