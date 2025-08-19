@@ -61,6 +61,7 @@ COPY crates/vad/Cargo.toml crates/vad/Cargo.toml
 COPY tools/create-release-tag/Cargo.toml tools/create-release-tag/Cargo.toml
 COPY tools/generate-dockerfiles/Cargo.toml tools/generate-dockerfiles/Cargo.toml
 COPY tools/hf-test-helpers/Cargo.toml tools/hf-test-helpers/Cargo.toml
+COPY tools/package-binaries/Cargo.toml tools/package-binaries/Cargo.toml
 COPY tools/sqlx-wrapper/Cargo.toml tools/sqlx-wrapper/Cargo.toml
 COPY tools/tracing-test-helpers/Cargo.toml tools/tracing-test-helpers/Cargo.toml
 COPY tools/update-latest-image/Cargo.toml tools/update-latest-image/Cargo.toml
@@ -96,6 +97,7 @@ RUN mkdir bindings/llama-cpp-sys/src && touch bindings/llama-cpp-sys/src/lib.rs 
     mkdir tools/create-release-tag/src && touch tools/create-release-tag/src/lib.rs && \
     mkdir tools/generate-dockerfiles/src && touch tools/generate-dockerfiles/src/lib.rs && \
     mkdir tools/hf-test-helpers/src && touch tools/hf-test-helpers/src/lib.rs && \
+    mkdir tools/package-binaries/src && touch tools/package-binaries/src/lib.rs && \
     mkdir tools/sqlx-wrapper/src && touch tools/sqlx-wrapper/src/lib.rs && \
     mkdir tools/tracing-test-helpers/src && touch tools/tracing-test-helpers/src/lib.rs && \
     mkdir tools/update-latest-image/src && touch tools/update-latest-image/src/lib.rs

@@ -2642,6 +2642,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "package-binaries"
+version = "0.0.2"
+dependencies = [
+ "anyhow",
+ "clap",
+ "flate2",
+ "tar",
+ "tempfile",
+ "uuid",
+]
+
+[[package]]
 name = "parking"
 version = "2.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"

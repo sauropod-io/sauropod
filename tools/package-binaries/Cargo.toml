@@ -1,0 +1,18 @@
+[package]
+name = "package-binaries"
+description = "Package up the binaries from a built Docker image"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+publish.workspace = true
+repository.workspace = true
+homepage.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+clap.workspace = true
+flate2.workspace = true
+tar.workspace = true
+tempfile.workspace = true
+uuid.workspace = true
