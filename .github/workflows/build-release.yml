@@ -114,7 +114,7 @@ jobs:
           name: sauropod-inference-server-${{ matrix.binary_suffix }}.tar.gz
           path: |
             sauropod-inference-server-${{ matrix.binary_suffix }}.tar.gz
-      - uses: actions/attest-build-provenance@e8998f949152b193b063cb0ec769d69d929409be # v2
+      - uses: actions/attest-build-provenance@977bb373ede98d70efdf65b84cb5f73e068dcc2a # v3
         with:
           subject-name: sauropod-inference-server-${{ matrix.binary_suffix }}.tar.gz
           subject-digest: sha256:${{ steps.upload.outputs.artifact-digest }}
@@ -244,7 +244,7 @@ jobs:
           echo "IMAGE_DIGEST_VULKAN=$(docker buildx imagetools inspect ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.docker-metadata-vulkan.outputs.version  }} --format '{{ json .Manifest.Digest }}' | jq -r)" >> $GITHUB_ENV
           echo "IMAGE_DIGEST_CUDA=$(docker buildx imagetools inspect ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.docker-metadata-cuda.outputs.version  }} --format '{{ json .Manifest.Digest }}' | jq -r)" >> $GITHUB_ENV
       - name: Attestation for Vulkan Docker image
-        uses: actions/attest-build-provenance@e8998f949152b193b063cb0ec769d69d929409be # v2
+        uses: actions/attest-build-provenance@977bb373ede98d70efdf65b84cb5f73e068dcc2a # v3
         id: attest-vulkan
         with:
           subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
@@ -252,7 +252,7 @@ jobs:
           push-to-registry: true
         if: github.repository == 'sauropod-io/sauropod'
       - name: Attestation for CUDA Docker image
-        uses: actions/attest-build-provenance@e8998f949152b193b063cb0ec769d69d929409be # v2
+        uses: actions/attest-build-provenance@977bb373ede98d70efdf65b84cb5f73e068dcc2a # v3
         id: attest-cuda
         with:
           subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
