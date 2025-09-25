@@ -55,7 +55,7 @@ sqlx-cli = { version = "0.8.6", default-features = false, features = [
 symphonia = { version = "0.5.4", features = ["wav"] }
 tar = "0.4.44"
 thiserror = "2.0.12"
-tokenizers = { version = "0.21.4", default-features = false, features = [
+tokenizers = { version = "0.22.0", default-features = false, features = [
     "fancy-regex",
     "unstable_wasm",
 ] }
