@@ -1,4 +1,4 @@
-FROM nvcr.io/nvidia/cuda:12.9.1-runtime-ubuntu24.04@sha256:1287141d283b8f06f45681b56a48a85791398c615888b1f96bfb9fc981392d98 AS rust-builder
+FROM nvcr.io/nvidia/cuda:13.0.1-runtime-ubuntu24.04@sha256:c3fde347d52d578c84fd644bc177bc7ec333feaf11550d990da4084d7612e4c7 AS rust-builder
 
 RUN export DEBIAN_FRONTEND=noninteractive && \
     apt-get update && apt-get install -y \
@@ -114,7 +114,7 @@ RUN --mount=type=secret,id=actions_results_url,env=ACTIONS_RESULTS_URL \
     if [ -n "$ACTIONS_RESULTS_URL" ]; then export ACTIONS_CACHE_SERVICE_V2=on SCCACHE_GHA_ENABLED=true RUSTC_WRAPPER=/usr/local/bin/sccache; fi; \
     make release-cuda
 
-FROM nvcr.io/nvidia/cuda:12.9.1-runtime-ubuntu24.04@sha256:1287141d283b8f06f45681b56a48a85791398c615888b1f96bfb9fc981392d98 AS base
+FROM nvcr.io/nvidia/cuda:13.0.1-runtime-ubuntu24.04@sha256:c3fde347d52d578c84fd644bc177bc7ec333feaf11550d990da4084d7612e4c7 AS base
 
 RUN export DEBIAN_FRONTEND=noninteractive && \
     apt-get update && apt-get install -y \
