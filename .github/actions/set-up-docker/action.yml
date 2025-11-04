@@ -12,7 +12,7 @@ runs:
   steps:
     # See <https://docs.docker.com/build/ci/github-actions/multi-platform/#build-and-load-multi-platform-images>
     - name: Set up Docker for multi-platform builds
-      uses: docker/setup-docker-action@3fb92d6d9c634363128c8cce4bc3b2826526370a # v4
+      uses: docker/setup-docker-action@efe9e3891a4f7307e689f2100b33a155b900a608 # v4
       with:
         daemon-config: |
           {
